@@ -7,7 +7,7 @@ import React, {
   useId,
 } from 'react';
 import { AutoCompleteProps, AutoCompleteOption } from './AutoComplete.types';
-import { classNames } from '../../utils';
+import { classNames, getValidationMessage, getValidationMessageClass, DROPDOWN_BLUR_DELAY_MS } from '../../utils';
 import { useFormField } from '../../hooks';
 import styles from './AutoComplete.module.css';
 
@@ -76,6 +76,7 @@ export const AutoComplete = forwardRef<HTMLInputElement, AutoCompleteProps>(
     const currentInputValue = isControlled ? (value as string) : inputValue;
 
     const wrapperRef = useRef<HTMLDivElement>(null);
+    const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const filteredOptions = options.filter((opt) =>
       opt.label.toLowerCase().includes(currentInputValue.toLowerCase())
@@ -144,15 +145,30 @@ export const AutoComplete = forwardRef<HTMLInputElement, AutoCompleteProps>(
 
     const handleBlur = useCallback(
       (e: React.FocusEvent<HTMLInputElement>) => {
-        setTimeout(() => {
+        // Clear any existing timeout
+        if (blurTimeoutRef.current) {
+          clearTimeout(blurTimeoutRef.current);
+        }
+
+        blurTimeoutRef.current = setTimeout(() => {
           if (!wrapperRef.current?.contains(document.activeElement)) {
             setIsOpen(false);
           }
-        }, 150);
+        }, DROPDOWN_BLUR_DELAY_MS);
+
         onBlur?.(e);
       },
       [onBlur]
     );
+
+    // Cleanup blur timeout on unmount
+    useEffect(() => {
+      return () => {
+        if (blurTimeoutRef.current) {
+          clearTimeout(blurTimeoutRef.current);
+        }
+      };
+    }, []);
 
     // Close dropdown on outside click
     useEffect(() => {
@@ -165,23 +181,15 @@ export const AutoComplete = forwardRef<HTMLInputElement, AutoCompleteProps>(
       return () => document.removeEventListener('mousedown', handleClick);
     }, []);
 
-    const activeMessage =
-      validationState === 'error'
-        ? errorMessage
-        : validationState === 'success'
-        ? successMessage
-        : validationState === 'warning'
-        ? warningMessage
-        : helperText;
+    const activeMessage = getValidationMessage(
+      validationState,
+      errorMessage,
+      successMessage,
+      warningMessage,
+      helperText
+    );
 
-    const messageClass =
-      validationState === 'error'
-        ? styles.errorText
-        : validationState === 'success'
-        ? styles.successText
-        : validationState === 'warning'
-        ? styles.warningText
-        : styles.helperText;
+    const messageClass = getValidationMessageClass(validationState, styles);
 
     const showDropdown = isOpen && !disabled && !readOnly;
 
