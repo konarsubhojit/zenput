@@ -1,0 +1,138 @@
+.wrapper {
+  --input-primary-color: #3b82f6;
+  --input-error-color: #ef4444;
+  --input-success-color: #22c55e;
+  --input-warning-color: #f59e0b;
+  --input-border-color: #d1d5db;
+  --input-bg-color: #ffffff;
+  --input-text-color: #111827;
+  --input-border-radius: 6px;
+  --input-font-family: inherit;
+  --input-disabled-bg: #f3f4f6;
+  --input-disabled-text: #9ca3af;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--input-font-family);
+}
+
+.fullWidth { width: 100%; }
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--input-text-color);
+}
+
+.required::after {
+  content: ' *';
+  color: var(--input-error-color);
+}
+
+/* Hidden native input */
+.nativeInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Default file button trigger */
+.fileButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid var(--input-border-color);
+  border-radius: var(--input-border-radius);
+  background-color: var(--input-bg-color);
+  color: var(--input-text-color);
+  font-family: var(--input-font-family);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  width: 100%;
+  justify-content: center;
+}
+
+.fileButton:hover:not(:disabled) {
+  border-color: var(--input-primary-color);
+  background-color: #f0f9ff;
+}
+
+.fileButton:focus-visible {
+  outline: none;
+  border-color: var(--input-primary-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4);
+}
+
+.fileButton:disabled {
+  background-color: var(--input-disabled-bg);
+  color: var(--input-disabled-text);
+  cursor: not-allowed;
+}
+
+.sm .fileButton { padding: 6px 12px; font-size: 0.75rem; }
+.lg .fileButton { padding: 10px 20px; font-size: 1rem; }
+
+/* Dropzone */
+.dropzone {
+  border: 2px dashed var(--input-border-color);
+  border-radius: var(--input-border-radius);
+  padding: 24px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+  background-color: var(--input-bg-color);
+  color: var(--input-text-color);
+  font-size: 0.875rem;
+}
+
+.dropzone:hover:not(.dropzoneDisabled) {
+  border-color: var(--input-primary-color);
+  background-color: #f0f9ff;
+}
+
+.dropzoneActive {
+  border-color: var(--input-primary-color);
+  background-color: #eff6ff;
+}
+
+.dropzoneDisabled {
+  background-color: var(--input-disabled-bg);
+  cursor: not-allowed;
+  color: var(--input-disabled-text);
+}
+
+.dropzoneHint {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.error .fileButton,
+.error .dropzone {
+  border-color: var(--input-error-color);
+}
+
+.fileNames {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.fileName {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.helperText { font-size: 0.75rem; color: #6b7280; }
+.errorText { font-size: 0.75rem; color: var(--input-error-color); }
+.successText { font-size: 0.75rem; color: var(--input-success-color); }
+.warningText { font-size: 0.75rem; color: var(--input-warning-color); }

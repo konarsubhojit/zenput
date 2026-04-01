@@ -1,0 +1,102 @@
+.wrapper {
+  --input-primary-color: #3b82f6;
+  --input-error-color: #ef4444;
+  --input-success-color: #22c55e;
+  --input-warning-color: #f59e0b;
+  --input-border-color: #d1d5db;
+  --input-bg-color: #ffffff;
+  --input-text-color: #111827;
+  --input-border-radius: 8px;
+  --input-font-family: inherit;
+  --input-focus-ring-color: rgba(59, 130, 246, 0.5);
+  --input-disabled-bg: #f3f4f6;
+  --input-disabled-text: #9ca3af;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family: var(--input-font-family);
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--input-text-color);
+}
+
+.required::after {
+  content: ' *';
+  color: var(--input-error-color);
+}
+
+.inputsRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.separator {
+  color: var(--input-text-color);
+  font-weight: 600;
+  user-select: none;
+}
+
+.digitInput {
+  width: 40px;
+  height: 48px;
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 600;
+  font-family: var(--input-font-family);
+  color: var(--input-text-color);
+  background-color: var(--input-bg-color);
+  border: 2px solid var(--input-border-color);
+  border-radius: var(--input-border-radius);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  caret-color: transparent;
+  cursor: default;
+  box-sizing: border-box;
+}
+
+.sm .digitInput { width: 32px; height: 38px; font-size: 1rem; }
+.lg .digitInput { width: 52px; height: 60px; font-size: 1.5rem; }
+
+.digitInput:hover:not(:disabled) {
+  border-color: var(--input-primary-color);
+}
+
+.digitInput:focus {
+  border-color: var(--input-primary-color);
+  box-shadow: 0 0 0 3px var(--input-focus-ring-color);
+}
+
+.digitInput:disabled {
+  background-color: var(--input-disabled-bg);
+  color: var(--input-disabled-text);
+  cursor: not-allowed;
+}
+
+.digitFilled {
+  border-color: var(--input-primary-color);
+}
+
+.error .digitInput {
+  border-color: var(--input-error-color);
+}
+
+.error .digitInput:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3);
+}
+
+.success .digitInput {
+  border-color: var(--input-success-color);
+}
+
+.success .digitInput:focus {
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.3);
+}
+
+.helperText { font-size: 0.75rem; color: #6b7280; }
+.errorText { font-size: 0.75rem; color: var(--input-error-color); }
+.successText { font-size: 0.75rem; color: var(--input-success-color); }
+.warningText { font-size: 0.75rem; color: var(--input-warning-color); }

@@ -1,0 +1,109 @@
+.wrapper {
+  --input-primary-color: #3b82f6;
+  --input-error-color: #ef4444;
+  --input-success-color: #22c55e;
+  --input-warning-color: #f59e0b;
+  --input-border-color: #d1d5db;
+  --input-text-color: #111827;
+  --input-border-radius: 6px;
+  --input-font-family: inherit;
+  --input-disabled-text: #9ca3af;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: var(--input-font-family);
+}
+
+.fullWidth { width: 100%; }
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--input-text-color);
+}
+
+.required::after {
+  content: ' *';
+  color: var(--input-error-color);
+}
+
+.rangeRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.input {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--input-border-color);
+  outline: none;
+  cursor: pointer;
+  accent-color: var(--input-primary-color);
+}
+
+.sm .input { height: 2px; }
+.lg .input { height: 6px; }
+
+.input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--input-primary-color);
+  cursor: pointer;
+  transition: box-shadow 0.15s ease;
+}
+
+.sm .input::-webkit-slider-thumb { width: 14px; height: 14px; }
+.lg .input::-webkit-slider-thumb { width: 22px; height: 22px; }
+
+.input::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--input-primary-color);
+  cursor: pointer;
+  border: none;
+}
+
+.input:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.4);
+}
+
+.input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.error .input { accent-color: var(--input-error-color); }
+.success .input { accent-color: var(--input-success-color); }
+.warning .input { accent-color: var(--input-warning-color); }
+
+.valueDisplay {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--input-text-color);
+  min-width: 40px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.sm .valueDisplay { font-size: 0.75rem; min-width: 32px; }
+.lg .valueDisplay { font-size: 1rem; min-width: 48px; }
+
+.rangeFooter {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.helperText { font-size: 0.75rem; color: #6b7280; }
+.errorText { font-size: 0.75rem; color: var(--input-error-color); }
+.successText { font-size: 0.75rem; color: var(--input-success-color); }
+.warningText { font-size: 0.75rem; color: var(--input-warning-color); }

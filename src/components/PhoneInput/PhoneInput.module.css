@@ -1,0 +1,121 @@
+.wrapper {
+  --input-primary-color: #3b82f6;
+  --input-error-color: #ef4444;
+  --input-success-color: #22c55e;
+  --input-warning-color: #f59e0b;
+  --input-border-color: #d1d5db;
+  --input-bg-color: #ffffff;
+  --input-text-color: #111827;
+  --input-placeholder-color: #9ca3af;
+  --input-border-radius: 6px;
+  --input-font-family: inherit;
+  --input-focus-ring-color: rgba(59, 130, 246, 0.5);
+  --input-disabled-bg: #f3f4f6;
+  --input-disabled-text: #9ca3af;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--input-font-family);
+}
+
+.fullWidth { width: 100%; }
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--input-text-color);
+}
+
+.required::after {
+  content: ' *';
+  color: var(--input-error-color);
+}
+
+.inputWrapper {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--input-border-color);
+  border-radius: var(--input-border-radius);
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  background-color: var(--input-bg-color);
+}
+
+.inputWrapper:hover:not(.disabledWrapper) {
+  border-color: var(--input-primary-color);
+}
+
+.inputWrapper:focus-within:not(.disabledWrapper) {
+  border-color: var(--input-primary-color);
+  box-shadow: 0 0 0 3px var(--input-focus-ring-color);
+}
+
+.error .inputWrapper {
+  border-color: var(--input-error-color);
+}
+
+.error .inputWrapper:focus-within {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3);
+}
+
+.success .inputWrapper {
+  border-color: var(--input-success-color);
+}
+
+.warning .inputWrapper {
+  border-color: var(--input-warning-color);
+}
+
+.disabledWrapper {
+  background-color: var(--input-disabled-bg);
+  cursor: not-allowed;
+}
+
+.dialCodeSelect {
+  appearance: none;
+  -webkit-appearance: none;
+  background: none;
+  border: none;
+  border-right: 1px solid var(--input-border-color);
+  outline: none;
+  cursor: pointer;
+  color: var(--input-text-color);
+  font-family: var(--input-font-family);
+  padding-right: 4px;
+}
+
+.dialCodeSelect:disabled {
+  cursor: not-allowed;
+  color: var(--input-disabled-text);
+}
+
+.sm .dialCodeSelect { padding: 6px 8px; font-size: 0.75rem; }
+.md .dialCodeSelect { padding: 8px 10px; font-size: 0.875rem; }
+.lg .dialCodeSelect { padding: 10px 12px; font-size: 1rem; }
+
+.phoneInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: none;
+  color: var(--input-text-color);
+  font-family: var(--input-font-family);
+}
+
+.phoneInput::placeholder {
+  color: var(--input-placeholder-color);
+}
+
+.phoneInput:disabled {
+  cursor: not-allowed;
+  color: var(--input-disabled-text);
+}
+
+.sm .phoneInput { padding: 6px 10px; font-size: 0.75rem; }
+.md .phoneInput { padding: 8px 12px; font-size: 0.875rem; }
+.lg .phoneInput { padding: 10px 16px; font-size: 1rem; }
+
+.helperText { font-size: 0.75rem; color: #6b7280; }
+.errorText { font-size: 0.75rem; color: var(--input-error-color); }
+.successText { font-size: 0.75rem; color: var(--input-success-color); }
+.warningText { font-size: 0.75rem; color: var(--input-warning-color); }
