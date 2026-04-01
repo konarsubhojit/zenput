@@ -17,13 +17,13 @@ A production-ready, accessible React TypeScript input components library with 18
 ## Installation
 
 ```bash
-npm install @konarsubhojit/zenput
+npm install zenput
 ```
 
 ## Quick Start
 
 ```tsx
-import { TextInput, ThemeProvider } from '@konarsubhojit/zenput';
+import { TextInput, ThemeProvider } from 'zenput';
 
 function App() {
   return (
@@ -205,7 +205,7 @@ function App() {
 Use `ThemeProvider` to customise the design tokens:
 
 ```tsx
-import { ThemeProvider } from '@konarsubhojit/zenput';
+import { ThemeProvider } from 'zenput';
 
 <ThemeProvider
   theme={{
