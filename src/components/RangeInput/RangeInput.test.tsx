@@ -1,6 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { RangeInput } from './RangeInput';
 
@@ -51,11 +50,11 @@ describe('RangeInput', () => {
     expect(screen.getByText('Drag to adjust')).toBeInTheDocument();
   });
 
-  it('calls onChange when value changes', async () => {
+  it('calls onChange when value changes', () => {
     const handleChange = jest.fn();
-    render(<RangeInput onChange={handleChange} />);
+    render(<RangeInput onChange={handleChange} defaultValue={50} min={0} max={100} />);
     const slider = screen.getByRole('slider');
-    await userEvent.type(slider, '{arrowright}');
+    fireEvent.change(slider, { target: { value: '60' } });
     expect(handleChange).toHaveBeenCalled();
   });
 

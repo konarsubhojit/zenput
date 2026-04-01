@@ -16,7 +16,7 @@ describe('PasswordInput', () => {
 
   it('defaults to password type (hidden)', () => {
     render(<PasswordInput />);
-    expect(screen.getByRole('textbox', { hidden: true })).toBeInTheDocument();
+    expect(document.querySelector('input[type="password"]')).toBeInTheDocument();
   });
 
   it('has a toggle visibility button', () => {

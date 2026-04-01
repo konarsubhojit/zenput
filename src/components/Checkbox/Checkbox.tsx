@@ -32,7 +32,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
     const internalRef = useRef<HTMLInputElement>(null);
     const checkboxRef = (ref as React.RefObject<HTMLInputElement>) ?? internalRef;
 
-    const { inputId, helperId, labelProps, inputAriaProps } = useFormField({
+    const { inputId, helperId, inputAriaProps } = useFormField({
       id,
       label,
       helperText,

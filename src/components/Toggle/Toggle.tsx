@@ -32,7 +32,7 @@ export const Toggle = forwardRef<HTMLInputElement, ToggleProps>(
     },
     ref
   ) => {
-    const { inputId, helperId, labelProps: _labelProps, inputAriaProps } = useFormField({
+    const { inputId, helperId, inputAriaProps } = useFormField({
       id,
       label,
       helperText,

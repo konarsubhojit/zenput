@@ -8,7 +8,7 @@ export interface AutoCompleteOption {
 }
 
 export interface AutoCompleteProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size' | 'onChange'>,
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size' | 'onChange' | 'onSelect'>,
     BaseInputProps {
   /** List of options to display */
   options: AutoCompleteOption[];

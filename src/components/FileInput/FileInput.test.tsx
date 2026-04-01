@@ -1,6 +1,5 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { FileInput } from './FileInput';
 
@@ -16,7 +15,7 @@ describe('FileInput', () => {
 
   it('renders the file button', () => {
     render(<FileInput buttonLabel="Select file" />);
-    expect(screen.getByRole('button', { name: 'Select file' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Select file/ })).toBeInTheDocument();
   });
 
   it('renders the hidden native file input', () => {
