@@ -1,4 +1,4 @@
-# @konarsubhojit/react-input-components
+# Zenput
 
 A production-ready, accessible React TypeScript input components library with 18 fully-featured components.
 
@@ -17,13 +17,13 @@ A production-ready, accessible React TypeScript input components library with 18
 ## Installation
 
 ```bash
-npm install @konarsubhojit/react-input-components
+npm install @konarsubhojit/zenput
 ```
 
 ## Quick Start
 
 ```tsx
-import { TextInput, ThemeProvider } from '@konarsubhojit/react-input-components';
+import { TextInput, ThemeProvider } from '@konarsubhojit/zenput';
 
 function App() {
   return (
@@ -205,7 +205,7 @@ function App() {
 Use `ThemeProvider` to customise the design tokens:
 
 ```tsx
-import { ThemeProvider } from '@konarsubhojit/react-input-components';
+import { ThemeProvider } from '@konarsubhojit/zenput';
 
 <ThemeProvider
   theme={{

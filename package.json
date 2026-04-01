@@ -1,7 +1,7 @@
 {
-  "name": "@konarsubhojit/react-input-components",
+  "name": "@konarsubhojit/zenput",
   "version": "1.0.0",
-  "description": "A production-ready, accessible React TypeScript input components library",
+  "description": "Zenput — a production-ready, accessible React TypeScript input components library",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/index.d.ts",
