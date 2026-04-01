@@ -16,13 +16,16 @@ export default [
       peerDepsExternal(),
       resolve(),
       commonjs(),
-      typescript({ tsconfig: './tsconfig.json' }),
+      typescript({
+        tsconfig: './tsconfig.json',
+        declarationDir: 'dist/types',
+      }),
       postcss({ modules: true, extract: false }),
     ],
     external: ['react', 'react-dom'],
   },
   {
-    input: 'dist/types/index.d.ts',
+    input: 'dist/cjs/types/index.d.ts',
     output: [{ file: 'dist/index.d.ts', format: 'esm' }],
     plugins: [dts()],
     external: [/\.css$/],
