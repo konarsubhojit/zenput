@@ -1,6 +1,6 @@
 import React, { forwardRef, useState, useCallback, useRef } from 'react';
 import { SearchInputProps } from './SearchInput.types';
-import { classNames } from '../../utils';
+import { classNames, getValidationMessage, getValidationMessageClass } from '../../utils';
 import { useFormField } from '../../hooks';
 import styles from './SearchInput.module.css';
 
@@ -81,37 +81,29 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
 
     const handleClear = useCallback(() => {
       if (!isControlled) setInternalValue('');
+
+      // Call onChange with a synthetic event if the component is controlled
+      if (onChange && inputRef.current) {
+        const syntheticEvent = {
+          target: { ...inputRef.current, value: '' },
+          currentTarget: inputRef.current,
+        } as React.ChangeEvent<HTMLInputElement>;
+        onChange(syntheticEvent);
+      }
+
       onSearch?.('');
       inputRef.current?.focus();
-      // fire a synthetic change event so forms update
-      const nativeInput = inputRef.current;
-      if (nativeInput) {
-        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-          window.HTMLInputElement.prototype,
-          'value'
-        )?.set;
-        nativeInputValueSetter?.call(nativeInput, '');
-        nativeInput.dispatchEvent(new Event('input', { bubbles: true }));
-      }
-    }, [isControlled, inputRef, onSearch]);
+    }, [isControlled, inputRef, onChange, onSearch]);
 
-    const activeMessage =
-      validationState === 'error'
-        ? errorMessage
-        : validationState === 'success'
-        ? successMessage
-        : validationState === 'warning'
-        ? warningMessage
-        : helperText;
+    const activeMessage = getValidationMessage(
+      validationState,
+      errorMessage,
+      successMessage,
+      warningMessage,
+      helperText
+    );
 
-    const messageClass =
-      validationState === 'error'
-        ? styles.errorText
-        : validationState === 'success'
-        ? styles.successText
-        : validationState === 'warning'
-        ? styles.warningText
-        : styles.helperText;
+    const messageClass = getValidationMessageClass(validationState, styles);
 
     const hasClearButton = showClearButton && Boolean(currentValue);
 

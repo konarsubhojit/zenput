@@ -1,6 +1,6 @@
 import React, { forwardRef, useRef, useState, useCallback } from 'react';
 import { FileInputProps } from './FileInput.types';
-import { classNames } from '../../utils';
+import { classNames, getValidationMessage, getValidationMessageClass } from '../../utils';
 import { useFormField } from '../../hooks';
 import styles from './FileInput.module.css';
 
@@ -86,23 +86,15 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
       [disabled, fileRef, onChange, showFileNames]
     );
 
-    const activeMessage =
-      validationState === 'error'
-        ? errorMessage
-        : validationState === 'success'
-        ? successMessage
-        : validationState === 'warning'
-        ? warningMessage
-        : helperText;
+    const activeMessage = getValidationMessage(
+      validationState,
+      errorMessage,
+      successMessage,
+      warningMessage,
+      helperText
+    );
 
-    const messageClass =
-      validationState === 'error'
-        ? styles.errorText
-        : validationState === 'success'
-        ? styles.successText
-        : validationState === 'warning'
-        ? styles.warningText
-        : styles.helperText;
+    const messageClass = getValidationMessageClass(validationState, styles);
 
     return (
       <div
@@ -176,8 +168,8 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
         )}
         {showFileNames && fileNames.length > 0 && (
           <div className={styles.fileNames}>
-            {fileNames.map((name, i) => (
-              <div key={i} className={styles.fileName}>
+            {fileNames.map((name) => (
+              <div key={name} className={styles.fileName}>
                 📄 {name}
               </div>
             ))}
