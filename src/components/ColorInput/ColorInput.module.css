@@ -1,0 +1,106 @@
+.wrapper {
+  --input-primary-color: #3b82f6;
+  --input-error-color: #ef4444;
+  --input-success-color: #22c55e;
+  --input-warning-color: #f59e0b;
+  --input-border-color: #d1d5db;
+  --input-bg-color: #ffffff;
+  --input-text-color: #111827;
+  --input-border-radius: 6px;
+  --input-font-family: inherit;
+  --input-disabled-bg: #f3f4f6;
+  --input-disabled-text: #9ca3af;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--input-font-family);
+}
+
+.fullWidth { width: 100%; }
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--input-text-color);
+}
+
+.required::after {
+  content: ' *';
+  color: var(--input-error-color);
+}
+
+.colorRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.colorSwatch {
+  position: relative;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--input-border-radius);
+  border: 1px solid var(--input-border-color);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sm .colorSwatch { width: 32px; height: 32px; }
+.lg .colorSwatch { width: 48px; height: 48px; }
+
+.colorSwatch:hover:not(.disabledSwatch) {
+  border-color: var(--input-primary-color);
+}
+
+.colorSwatch:focus-within {
+  border-color: var(--input-primary-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4);
+}
+
+.disabledSwatch {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.error .colorSwatch {
+  border-color: var(--input-error-color);
+}
+
+.input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 200%;
+  transform: translate(-25%, -25%);
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  background: none;
+  opacity: 0.01;
+}
+
+.input:disabled {
+  cursor: not-allowed;
+}
+
+.hexValue {
+  font-size: 0.875rem;
+  font-family: monospace;
+  color: var(--input-text-color);
+  padding: 6px 10px;
+  border: 1px solid var(--input-border-color);
+  border-radius: var(--input-border-radius);
+  background-color: var(--input-bg-color);
+  min-width: 90px;
+}
+
+.sm .hexValue { font-size: 0.75rem; padding: 4px 8px; min-width: 80px; }
+.lg .hexValue { font-size: 1rem; padding: 8px 12px; min-width: 100px; }
+
+.helperText { font-size: 0.75rem; color: #6b7280; }
+.errorText { font-size: 0.75rem; color: var(--input-error-color); }
+.successText { font-size: 0.75rem; color: var(--input-success-color); }
+.warningText { font-size: 0.75rem; color: var(--input-warning-color); }

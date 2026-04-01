@@ -1,0 +1,87 @@
+name: CI/CD Pipeline
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+      - 'release/**'
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Stage 1 – Build
+  # Runs on every pull request and on every push to master or release/** branches.
+  # ─────────────────────────────────────────────────────────────────────────────
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test with coverage
+        run: npm run test:coverage
+
+      - name: Build
+        run: npm run build
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v4
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Stage 2 – Publish to npm
+  # Runs only on pushes to branches matching the "release/**" pattern.
+  # Requires manual approval via the "npm-publish" GitHub Environment before
+  # the publish step executes.
+  # ─────────────────────────────────────────────────────────────────────────────
+  publish:
+    name: Publish to npm
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/release/')
+    environment: npm-publish          # configured with required reviewers for approval
+    permissions:
+      contents: read
+      id-token: write                 # needed for npm provenance
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Publish to npm registry
+        run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

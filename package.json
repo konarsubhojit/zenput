@@ -1,16 +1,69 @@
 {
-  "name": "simple-app",
+  "name": "zenput",
   "version": "1.0.0",
-  "description": "",
-  "main": "server.js",
+  "description": "Zenput — a production-ready, accessible React TypeScript input components library",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "build": "rollup -c",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint 'src/**/*.{ts,tsx}'",
+    "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix",
+    "format": "prettier --write 'src/**/*.{ts,tsx,css}'",
+    "type-check": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
   },
-  "author": "",
-  "license": "UNLICENSED",
-  "dependencies": {
-    "express": "^4.16.3",
-    "pug": "^2.0.3"
-  }
+  "peerDependencies": {
+    "react": ">=17.0.0",
+    "react-dom": ">=17.0.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "@rollup/plugin-typescript": "^11.0.0",
+    "@testing-library/jest-dom": "^6.0.0",
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/user-event": "^14.0.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "eslint-plugin-react": "^7.0.0",
+    "eslint-plugin-react-hooks": "^4.0.0",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^29.0.0",
+    "jest-environment-jsdom": "^29.0.0",
+    "prettier": "^3.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "rollup": "^4.0.0",
+    "rollup-plugin-dts": "^6.0.0",
+    "rollup-plugin-peer-deps-external": "^2.2.4",
+    "rollup-plugin-postcss": "^4.0.0",
+    "ts-jest": "^29.0.0",
+    "tslib": "^2.8.1",
+    "typescript": "^5.3.0"
+  },
+  "keywords": [
+    "react",
+    "input",
+    "components",
+    "typescript",
+    "accessible",
+    "form",
+    "ui"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/konarsubhojit/simple-app.git"
+  },
+  "author": "konarsubhojit"
 }

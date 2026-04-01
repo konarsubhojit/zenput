@@ -1,0 +1,145 @@
+.wrapper {
+  --input-primary-color: #3b82f6;
+  --input-error-color: #ef4444;
+  --input-text-color: #111827;
+  --input-border-color: #d1d5db;
+  --input-font-family: inherit;
+  --input-disabled-bg: #f3f4f6;
+  --input-disabled-text: #9ca3af;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family: var(--input-font-family);
+}
+
+.groupLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--input-text-color);
+}
+
+.required::after {
+  content: ' *';
+  color: var(--input-error-color);
+}
+
+.optionsWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.horizontal {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.radioRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.radioRow.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.input {
+  position: relative;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  border: 2px solid var(--input-border-color);
+  border-radius: 50%;
+  background-color: #ffffff;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+  outline: none;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.sm .input {
+  width: 14px;
+  height: 14px;
+  min-width: 14px;
+}
+
+.lg .input {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+}
+
+.input:hover:not(:disabled) {
+  border-color: var(--input-primary-color);
+}
+
+.input:focus-visible {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4);
+}
+
+.input:checked {
+  border-color: var(--input-primary-color);
+}
+
+.input:checked::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--input-primary-color);
+}
+
+.sm .input:checked::after {
+  width: 6px;
+  height: 6px;
+}
+
+.lg .input:checked::after {
+  width: 10px;
+  height: 10px;
+}
+
+.input:disabled {
+  background-color: var(--input-disabled-bg);
+  border-color: #d1d5db;
+  cursor: not-allowed;
+}
+
+.error .input {
+  border-color: var(--input-error-color);
+}
+
+.radioLabel {
+  font-size: 0.875rem;
+  color: var(--input-text-color);
+  line-height: 1.4;
+}
+
+.sm .radioLabel {
+  font-size: 0.75rem;
+}
+
+.lg .radioLabel {
+  font-size: 1rem;
+}
+
+.helperText {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.errorText {
+  font-size: 0.75rem;
+  color: var(--input-error-color);
+}

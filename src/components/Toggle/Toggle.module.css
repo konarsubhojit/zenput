@@ -1,0 +1,148 @@
+.wrapper {
+  --input-primary-color: #3b82f6;
+  --input-error-color: #ef4444;
+  --input-text-color: #111827;
+  --input-border-color: #d1d5db;
+  --input-font-family: inherit;
+  --input-disabled-bg: #f3f4f6;
+  --input-disabled-text: #9ca3af;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--input-font-family);
+}
+
+.toggleRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggleRow.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.labelLeft {
+  flex-direction: row-reverse;
+}
+
+/* Hidden native input */
+.nativeInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* The visible track */
+.track {
+  position: relative;
+  display: inline-block;
+  border-radius: 9999px;
+  transition: background-color 0.2s ease;
+  flex-shrink: 0;
+  background-color: #d1d5db;
+}
+
+.sm .track {
+  width: 32px;
+  height: 18px;
+}
+
+.md .track {
+  width: 40px;
+  height: 22px;
+}
+
+.lg .track {
+  width: 52px;
+  height: 28px;
+}
+
+/* The thumb */
+.thumb {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: left 0.2s ease;
+}
+
+.sm .thumb {
+  width: 14px;
+  height: 14px;
+  left: 2px;
+}
+
+.md .thumb {
+  width: 18px;
+  height: 18px;
+  left: 2px;
+}
+
+.lg .thumb {
+  width: 22px;
+  height: 22px;
+  left: 3px;
+}
+
+/* Checked state */
+.checked .track {
+  background-color: var(--input-primary-color);
+}
+
+.sm.checked .thumb {
+  left: calc(32px - 14px - 2px);
+}
+
+.md.checked .thumb {
+  left: calc(40px - 18px - 2px);
+}
+
+.lg.checked .thumb {
+  left: calc(52px - 22px - 3px);
+}
+
+/* Focus */
+.nativeInput:focus-visible + .toggleRow .track {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4);
+}
+
+/* Error state */
+.error .track {
+  outline: 2px solid var(--input-error-color);
+}
+
+.label {
+  font-size: 0.875rem;
+  color: var(--input-text-color);
+  line-height: 1.4;
+}
+
+.sm .label {
+  font-size: 0.75rem;
+}
+
+.lg .label {
+  font-size: 1rem;
+}
+
+.helperText {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.errorText {
+  font-size: 0.75rem;
+  color: var(--input-error-color);
+}

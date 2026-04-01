@@ -1,0 +1,49 @@
+.wrapper {
+  --input-primary-color: #3b82f6;
+  --input-error-color: #ef4444;
+  --input-border-color: #d1d5db;
+  --input-text-color: #111827;
+  --input-font-family: inherit;
+  --input-disabled-text: #9ca3af;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family: var(--input-font-family);
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.groupLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--input-text-color);
+}
+
+.required::after {
+  content: ' *';
+  color: var(--input-error-color);
+}
+
+.optionsWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.horizontal {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.helperText {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.errorText {
+  font-size: 0.75rem;
+  color: var(--input-error-color);
+}

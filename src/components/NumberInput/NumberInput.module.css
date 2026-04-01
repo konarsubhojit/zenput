@@ -1,0 +1,216 @@
+.wrapper {
+  --input-primary-color: #3b82f6;
+  --input-error-color: #ef4444;
+  --input-success-color: #22c55e;
+  --input-warning-color: #f59e0b;
+  --input-border-color: #d1d5db;
+  --input-bg-color: #ffffff;
+  --input-text-color: #111827;
+  --input-placeholder-color: #9ca3af;
+  --input-border-radius: 6px;
+  --input-font-family: inherit;
+  --input-focus-ring-color: rgba(59, 130, 246, 0.5);
+  --input-disabled-bg: #f3f4f6;
+  --input-disabled-text: #9ca3af;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--input-font-family);
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--input-text-color);
+}
+
+.required::after {
+  content: ' *';
+  color: var(--input-error-color);
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input {
+  width: 100%;
+  font-family: var(--input-font-family);
+  color: var(--input-text-color);
+  background-color: var(--input-bg-color);
+  border-radius: var(--input-border-radius);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  outline: none;
+  box-sizing: border-box;
+  -moz-appearance: textfield;
+}
+
+.input::-webkit-inner-spin-button,
+.input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.input::placeholder {
+  color: var(--input-placeholder-color);
+}
+
+.sm .input {
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  height: 32px;
+}
+
+.md .input {
+  padding: 8px 12px;
+  font-size: 0.875rem;
+  height: 40px;
+}
+
+.lg .input {
+  padding: 10px 16px;
+  font-size: 1rem;
+  height: 48px;
+}
+
+.hasControls .input {
+  padding-right: 40px;
+}
+
+.outlined .input {
+  border: 1px solid var(--input-border-color);
+}
+
+.outlined .input:hover:not(:disabled) {
+  border-color: var(--input-primary-color);
+}
+
+.outlined .input:focus {
+  border-color: var(--input-primary-color);
+  box-shadow: 0 0 0 3px var(--input-focus-ring-color);
+}
+
+.filled .input {
+  border: 1px solid transparent;
+  background-color: #f3f4f6;
+}
+
+.filled .input:hover:not(:disabled) {
+  background-color: #e5e7eb;
+}
+
+.filled .input:focus {
+  background-color: var(--input-bg-color);
+  border-color: var(--input-primary-color);
+  box-shadow: 0 0 0 3px var(--input-focus-ring-color);
+}
+
+.underlined .input {
+  border: none;
+  border-bottom: 2px solid var(--input-border-color);
+  border-radius: 0;
+  padding-left: 0;
+}
+
+.underlined .input:hover:not(:disabled) {
+  border-bottom-color: var(--input-primary-color);
+}
+
+.underlined .input:focus {
+  border-bottom-color: var(--input-primary-color);
+  box-shadow: 0 2px 0 0 var(--input-focus-ring-color);
+}
+
+.error .input {
+  border-color: var(--input-error-color) !important;
+}
+
+.error .input:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3) !important;
+}
+
+.success .input {
+  border-color: var(--input-success-color) !important;
+}
+
+.success .input:focus {
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.3) !important;
+}
+
+.warning .input {
+  border-color: var(--input-warning-color) !important;
+}
+
+.warning .input:focus {
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3) !important;
+}
+
+.input:disabled {
+  background-color: var(--input-disabled-bg);
+  color: var(--input-disabled-text);
+  cursor: not-allowed;
+}
+
+.controls {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--input-border-color);
+}
+
+.controlBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--input-text-color);
+  font-size: 0.625rem;
+  padding: 0 6px;
+  transition: background-color 0.1s ease;
+  line-height: 1;
+}
+
+.controlBtn:hover:not(:disabled) {
+  background-color: #f3f4f6;
+}
+
+.controlBtn:disabled {
+  color: var(--input-disabled-text);
+  cursor: not-allowed;
+}
+
+.controlBtn + .controlBtn {
+  border-top: 1px solid var(--input-border-color);
+}
+
+.helperText {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.errorText {
+  font-size: 0.75rem;
+  color: var(--input-error-color);
+}
+
+.successText {
+  font-size: 0.75rem;
+  color: var(--input-success-color);
+}
+
+.warningText {
+  font-size: 0.75rem;
+  color: var(--input-warning-color);
+}
