@@ -38,7 +38,7 @@ export const ValidationStates: Story = {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       <OTPInput label="Default" length={6} validationState="default" helperText="Enter the code sent to your email" />
       <OTPInput label="Error" length={6} validationState="error" errorMessage="Invalid code, please try again" />
-      <OTPInput label="Success" length={6} validationState="success" successMessage="Code verified!" />
+      <OTPInput label="Success" length={6} validationState="success" helperText="Code verified!" />
     </div>
   ),
 };
