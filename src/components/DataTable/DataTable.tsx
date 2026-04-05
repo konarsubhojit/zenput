@@ -10,7 +10,7 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
   className,
   style,
   emptyMessage = 'No data available',
-}: DataTableProps<T>) {
+}: Readonly<DataTableProps<T>>) {
   /** Key of the column whose filter dropdown is currently open */
   const [openFilterKey, setOpenFilterKey] = useState<string | null>(null);
 
@@ -38,7 +38,7 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
     (key: string): string[] => {
       const seen = new Set<string>();
       data.forEach((row) => seen.add(String(row[key] ?? '')));
-      return Array.from(seen).sort();
+      return Array.from(seen).sort((a, b) => a.localeCompare(b));
     },
     [data]
   );
@@ -99,7 +99,7 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
                   <th
                     key={col.key}
                     className={styles.th}
-                    style={col.width !== undefined ? { width: col.width } : undefined}
+                    style={col.width === undefined ? undefined : { width: col.width }}
                   >
                     <div className={styles.thContent}>
                       <span className={styles.headerText}>{col.header}</span>
