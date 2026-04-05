@@ -1,8 +1,9 @@
 import React from 'react';
 import type { Preview, Decorator } from '@storybook/react';
 import { ThemeProvider } from '../src/context';
+import type { Theme } from '../src/context';
 
-const THEMES: Record<string, Record<string, string>> = {
+const THEMES: Record<string, Theme> = {
   Default: {},
   Indigo: {
     primaryColor: '#6366f1',

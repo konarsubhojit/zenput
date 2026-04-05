@@ -16,7 +16,7 @@ const meta: Meta<typeof CheckboxGroup> = {
   argTypes: {
     size: { control: 'select', options: ['sm', 'md', 'lg'] },
     direction: { control: 'select', options: ['horizontal', 'vertical'] },
-    validationState: { control: 'select', options: ['default', 'error', 'success', 'warning'] },
+    validationState: { control: 'select', options: ['default', 'error'] },
   },
 };
 

@@ -54,34 +54,37 @@ jobs:
 
           # Fetch existing gh-pages index.html if it exists
           git fetch origin gh-pages 2>/dev/null || true
-          EXISTING_VERSIONS=""
+
+          # Extract full <li>…</li> blocks from the existing page, one per line
+          EXISTING_LI=""
           if git show origin/gh-pages:index.html > existing_index.html 2>/dev/null; then
-            # Extract existing version list items (lines containing /v[0-9])
-            EXISTING_VERSIONS=$(grep -oP 'href="v\d+/"[^>]*>[^<]*</a>' existing_index.html 2>/dev/null || true)
+            # Extract every <li>…</li> block that references a versioned path (/v<N>/)
+            EXISTING_LI=$(grep -oP '<li>.*?href="v\d+/".*?</li>' existing_index.html 2>/dev/null || true)
           fi
 
-          # Build version entry for this release (no wrapping <li> — added in template)
+          # Build the <li> entry for this release
           DATE=$(date -u +"%Y-%m-%d")
-          NEW_ENTRY="<a href=\"${MAJOR}/\">Storybook ${MAJOR}</a> — released ${DATE} (${SEMVER})"
+          NEW_LI="<li><a href=\"${MAJOR}/\">Storybook ${MAJOR}</a> — released ${DATE} (${SEMVER})</li>"
 
-          # Collect all version list items, replacing entry for this major if it exists
+          # Rebuild the list: replace the existing entry for this major version if found,
+          # otherwise prepend the new entry
           ALL_ITEMS=""
           FOUND=false
-          while IFS= read -r line; do
-            if echo "$line" | grep -q "href=\"${MAJOR}/\""; then
-              ALL_ITEMS="${ALL_ITEMS}<li>${NEW_ENTRY}</li>"
+          while IFS= read -r li; do
+            if echo "$li" | grep -q "href=\"${MAJOR}/\""; then
+              ALL_ITEMS="${ALL_ITEMS}${NEW_LI}"
               FOUND=true
             else
-              # line already contains a bare anchor tag; wrap it in <li>
-              ALL_ITEMS="${ALL_ITEMS}<li>${line}</li>"
+              ALL_ITEMS="${ALL_ITEMS}${li}"
             fi
-          done <<< "$EXISTING_VERSIONS"
+          done <<< "$EXISTING_LI"
 
           if [ "$FOUND" = false ]; then
-            ALL_ITEMS="<li>${NEW_ENTRY}</li>${ALL_ITEMS}"
+            ALL_ITEMS="${NEW_LI}${ALL_ITEMS}"
           fi
 
-          cat > index.html <<EOF
+          mkdir -p gh-pages-root
+          cat > gh-pages-root/index.html <<EOF
           <!DOCTYPE html>
           <html lang="en">
           <head>
@@ -113,6 +116,5 @@ jobs:
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .
-          include_files: index.html
+          publish_dir: gh-pages-root
           keep_files: true

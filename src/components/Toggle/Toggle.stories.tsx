@@ -8,7 +8,7 @@ const meta: Meta<typeof Toggle> = {
   tags: ['autodocs'],
   argTypes: {
     size: { control: 'select', options: ['sm', 'md', 'lg'] },
-    validationState: { control: 'select', options: ['default', 'error', 'success', 'warning'] },
+    validationState: { control: 'select', options: ['default', 'error'] },
     labelPosition: { control: 'select', options: ['left', 'right'] },
   },
 };

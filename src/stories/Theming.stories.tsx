@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { ThemeProvider } from '../context';
+import type { Theme } from '../context';
 import { TextInput } from '../components/TextInput';
 import { SelectInput } from '../components/SelectInput';
 import { Checkbox } from '../components/Checkbox';
@@ -18,7 +19,7 @@ const COUNTRY_OPTIONS = [
 
 interface ThemeShowcaseProps {
   themeName: string;
-  theme: Record<string, string>;
+  theme: Theme;
   darkBackground?: boolean;
 }
 
