@@ -1,0 +1,227 @@
+.wrapper {
+  --dt-border-color: #d1d5db;
+  --dt-bg-color: #ffffff;
+  --dt-text-color: #111827;
+  --dt-header-bg: #f9fafb;
+  --dt-header-text: #374151;
+  --dt-row-hover-bg: #f3f4f6;
+  --dt-primary-color: #3b82f6;
+  --dt-primary-focus-ring: rgba(59, 130, 246, 0.4);
+  --dt-active-filter-color: #2563eb;
+  --dt-dropdown-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --dt-border-radius: 6px;
+  --dt-font-family: inherit;
+  font-family: var(--dt-font-family);
+  color: var(--dt-text-color);
+  display: block;
+}
+
+/* Horizontally scrollable container so wide tables don't break layout */
+.tableContainer {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--dt-border-color);
+  border-radius: var(--dt-border-radius);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  background-color: var(--dt-bg-color);
+}
+
+/* ── Header ──────────────────────────────────────────── */
+
+.th {
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--dt-header-text);
+  background-color: var(--dt-header-bg);
+  border-bottom: 1px solid var(--dt-border-color);
+  white-space: nowrap;
+}
+
+.thContent {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.headerText {
+  flex: 1;
+}
+
+/* ── Filter button & dropdown ─────────────────────────── */
+
+.filterContainer {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.filterButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 2px 4px;
+  cursor: pointer;
+  color: #9ca3af;
+  line-height: 1;
+  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.filterButton:hover {
+  color: var(--dt-primary-color);
+  background-color: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.filterButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--dt-primary-focus-ring);
+}
+
+.filterButtonActive {
+  color: var(--dt-active-filter-color);
+  background-color: #dbeafe;
+  border-color: #93c5fd;
+}
+
+.filterArrow {
+  font-size: 0.75rem;
+  display: inline-block;
+  transition: transform 0.15s ease;
+}
+
+.filterArrowOpen {
+  transform: rotate(180deg);
+}
+
+.filterDropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  min-width: 160px;
+  max-width: 260px;
+  background-color: var(--dt-bg-color);
+  border: 1px solid var(--dt-border-color);
+  border-radius: var(--dt-border-radius);
+  box-shadow: var(--dt-dropdown-shadow);
+  padding: 4px 0;
+}
+
+.filterList {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.filterItem {
+  padding: 0;
+}
+
+.filterLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  cursor: pointer;
+  font-size: 0.8125rem;
+  color: var(--dt-text-color);
+  transition: background-color 0.1s ease;
+  user-select: none;
+}
+
+.filterLabel:hover {
+  background-color: #eff6ff;
+}
+
+.filterCheckbox {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--dt-primary-color);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.filterValueText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filterEmpty {
+  padding: 10px 12px;
+  font-size: 0.8125rem;
+  color: #9ca3af;
+  text-align: center;
+}
+
+.filterActions {
+  border-top: 1px solid var(--dt-border-color);
+  padding: 6px 8px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.clearButton {
+  background: none;
+  border: none;
+  font-size: 0.75rem;
+  color: var(--dt-primary-color);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background-color 0.1s ease;
+}
+
+.clearButton:hover {
+  background-color: #eff6ff;
+}
+
+.clearButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--dt-primary-focus-ring);
+}
+
+/* ── Body ─────────────────────────────────────────────── */
+
+.tr {
+  transition: background-color 0.1s ease;
+}
+
+.tr:hover {
+  background-color: var(--dt-row-hover-bg);
+}
+
+.tr:not(:last-child) {
+  border-bottom: 1px solid var(--dt-border-color);
+}
+
+.td {
+  padding: 10px 14px;
+  vertical-align: middle;
+  color: var(--dt-text-color);
+  font-size: 0.875rem;
+}
+
+/* ── Empty state ─────────────────────────────────────── */
+
+.emptyCell {
+  padding: 24px 14px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.875rem;
+}

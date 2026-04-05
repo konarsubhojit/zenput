@@ -16,3 +16,4 @@ export * from './SearchInput';
 export * from './PhoneInput';
 export * from './OTPInput';
 export * from './AutoComplete';
+export * from './DataTable';
