@@ -1,0 +1,118 @@
+name: Deploy Storybook to GitHub Pages
+
+on:
+  push:
+    branches:
+      - 'release/**'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Extract version from branch name
+        id: version
+        run: |
+          BRANCH="${GITHUB_REF#refs/heads/}"
+          # Extract semver from release/<semver>
+          SEMVER="${BRANCH#release/}"
+          # Extract major version (e.g. 1.0.0 -> v1)
+          MAJOR="v$(echo "$SEMVER" | cut -d. -f1)"
+          echo "semver=$SEMVER" >> "$GITHUB_OUTPUT"
+          echo "major=$MAJOR" >> "$GITHUB_OUTPUT"
+
+      - name: Build Storybook
+        run: npm run build-storybook -- --output-dir storybook-static
+
+      - name: Deploy versioned Storybook to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: storybook-static
+          destination_dir: ${{ steps.version.outputs.major }}
+          keep_files: true
+
+      - name: Update root index.html with version listing
+        run: |
+          MAJOR="${{ steps.version.outputs.major }}"
+          SEMVER="${{ steps.version.outputs.semver }}"
+
+          # Fetch existing gh-pages index.html if it exists
+          git fetch origin gh-pages 2>/dev/null || true
+          EXISTING_VERSIONS=""
+          if git show origin/gh-pages:index.html > existing_index.html 2>/dev/null; then
+            # Extract existing version list items (lines containing /v[0-9])
+            EXISTING_VERSIONS=$(grep -oP 'href="v\d+/"[^>]*>[^<]*</a>' existing_index.html 2>/dev/null || true)
+          fi
+
+          # Build version entry for this release (no wrapping <li> — added in template)
+          DATE=$(date -u +"%Y-%m-%d")
+          NEW_ENTRY="<a href=\"${MAJOR}/\">Storybook ${MAJOR}</a> — released ${DATE} (${SEMVER})"
+
+          # Collect all version list items, replacing entry for this major if it exists
+          ALL_ITEMS=""
+          FOUND=false
+          while IFS= read -r line; do
+            if echo "$line" | grep -q "href=\"${MAJOR}/\""; then
+              ALL_ITEMS="${ALL_ITEMS}<li>${NEW_ENTRY}</li>"
+              FOUND=true
+            else
+              # line already contains a bare anchor tag; wrap it in <li>
+              ALL_ITEMS="${ALL_ITEMS}<li>${line}</li>"
+            fi
+          done <<< "$EXISTING_VERSIONS"
+
+          if [ "$FOUND" = false ]; then
+            ALL_ITEMS="<li>${NEW_ENTRY}</li>${ALL_ITEMS}"
+          fi
+
+          cat > index.html <<EOF
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title>Zenput — Storybook Versions</title>
+            <style>
+              body { font-family: system-ui, sans-serif; max-width: 640px; margin: 4rem auto; padding: 0 1.5rem; color: #111827; }
+              h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+              p { color: #6b7280; margin-bottom: 1.5rem; }
+              ul { list-style: none; padding: 0; }
+              li { margin-bottom: 0.75rem; }
+              a { color: #6366f1; text-decoration: none; font-weight: 500; }
+              a:hover { text-decoration: underline; }
+              small { color: #9ca3af; }
+            </style>
+          </head>
+          <body>
+            <h1>Zenput Storybook</h1>
+            <p>Component library documentation — select a version below.</p>
+            <ul>
+              ${ALL_ITEMS}
+            </ul>
+          </body>
+          </html>
+          EOF
+
+      - name: Deploy root index.html to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
+          include_files: index.html
+          keep_files: true
