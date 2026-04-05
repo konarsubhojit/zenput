@@ -159,7 +159,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
             id={inputId}
             type={!isFocused && formatValue !== undefined ? 'text' : 'number'}
             disabled={disabled}
-            readOnly={readOnly || (!isFocused && formatValue !== undefined)}
+            readOnly={readOnly}
             required={required}
             min={min}
             max={max}

@@ -20,6 +20,11 @@ export interface SelectInputProps
    */
   multiple?: boolean;
   /**
+   * Placeholder text shown in the native select when `multiple` is true.
+   * Defaults to 'Add…'.
+   */
+  multiplePlaceholder?: string;
+  /**
    * Controlled array of selected values (used when multiple is true).
    * Defaults to an uncontrolled internal state when omitted.
    */

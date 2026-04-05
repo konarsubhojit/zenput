@@ -69,7 +69,10 @@ describe('FileInput', () => {
 
   it('renders progress bar when uploading is true', () => {
     render(<FileInput uploading />);
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    const progressbar = screen.getByRole('progressbar');
+    expect(progressbar).toBeInTheDocument();
+    // Indeterminate — aria-valuenow should not be set
+    expect(progressbar).not.toHaveAttribute('aria-valuenow');
   });
 
   it('clamps uploadProgress to 0–100', () => {

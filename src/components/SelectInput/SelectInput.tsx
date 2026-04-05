@@ -35,6 +35,7 @@ export const SelectInput = forwardRef<HTMLSelectElement, SelectInputProps>(
       options,
       placeholder,
       multiple,
+      multiplePlaceholder = 'Add…',
       selectedValues,
       onSelectedValuesChange,
       onChange,
@@ -162,7 +163,7 @@ export const SelectInput = forwardRef<HTMLSelectElement, SelectInputProps>(
           >
             {(placeholder || multiple) && (
               <option value="" disabled={!multiple} className={styles.placeholderOption}>
-                {placeholder ?? (multiple ? 'Add…' : undefined)}
+                {placeholder ?? (multiple ? multiplePlaceholder : undefined)}
               </option>
             )}
             {options.map((opt) => (

@@ -418,3 +418,14 @@
   color: #ffffff;
 }
 
+.pageEllipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  font-size: 0.8125rem;
+  color: #9ca3af;
+  user-select: none;
+}
+

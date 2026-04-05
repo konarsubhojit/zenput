@@ -5,6 +5,34 @@ import styles from './DataTable.module.css';
 
 const DEFAULT_SKELETON_ROW_COUNT = 5;
 
+/**
+ * Returns an array of page numbers and 'ellipsis' placeholders to render in
+ * the pagination bar. Always shows the first/last page and up to `windowSize`
+ * pages around the current page, with ellipsis where gaps exist.
+ */
+function buildPageItems(current: number, total: number, windowSize = 2): (number | 'ellipsis')[] {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+
+  const items: (number | 'ellipsis')[] = [];
+  const left = Math.max(2, current - windowSize);
+  const right = Math.min(total - 1, current + windowSize);
+
+  items.push(1);
+
+  if (left > 2) items.push('ellipsis');
+
+  for (let p = left; p <= right; p++) {
+    items.push(p);
+  }
+
+  if (right < total - 1) items.push('ellipsis');
+
+  items.push(total);
+  return items;
+}
+
 export function DataTable<T extends DataTableRecord = DataTableRecord>({
   columns,
   data,
@@ -433,21 +461,27 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
             >
               ‹
             </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                type="button"
-                className={classNames(
-                  styles.pageButton,
-                  page === pagination.currentPage ? styles.pageButtonActive : undefined
-                )}
-                onClick={() => pagination.onPageChange(page)}
-                aria-label={`Page ${page}`}
-                aria-current={page === pagination.currentPage ? 'page' : undefined}
-              >
-                {page}
-              </button>
-            ))}
+            {buildPageItems(pagination.currentPage, totalPages).map((item, idx) =>
+              item === 'ellipsis' ? (
+                <span key={`ellipsis-${idx}`} className={styles.pageEllipsis} aria-hidden="true">
+                  …
+                </span>
+              ) : (
+                <button
+                  key={item}
+                  type="button"
+                  className={classNames(
+                    styles.pageButton,
+                    item === pagination.currentPage ? styles.pageButtonActive : undefined
+                  )}
+                  onClick={() => pagination.onPageChange(item)}
+                  aria-label={`Page ${item}`}
+                  aria-current={item === pagination.currentPage ? 'page' : undefined}
+                >
+                  {item}
+                </button>
+              )
+            )}
             <button
               type="button"
               className={styles.pageButton}

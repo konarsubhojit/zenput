@@ -217,7 +217,13 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
           </div>
         )}
         {(uploading || clampedProgress !== undefined) && (
-          <div className={styles.uploadProgress} role="progressbar" aria-valuenow={clampedProgress ?? 0} aria-valuemin={0} aria-valuemax={100}>
+          <div
+            className={styles.uploadProgress}
+            role="progressbar"
+            aria-valuenow={uploading ? undefined : clampedProgress}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
             <div
               className={classNames(styles.uploadProgressBar, uploading ? styles.uploadProgressIndeterminate : undefined)}
               style={clampedProgress !== undefined && !uploading ? { width: `${clampedProgress}%` } : undefined}
