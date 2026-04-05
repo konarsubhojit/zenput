@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { SelectInput } from './SelectInput';
 
@@ -65,4 +65,23 @@ export const Disabled: Story = {
 
 export const Required: Story = {
   args: { label: 'Required', options: COUNTRY_OPTIONS, placeholder: 'Select a country', required: true },
+};
+
+export const MultiSelect: Story = {
+  render: () => {
+    const MultiSelectExample = () => {
+      const [selected, setSelected] = useState<string[]>(['us']);
+      return (
+        <SelectInput
+          label="Countries"
+          options={COUNTRY_OPTIONS}
+          multiple
+          selectedValues={selected}
+          onSelectedValuesChange={setSelected}
+          helperText="Select one or more countries"
+        />
+      );
+    };
+    return <MultiSelectExample />;
+  },
 };

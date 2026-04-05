@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback } from 'react';
+import React, { forwardRef, useCallback, useState } from 'react';
 import { NumberInputProps } from './NumberInput.types';
 import { classNames } from '../../utils';
 import { useFormField } from '../../hooks';
@@ -41,6 +41,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       step = 1,
       hideControls,
       placeholder,
+      formatValue,
       ...rest
     },
     ref
@@ -60,6 +61,8 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       defaultValue,
       onChange,
     });
+
+    const [isFocused, setIsFocused] = useState(false);
 
     const clamp = useCallback(
       (n: number) => {
@@ -118,6 +121,14 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
     const isAtMin = min !== undefined && (currentValue ?? 0) <= min;
     const isAtMax = max !== undefined && (currentValue ?? 0) >= max;
 
+    // When a formatValue function is provided, show formatted text when not focused
+    const displayValue =
+      !isFocused && formatValue !== undefined && currentValue !== undefined
+        ? formatValue(currentValue)
+        : currentValue !== undefined
+        ? currentValue
+        : '';
+
     return (
       <div
         className={classNames(
@@ -146,16 +157,18 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
             {...inputAriaProps}
             ref={ref}
             id={inputId}
-            type="number"
+            type={!isFocused && formatValue !== undefined ? 'text' : 'number'}
             disabled={disabled}
-            readOnly={readOnly}
+            readOnly={readOnly || (!isFocused && formatValue !== undefined)}
             required={required}
             min={min}
             max={max}
             step={step}
             placeholder={placeholder}
-            value={currentValue !== undefined ? currentValue : ''}
+            value={displayValue}
             onChange={handleChange}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
             className={classNames(styles.input, inputClassName, className)}
             style={inputStyle}
           />

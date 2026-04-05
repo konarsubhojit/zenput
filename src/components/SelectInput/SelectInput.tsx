@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useCallback, useState } from 'react';
 import { SelectInputProps } from './SelectInput.types';
 import { classNames } from '../../utils';
 import { useFormField } from '../../hooks';
@@ -34,6 +34,10 @@ export const SelectInput = forwardRef<HTMLSelectElement, SelectInputProps>(
       className,
       options,
       placeholder,
+      multiple,
+      selectedValues,
+      onSelectedValuesChange,
+      onChange,
       ...rest
     },
     ref
@@ -66,6 +70,42 @@ export const SelectInput = forwardRef<HTMLSelectElement, SelectInputProps>(
         ? styles.warningText
         : styles.helperText;
 
+    // ── Multi-select state ───────────────────────────────────────────────────
+
+    const isControlled = selectedValues !== undefined;
+    const [internalSelected, setInternalSelected] = useState<string[]>([]);
+    const activeSelected = isControlled ? selectedValues : internalSelected;
+
+    const handleMultiChange = useCallback(
+      (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const picked = e.target.value;
+        if (!picked) return;
+        const next = activeSelected.includes(picked)
+          ? activeSelected
+          : [...activeSelected, picked];
+        if (!isControlled) setInternalSelected(next);
+        onSelectedValuesChange?.(next);
+        // Reset the native select back to the placeholder so it stays visually neutral
+        e.target.value = '';
+        onChange?.(e);
+      },
+      [activeSelected, isControlled, onSelectedValuesChange, onChange]
+    );
+
+    const removeChip = useCallback(
+      (value: string) => {
+        const next = activeSelected.filter((v) => v !== value);
+        if (!isControlled) setInternalSelected(next);
+        onSelectedValuesChange?.(next);
+      },
+      [activeSelected, isControlled, onSelectedValuesChange]
+    );
+
+    const getLabel = (value: string) =>
+      options.find((o) => o.value === value)?.label ?? value;
+
+    // ── Render ────────────────────────────────────────────────────────────────
+
     return (
       <div
         className={classNames(
@@ -87,6 +127,27 @@ export const SelectInput = forwardRef<HTMLSelectElement, SelectInputProps>(
             {label}
           </label>
         )}
+
+        {/* Chips for multi-select */}
+        {multiple && activeSelected.length > 0 && (
+          <div className={styles.chipList}>
+            {activeSelected.map((val) => (
+              <span key={val} className={styles.chip}>
+                {getLabel(val)}
+                <button
+                  type="button"
+                  aria-label={`Remove ${getLabel(val)}`}
+                  className={styles.chipRemove}
+                  disabled={disabled}
+                  onClick={() => removeChip(val)}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+
         <div className={styles.inputWrapper}>
           <select
             {...rest}
@@ -97,14 +158,19 @@ export const SelectInput = forwardRef<HTMLSelectElement, SelectInputProps>(
             required={required}
             className={classNames(styles.input, inputClassName, className)}
             style={inputStyle}
+            onChange={multiple ? handleMultiChange : onChange}
           >
-            {placeholder && (
-              <option value="" disabled className={styles.placeholderOption}>
-                {placeholder}
+            {(placeholder || multiple) && (
+              <option value="" disabled={!multiple} className={styles.placeholderOption}>
+                {placeholder ?? (multiple ? 'Add…' : undefined)}
               </option>
             )}
             {options.map((opt) => (
-              <option key={opt.value} value={opt.value} disabled={opt.disabled}>
+              <option
+                key={opt.value}
+                value={opt.value}
+                disabled={opt.disabled || (multiple && activeSelected.includes(opt.value))}
+              >
                 {opt.label}
               </option>
             ))}

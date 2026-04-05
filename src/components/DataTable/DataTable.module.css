@@ -225,3 +225,196 @@
   color: #9ca3af;
   font-size: 0.875rem;
 }
+
+/* ── Sortable columns ─────────────────────────────────── */
+
+.sortButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  font-weight: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sortButton:hover {
+  color: var(--dt-primary-color);
+}
+
+.sortButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--dt-primary-focus-ring);
+  border-radius: 2px;
+}
+
+.sortButtonActive {
+  color: var(--dt-active-filter-color);
+}
+
+.sortIcon {
+  font-size: 0.625rem;
+  line-height: 1;
+}
+
+/* ── Row click / expand ───────────────────────────────── */
+
+.trClickable {
+  cursor: pointer;
+}
+
+.trSelected {
+  background-color: #eff6ff;
+}
+
+.trSelected:hover {
+  background-color: #dbeafe;
+}
+
+.expandedRow {
+  background-color: #f9fafb;
+}
+
+.expandedCell {
+  padding: 12px 14px;
+}
+
+/* ── Skeleton loading ─────────────────────────────────── */
+
+.skeletonRow {
+  pointer-events: none;
+}
+
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeletonCell {
+  height: 14px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s ease infinite;
+  width: 70%;
+}
+
+.skeletonCheckbox {
+  width: 14px;
+  height: 14px;
+}
+
+/* ── Checkbox column ─────────────────────────────────── */
+
+.checkboxTh {
+  width: 40px;
+  text-align: center;
+}
+
+.rowCheckbox {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--dt-primary-color);
+  cursor: pointer;
+  display: block;
+  margin: 0 auto;
+}
+
+/* ── Bulk actions bar ─────────────────────────────────── */
+
+.bulkActionsBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: var(--dt-border-radius);
+  margin-bottom: 8px;
+  font-size: 0.875rem;
+}
+
+.bulkActionsCount {
+  font-weight: 500;
+  color: var(--dt-primary-color);
+  flex-shrink: 0;
+}
+
+.bulkActionsSlot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ── Pagination ───────────────────────────────────────── */
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 4px 2px;
+  font-size: 0.8125rem;
+  color: var(--dt-header-text);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.paginationInfo {
+  color: #6b7280;
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pageButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 6px;
+  border: 1px solid var(--dt-border-color);
+  border-radius: 4px;
+  background-color: var(--dt-bg-color);
+  color: var(--dt-text-color);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: border-color 0.1s ease, background-color 0.1s ease, color 0.1s ease;
+}
+
+.pageButton:hover:not(:disabled) {
+  border-color: var(--dt-primary-color);
+  color: var(--dt-primary-color);
+}
+
+.pageButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pageButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--dt-primary-focus-ring);
+}
+
+.pageButtonActive {
+  background-color: var(--dt-primary-color);
+  border-color: var(--dt-primary-color);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.pageButtonActive:hover:not(:disabled) {
+  color: #ffffff;
+}
+

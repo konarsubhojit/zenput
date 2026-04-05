@@ -18,4 +18,10 @@ export interface NumberInputProps
   hideControls?: boolean;
   /** Called when the value changes */
   onChange?: (value: number | undefined) => void;
+  /**
+   * Optional formatter applied to the displayed value while the input is not
+   * focused. The underlying model value is always the raw number.
+   * Example: `(v) => v.toLocaleString('en-US', { style: 'currency', currency: 'USD' })`
+   */
+  formatValue?: (value: number) => string;
 }

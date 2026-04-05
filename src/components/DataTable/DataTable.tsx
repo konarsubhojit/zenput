@@ -1,7 +1,9 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { DataTableProps, DataTableRecord } from './DataTable.types';
+import { DataTableProps, DataTableRecord, SortDirection } from './DataTable.types';
 import { classNames } from '../../utils';
 import styles from './DataTable.module.css';
+
+const DEFAULT_SKELETON_ROW_COUNT = 5;
 
 export function DataTable<T extends DataTableRecord = DataTableRecord>({
   columns,
@@ -10,6 +12,16 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
   className,
   style,
   emptyMessage = 'No data available',
+  pagination,
+  onSort,
+  loading = false,
+  skeletonRowCount = DEFAULT_SKELETON_ROW_COUNT,
+  onRowClick,
+  expandedRowRender,
+  selectable = false,
+  selectedRows,
+  onSelectionChange,
+  bulkActions,
 }: Readonly<DataTableProps<T>>) {
   /** Key of the column whose filter dropdown is currently open */
   const [openFilterKey, setOpenFilterKey] = useState<string | null>(null);
@@ -19,6 +31,12 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
    * An empty (or absent) array means "no filter applied" for that column.
    */
   const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});
+
+  /** Current sort state: { key, direction } */
+  const [sortState, setSortState] = useState<{ key: string; direction: SortDirection } | null>(null);
+
+  /** Set of expanded row keys */
+  const [expandedKeys, setExpandedKeys] = useState<Set<string | number>>(new Set());
 
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -79,21 +97,142 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
     );
   }, [data, columns, activeFilters]);
 
+  /** Handle sortable column header click */
+  const handleSortClick = useCallback(
+    (key: string) => {
+      const nextDirection: SortDirection =
+        sortState?.key === key && sortState.direction === 'asc' ? 'desc' : 'asc';
+      setSortState({ key, direction: nextDirection });
+      onSort?.(key, nextDirection);
+    },
+    [sortState, onSort]
+  );
+
+  /** Derive the row key for a given row + index */
+  const getRowKey = useCallback(
+    (row: T, index: number): string | number => {
+      return rowKey ? rowKey(row, index) : index;
+    },
+    [rowKey]
+  );
+
+  /** Toggle expanded state for a row */
+  const toggleExpandedRow = useCallback((key: string | number) => {
+    setExpandedKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  }, []);
+
+  /** Handle row click */
+  const handleRowClick = useCallback(
+    (row: T, key: string | number) => {
+      if (expandedRowRender) {
+        toggleExpandedRow(key);
+      }
+      onRowClick?.(row);
+    },
+    [onRowClick, expandedRowRender, toggleExpandedRow]
+  );
+
+  // ── Selection helpers ──────────────────────────────────────────────────────
+
+  const isControlledSelection = selectedRows !== undefined;
+
+  const [internalSelected, setInternalSelected] = useState<Set<string | number>>(new Set());
+  const activeSelected = isControlledSelection ? selectedRows : internalSelected;
+
+  const isAllSelected =
+    filteredData.length > 0 &&
+    filteredData.every((row, idx) => activeSelected.has(getRowKey(row, idx)));
+
+  const isIndeterminate =
+    !isAllSelected && filteredData.some((row, idx) => activeSelected.has(getRowKey(row, idx)));
+
+  const handleSelectAll = useCallback(() => {
+    const allKeys = filteredData.map((row, idx) => getRowKey(row, idx));
+    const next = isAllSelected
+      ? new Set<string | number>([...activeSelected].filter((k) => !allKeys.includes(k)))
+      : new Set<string | number>([...activeSelected, ...allKeys]);
+    if (!isControlledSelection) setInternalSelected(next);
+    onSelectionChange?.(next);
+  }, [filteredData, getRowKey, isAllSelected, activeSelected, isControlledSelection, onSelectionChange]);
+
+  const handleSelectRow = useCallback(
+    (key: string | number) => {
+      const next = new Set(activeSelected);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      if (!isControlledSelection) setInternalSelected(next);
+      onSelectionChange?.(next);
+    },
+    [activeSelected, isControlledSelection, onSelectionChange]
+  );
+
+  // ── Pagination ─────────────────────────────────────────────────────────────
+
+  const totalPages = pagination
+    ? Math.max(1, Math.ceil(pagination.totalCount / pagination.pageSize))
+    : 1;
+
+  const colSpan = columns.length + (selectable ? 1 : 0);
+
+  // ── Skeleton rows ──────────────────────────────────────────────────────────
+
+  const skeletonRows = useMemo(
+    () => Array.from({ length: skeletonRowCount }),
+    [skeletonRowCount]
+  );
+
   return (
     <div
       ref={wrapperRef}
       className={classNames(styles.wrapper, className)}
       style={style}
     >
+      {/* Bulk actions bar */}
+      {selectable && activeSelected.size > 0 && bulkActions && (
+        <div className={styles.bulkActionsBar}>
+          <span className={styles.bulkActionsCount}>
+            {activeSelected.size} selected
+          </span>
+          <div className={styles.bulkActionsSlot}>{bulkActions}</div>
+        </div>
+      )}
+
       <div className={styles.tableContainer}>
         <table className={styles.table}>
           <thead>
             <tr>
+              {selectable && (
+                <th className={classNames(styles.th, styles.checkboxTh)}>
+                  <input
+                    type="checkbox"
+                    aria-label="Select all rows"
+                    checked={isAllSelected}
+                    ref={(el) => {
+                      if (el) el.indeterminate = isIndeterminate;
+                    }}
+                    onChange={handleSelectAll}
+                    className={styles.rowCheckbox}
+                  />
+                </th>
+              )}
               {columns.map((col) => {
                 const isOpen = openFilterKey === col.key;
                 const selectedValues = activeFilters[col.key] ?? [];
                 const isActive = selectedValues.length > 0;
                 const uniqueValues = col.filterable ? getUniqueValues(col.key) : [];
+                const isSorted = sortState?.key === col.key;
+                const sortDir = isSorted ? sortState!.direction : null;
 
                 return (
                   <th
@@ -102,7 +241,25 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
                     style={col.width === undefined ? undefined : { width: col.width }}
                   >
                     <div className={styles.thContent}>
-                      <span className={styles.headerText}>{col.header}</span>
+                      {col.sortable ? (
+                        <button
+                          type="button"
+                          className={classNames(styles.sortButton, isSorted ? styles.sortButtonActive : undefined)}
+                          onClick={() => handleSortClick(col.key)}
+                          aria-label={`Sort by ${col.header}${isSorted ? `, currently ${sortDir}` : ''}`}
+                        >
+                          <span className={styles.headerText}>{col.header}</span>
+                          <span className={styles.sortIcon} aria-hidden="true">
+                            {isSorted
+                              ? sortDir === 'asc'
+                                ? '▲'
+                                : '▼'
+                              : '⇅'}
+                          </span>
+                        </button>
+                      ) : (
+                        <span className={styles.headerText}>{col.header}</span>
+                      )}
                       {col.filterable && (
                         <div className={styles.filterContainer}>
                           <button
@@ -181,31 +338,128 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
             </tr>
           </thead>
           <tbody>
-            {filteredData.length === 0 ? (
+            {loading ? (
+              skeletonRows.map((_, skeletonIdx) => (
+                <tr key={`skeleton-${skeletonIdx}`} className={styles.skeletonRow}>
+                  {selectable && (
+                    <td className={styles.td}>
+                      <div className={classNames(styles.skeletonCell, styles.skeletonCheckbox)} />
+                    </td>
+                  )}
+                  {columns.map((col) => (
+                    <td key={col.key} className={styles.td}>
+                      <div className={styles.skeletonCell} />
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : filteredData.length === 0 ? (
               <tr>
                 <td
-                  colSpan={columns.length}
+                  colSpan={colSpan}
                   className={styles.emptyCell}
                 >
                   {emptyMessage}
                 </td>
               </tr>
             ) : (
-              filteredData.map((row, rowIndex) => (
-                <tr key={rowKey ? rowKey(row, rowIndex) : rowIndex} className={styles.tr}>
-                  {columns.map((col) => (
-                    <td key={col.key} className={styles.td}>
-                      {col.render
-                        ? col.render(row[col.key], row)
-                        : String(row[col.key] ?? '')}
-                    </td>
-                  ))}
-                </tr>
-              ))
+              filteredData.map((row, rowIndex) => {
+                const key = getRowKey(row, rowIndex);
+                const isSelected = activeSelected.has(key);
+                const isExpanded = expandedKeys.has(key);
+                const isClickable = !!(onRowClick || expandedRowRender);
+
+                return (
+                  <React.Fragment key={key}>
+                    <tr
+                      className={classNames(
+                        styles.tr,
+                        isClickable ? styles.trClickable : undefined,
+                        isSelected ? styles.trSelected : undefined
+                      )}
+                      onClick={isClickable ? () => handleRowClick(row, key) : undefined}
+                      aria-expanded={expandedRowRender ? isExpanded : undefined}
+                    >
+                      {selectable && (
+                        <td className={styles.td} onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            aria-label="Select row"
+                            checked={isSelected}
+                            onChange={() => handleSelectRow(key)}
+                            className={styles.rowCheckbox}
+                          />
+                        </td>
+                      )}
+                      {columns.map((col) => (
+                        <td key={col.key} className={styles.td}>
+                          {col.render
+                            ? col.render(row[col.key], row)
+                            : String(row[col.key] ?? '')}
+                        </td>
+                      ))}
+                    </tr>
+                    {expandedRowRender && isExpanded && (
+                      <tr className={styles.expandedRow}>
+                        <td colSpan={colSpan} className={styles.expandedCell}>
+                          {expandedRowRender(row)}
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })
             )}
           </tbody>
         </table>
       </div>
+
+      {/* Pagination controls */}
+      {pagination && !loading && (
+        <div className={styles.pagination}>
+          <span className={styles.paginationInfo}>
+            {`${(pagination.currentPage - 1) * pagination.pageSize + 1}–${Math.min(
+              pagination.currentPage * pagination.pageSize,
+              pagination.totalCount
+            )} of ${pagination.totalCount}`}
+          </span>
+          <div className={styles.paginationControls}>
+            <button
+              type="button"
+              className={styles.pageButton}
+              disabled={pagination.currentPage <= 1}
+              onClick={() => pagination.onPageChange(pagination.currentPage - 1)}
+              aria-label="Previous page"
+            >
+              ‹
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                type="button"
+                className={classNames(
+                  styles.pageButton,
+                  page === pagination.currentPage ? styles.pageButtonActive : undefined
+                )}
+                onClick={() => pagination.onPageChange(page)}
+                aria-label={`Page ${page}`}
+                aria-current={page === pagination.currentPage ? 'page' : undefined}
+              >
+                {page}
+              </button>
+            ))}
+            <button
+              type="button"
+              className={styles.pageButton}
+              disabled={pagination.currentPage >= totalPages}
+              onClick={() => pagination.onPageChange(pagination.currentPage + 1)}
+              aria-label="Next page"
+            >
+              ›
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

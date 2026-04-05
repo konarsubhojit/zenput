@@ -1,4 +1,4 @@
-import React, { forwardRef, useRef, useState, useCallback } from 'react';
+import React, { forwardRef, useRef, useState, useCallback, useEffect } from 'react';
 import { FileInputProps } from './FileInput.types';
 import { classNames, getValidationMessage, getValidationMessageClass } from '../../utils';
 import { useFormField } from '../../hooks';
@@ -35,6 +35,9 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
       buttonLabel = 'Choose file',
       showFileNames = true,
       dropzone,
+      previewSrc,
+      uploading,
+      uploadProgress,
       onChange,
       multiple,
       accept,
@@ -47,6 +50,16 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
 
     const [fileNames, setFileNames] = useState<string[]>([]);
     const [isDragActive, setIsDragActive] = useState(false);
+    const [objectUrl, setObjectUrl] = useState<string | undefined>(undefined);
+
+    // Revoke previous object-URL when component unmounts or a new one is created
+    useEffect(() => {
+      return () => {
+        if (objectUrl) {
+          URL.revokeObjectURL(objectUrl);
+        }
+      };
+    }, [objectUrl]);
 
     const { inputId, helperId, labelProps, inputAriaProps } = useFormField({
       id,
@@ -58,15 +71,27 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
       disabled,
     });
 
+    const updatePreviewFromFiles = useCallback((files: FileList | null) => {
+      if (!files || files.length === 0) return;
+      const file = files[0];
+      if (file.type.startsWith('image/')) {
+        setObjectUrl((prev) => {
+          if (prev) URL.revokeObjectURL(prev);
+          return URL.createObjectURL(file);
+        });
+      }
+    }, []);
+
     const handleChange = useCallback(
       (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (files && showFileNames) {
           setFileNames(Array.from(files).map((f) => f.name));
         }
+        updatePreviewFromFiles(files);
         onChange?.(e);
       },
-      [onChange, showFileNames]
+      [onChange, showFileNames, updatePreviewFromFiles]
     );
 
     const handleDrop = useCallback(
@@ -79,11 +104,12 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
         if (files && showFileNames) {
           setFileNames(Array.from(files).map((f) => f.name));
         }
+        updatePreviewFromFiles(files);
         // Create synthetic change event
         const changeEvent = { target: { files } } as React.ChangeEvent<HTMLInputElement>;
         onChange?.(changeEvent);
       },
-      [disabled, fileRef, onChange, showFileNames]
+      [disabled, fileRef, onChange, showFileNames, updatePreviewFromFiles]
     );
 
     const activeMessage = getValidationMessage(
@@ -95,6 +121,12 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
     );
 
     const messageClass = getValidationMessageClass(validationState, styles);
+
+    const activeSrc = objectUrl ?? previewSrc;
+    const clampedProgress =
+      uploadProgress !== undefined
+        ? Math.min(100, Math.max(0, uploadProgress))
+        : undefined;
 
     return (
       <div
@@ -166,6 +198,15 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
             📁 {buttonLabel}
           </button>
         )}
+        {activeSrc && (
+          <div className={styles.imagePreview}>
+            <img
+              src={activeSrc}
+              alt="Preview"
+              className={styles.previewImage}
+            />
+          </div>
+        )}
         {showFileNames && fileNames.length > 0 && (
           <div className={styles.fileNames}>
             {fileNames.map((name) => (
@@ -173,6 +214,14 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
                 📄 {name}
               </div>
             ))}
+          </div>
+        )}
+        {(uploading || clampedProgress !== undefined) && (
+          <div className={styles.uploadProgress} role="progressbar" aria-valuenow={clampedProgress ?? 0} aria-valuemin={0} aria-valuemax={100}>
+            <div
+              className={classNames(styles.uploadProgressBar, uploading ? styles.uploadProgressIndeterminate : undefined)}
+              style={clampedProgress !== undefined && !uploading ? { width: `${clampedProgress}%` } : undefined}
+            />
           </div>
         )}
         {activeMessage && (

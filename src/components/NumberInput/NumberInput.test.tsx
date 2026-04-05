@@ -70,4 +70,17 @@ describe('NumberInput', () => {
     render(<NumberInput ref={ref} />);
     expect(ref.current).toBeInstanceOf(HTMLInputElement);
   });
+
+  // ── formatValue ───────────────────────────────────────────────────────────
+
+  it('displays formatted value when formatValue is provided and not focused', () => {
+    render(
+      <NumberInput
+        value={1234.5}
+        formatValue={(v) => `$${v.toFixed(2)}`}
+        onChange={() => undefined}
+      />
+    );
+    expect(screen.getByDisplayValue('$1234.50')).toBeInTheDocument();
+  });
 });

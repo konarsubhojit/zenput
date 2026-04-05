@@ -48,4 +48,32 @@ describe('FileInput', () => {
     render(<FileInput ref={ref} />);
     expect(ref.current).toBeInstanceOf(HTMLInputElement);
   });
+
+  it('renders image preview when previewSrc is provided', () => {
+    render(<FileInput previewSrc="https://example.com/image.jpg" />);
+    const img = screen.getByRole('img', { name: 'Preview' });
+    expect(img).toBeInTheDocument();
+    expect(img).toHaveAttribute('src', 'https://example.com/image.jpg');
+  });
+
+  it('does not render image preview when previewSrc is not provided', () => {
+    render(<FileInput />);
+    expect(screen.queryByRole('img', { name: 'Preview' })).not.toBeInTheDocument();
+  });
+
+  it('renders progress bar when uploadProgress is provided', () => {
+    render(<FileInput uploadProgress={50} />);
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '50');
+  });
+
+  it('renders progress bar when uploading is true', () => {
+    render(<FileInput uploading />);
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+  });
+
+  it('clamps uploadProgress to 0–100', () => {
+    render(<FileInput uploadProgress={120} />);
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '100');
+  });
 });

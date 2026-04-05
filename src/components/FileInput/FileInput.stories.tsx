@@ -10,6 +10,7 @@ const meta: Meta<typeof FileInput> = {
     size: { control: 'select', options: ['sm', 'md', 'lg'] },
     variant: { control: 'select', options: ['outlined', 'filled', 'underlined'] },
     validationState: { control: 'select', options: ['default', 'error', 'success', 'warning'] },
+    uploadProgress: { control: { type: 'range', min: 0, max: 100, step: 1 } },
   },
 };
 
@@ -34,6 +35,33 @@ export const MultipleFiles: Story = {
 
 export const AcceptImages: Story = {
   args: { label: 'Upload Image', accept: 'image/*', helperText: 'Only image files' },
+};
+
+export const WithImagePreview: Story = {
+  args: {
+    label: 'Product Image',
+    accept: 'image/*',
+    previewSrc: 'https://placehold.co/200x150',
+    helperText: 'Current image shown; pick a new file to update the preview',
+  },
+};
+
+export const WithUploadProgress: Story = {
+  args: {
+    label: 'Upload Image',
+    accept: 'image/*',
+    uploadProgress: 65,
+    helperText: '65% uploaded',
+  },
+};
+
+export const Uploading: Story = {
+  args: {
+    label: 'Upload Image',
+    accept: 'image/*',
+    uploading: true,
+    helperText: 'Upload in progress…',
+  },
 };
 
 export const ValidationStates: Story = {
