@@ -55,7 +55,8 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
     const [isDragActive, setIsDragActive] = useState(false);
     const [objectUrl, setObjectUrl] = useState<string | undefined>(undefined);
 
-    // Revoke previous object-URL when component unmounts or a new one is created
+    // Revoke the object-URL when it changes or the component unmounts.
+    // Revocation happens only here (not inside setObjectUrl) to avoid double-revocation.
     useEffect(() => {
       return () => {
         if (objectUrl) {
@@ -78,10 +79,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
       if (!files || files.length === 0) return;
       const file = files[0];
       if (file.type.startsWith('image/')) {
-        setObjectUrl((prev) => {
-          if (prev) URL.revokeObjectURL(prev);
-          return URL.createObjectURL(file);
-        });
+        setObjectUrl(URL.createObjectURL(file));
       }
     }, []);
 
@@ -205,7 +203,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
           <div className={styles.imagePreview}>
             <img
               src={activeSrc}
-              alt="Preview"
+              alt={typeof label === 'string' && label.trim() ? `${label} preview` : 'Selected image preview'}
               className={styles.previewImage}
             />
           </div>

@@ -18,9 +18,9 @@ describe('MoneyInput', () => {
   it('renders the currency selector with all options', () => {
     render(<MoneyInput currencies={CURRENCIES} />);
     expect(screen.getByRole('combobox', { name: 'Currency' })).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: '$ USD' })).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: '€ EUR' })).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: '£ GBP' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: '$ USD - US Dollar' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: '€ EUR - Euro' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: '£ GBP - British Pound' })).toBeInTheDocument();
   });
 
   it('renders the amount input', () => {

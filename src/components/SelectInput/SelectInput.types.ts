@@ -8,7 +8,7 @@ export interface SelectOption {
 }
 
 export interface SelectInputProps
-  extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'size'>,
+  extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'size' | 'value' | 'defaultValue' | 'onChange' | 'multiple'>,
     BaseInputProps {
   /** List of options */
   options: SelectOption[];
@@ -33,5 +33,20 @@ export interface SelectInputProps
    * Called with the updated array of selected values when the selection changes
    * (used when multiple is true).
    */
+  /**
+   * Called when the selected value changes (single-select mode).
+   * Do not use with `multiple`; use `onSelectedValuesChange` instead.
+   */
+  onChange?: React.ChangeEventHandler<HTMLSelectElement>;
+  /**
+   * Controlled value (single-select mode).
+   * Do not use with `multiple`.
+   */
+  value?: string | number;
+  /**
+   * Default value (single-select, uncontrolled).
+   * Do not use with `multiple`.
+   */
+  defaultValue?: string | number;
   onSelectedValuesChange?: (values: string[]) => void;
 }

@@ -51,14 +51,19 @@ describe('FileInput', () => {
 
   it('renders image preview when previewSrc is provided', () => {
     render(<FileInput previewSrc="https://example.com/image.jpg" />);
-    const img = screen.getByRole('img', { name: 'Preview' });
+    const img = screen.getByRole('img', { name: 'Selected image preview' });
     expect(img).toBeInTheDocument();
     expect(img).toHaveAttribute('src', 'https://example.com/image.jpg');
   });
 
+  it('uses label in preview alt text when label is provided', () => {
+    render(<FileInput previewSrc="https://example.com/image.jpg" label="Avatar" />);
+    expect(screen.getByRole('img', { name: 'Avatar preview' })).toBeInTheDocument();
+  });
+
   it('does not render image preview when previewSrc is not provided', () => {
     render(<FileInput />);
-    expect(screen.queryByRole('img', { name: 'Preview' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: 'Selected image preview' })).not.toBeInTheDocument();
   });
 
   it('renders progress bar when uploadProgress is provided', () => {

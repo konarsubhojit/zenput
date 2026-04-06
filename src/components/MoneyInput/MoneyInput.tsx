@@ -16,6 +16,7 @@ export function MoneyInput({
   max,
   step = 0.01,
   placeholder,
+  id,
   size = 'md',
   variant = 'outlined',
   validationState = 'default',
@@ -36,13 +37,11 @@ export function MoneyInput({
   inputStyle,
   helperTextClassName,
   helperTextStyle,
-  className,
-  style,
 }: Readonly<MoneyInputProps>) {
   const baseId = useId();
   const labelId = `${baseId}-label`;
   const helperId = `${baseId}-helper`;
-  const amountId = `${baseId}-amount`;
+  const amountId = id ?? `${baseId}-amount`;
   const currencyId = `${baseId}-currency`;
 
   const [currentCurrency, setCurrentCurrency] = useControllable<string>({
@@ -102,10 +101,9 @@ export function MoneyInput({
         styles[variant],
         validationState !== 'default' ? styles[validationState] : undefined,
         fullWidth ? styles.fullWidth : undefined,
-        wrapperClassName,
-        className
+        wrapperClassName
       )}
-      style={{ ...wrapperStyle, ...style }}
+      style={wrapperStyle}
     >
       {label && (
         <label
@@ -139,7 +137,7 @@ export function MoneyInput({
         >
           {currencies.map((opt) => (
             <option key={opt.code} value={opt.code}>
-              {opt.symbol} {opt.code}
+              {opt.symbol} {opt.code}{opt.label ? ` - ${opt.label}` : ''}
             </option>
           ))}
         </select>

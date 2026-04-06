@@ -301,7 +301,7 @@ describe('DataTable', () => {
   it('renders checkbox column when selectable is true', () => {
     render(<DataTable columns={columns} data={data} selectable rowKey={(r) => r.id} />);
     expect(screen.getByLabelText('Select all rows')).toBeInTheDocument();
-    const rowCheckboxes = screen.getAllByLabelText('Select row');
+    const rowCheckboxes = screen.getAllByRole('checkbox', { name: /^Select row/ });
     expect(rowCheckboxes).toHaveLength(data.length);
   });
 
@@ -316,7 +316,7 @@ describe('DataTable', () => {
         onSelectionChange={handleSelectionChange}
       />
     );
-    const [firstCheckbox] = screen.getAllByLabelText('Select row');
+    const [firstCheckbox] = screen.getAllByRole('checkbox', { name: /^Select row/ });
     await userEvent.click(firstCheckbox);
     expect(handleSelectionChange).toHaveBeenCalledWith(new Set([1]));
   });
@@ -346,7 +346,7 @@ describe('DataTable', () => {
         bulkActions={<button>Delete</button>}
       />
     );
-    const [firstCheckbox] = screen.getAllByLabelText('Select row');
+    const [firstCheckbox] = screen.getAllByRole('checkbox', { name: /^Select row/ });
     await userEvent.click(firstCheckbox);
     expect(screen.getByText('Delete')).toBeInTheDocument();
     expect(screen.getByText(/1 selected/i)).toBeInTheDocument();

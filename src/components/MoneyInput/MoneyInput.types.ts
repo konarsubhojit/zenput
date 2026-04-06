@@ -1,4 +1,3 @@
-import React from 'react';
 import { BaseInputProps } from '../../types';
 
 export interface CurrencyOption {
@@ -34,8 +33,6 @@ export interface MoneyInputProps
   step?: number;
   /** Placeholder text for the amount field */
   placeholder?: string;
-  /** Additional class for the wrapper */
-  className?: string;
-  /** Additional inline style for the wrapper */
-  style?: React.CSSProperties;
+  /** HTML id for the amount input; auto-generated if omitted */
+  id?: string;
 }

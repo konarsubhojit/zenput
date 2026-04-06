@@ -86,9 +86,9 @@ export const SelectInput = forwardRef<HTMLSelectElement, SelectInputProps>(
           : [...activeSelected, picked];
         if (!isControlled) setInternalSelected(next);
         onSelectedValuesChange?.(next);
+        onChange?.(e);
         // Reset the native select back to the placeholder so it stays visually neutral
         e.target.value = '';
-        onChange?.(e);
       },
       [activeSelected, isControlled, onSelectedValuesChange, onChange]
     );

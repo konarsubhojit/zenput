@@ -42,6 +42,8 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       hideControls,
       placeholder,
       formatValue,
+      onFocus,
+      onBlur,
       ...rest
     },
     ref
@@ -167,8 +169,8 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
             placeholder={placeholder}
             value={displayValue}
             onChange={handleChange}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
+            onFocus={(e) => { setIsFocused(true); onFocus?.(e); }}
+            onBlur={(e) => { setIsFocused(false); onBlur?.(e); }}
             className={classNames(styles.input, inputClassName, className)}
             style={inputStyle}
           />

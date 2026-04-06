@@ -11,13 +11,16 @@ const DEFAULT_SKELETON_ROW_COUNT = 5;
  * pages around the current page, with ellipsis where gaps exist.
  */
 function buildPageItems(current: number, total: number, windowSize = 2): (number | 'ellipsis')[] {
+  // Clamp current to a valid page range so pagination stays stable under data changes.
+  const clamped = Math.min(Math.max(current, 1), Math.max(total, 1));
+
   if (total <= 7) {
     return Array.from({ length: total }, (_, i) => i + 1);
   }
 
   const items: (number | 'ellipsis')[] = [];
-  const left = Math.max(2, current - windowSize);
-  const right = Math.min(total - 1, current + windowSize);
+  const left = Math.max(2, clamped - windowSize);
+  const right = Math.min(total - 1, clamped + windowSize);
 
   items.push(1);
 
@@ -184,8 +187,9 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
 
   const handleSelectAll = useCallback(() => {
     const allKeys = filteredData.map((row, idx) => getRowKey(row, idx));
+    const allKeysSet = new Set(allKeys);
     const next = isAllSelected
-      ? new Set<string | number>([...activeSelected].filter((k) => !allKeys.includes(k)))
+      ? new Set<string | number>([...activeSelected].filter((k) => !allKeysSet.has(k)))
       : new Set<string | number>([...activeSelected, ...allKeys]);
     if (!isControlledSelection) setInternalSelected(next);
     onSelectionChange?.(next);
@@ -412,7 +416,7 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
                         <td className={styles.td} onClick={(e) => e.stopPropagation()}>
                           <input
                             type="checkbox"
-                            aria-label="Select row"
+                            aria-label={`Select row ${key}`}
                             checked={isSelected}
                             onChange={() => handleSelectRow(key)}
                             className={styles.rowCheckbox}
