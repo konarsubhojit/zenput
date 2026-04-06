@@ -65,6 +65,11 @@ describe('MoneyInput', () => {
     expect(screen.getByRole('combobox', { name: 'Currency' })).toBeDisabled();
   });
 
+  it('disables currency selector when readOnly is true', () => {
+    render(<MoneyInput currencies={CURRENCIES} readOnly defaultValue={10} />);
+    expect(screen.getByRole('combobox', { name: 'Currency' })).toBeDisabled();
+  });
+
   it('uses defaultCurrency when not controlled', () => {
     render(<MoneyInput currencies={CURRENCIES} defaultCurrency="GBP" />);
     expect(screen.getByRole('combobox', { name: 'Currency' })).toHaveValue('GBP');

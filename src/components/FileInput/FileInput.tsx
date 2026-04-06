@@ -1,4 +1,4 @@
-import React, { forwardRef, useRef, useState, useCallback, useEffect } from 'react';
+import React, { forwardRef, useRef, useState, useCallback, useEffect, useImperativeHandle } from 'react';
 import { FileInputProps } from './FileInput.types';
 import { classNames, getValidationMessage, getValidationMessageClass } from '../../utils';
 import { useFormField } from '../../hooks';
@@ -46,7 +46,10 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
     ref
   ) => {
     const internalRef = useRef<HTMLInputElement>(null);
-    const fileRef = (ref as React.RefObject<HTMLInputElement>) ?? internalRef;
+
+    // Always use internalRef for internal reads so that callback refs are supported.
+    // Forward via useImperativeHandle so consumers with object or callback refs both work.
+    useImperativeHandle(ref, () => internalRef.current as HTMLInputElement);
 
     const [fileNames, setFileNames] = useState<string[]>([]);
     const [isDragActive, setIsDragActive] = useState(false);
@@ -98,7 +101,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
       (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         setIsDragActive(false);
-        if (disabled || !fileRef.current) return;
+        if (disabled || !internalRef.current) return;
         const dt = e.dataTransfer;
         const files = dt.files;
         if (files && showFileNames) {
@@ -109,7 +112,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
         const changeEvent = { target: { files } } as React.ChangeEvent<HTMLInputElement>;
         onChange?.(changeEvent);
       },
-      [disabled, fileRef, onChange, showFileNames, updatePreviewFromFiles]
+      [disabled, onChange, showFileNames, updatePreviewFromFiles]
     );
 
     const activeMessage = getValidationMessage(
@@ -151,7 +154,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
         <input
           {...rest}
           {...inputAriaProps}
-          ref={fileRef}
+          ref={internalRef}
           id={inputId}
           type="file"
           disabled={disabled}
@@ -173,11 +176,11 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
               isDragActive ? styles.dropzoneActive : undefined,
               disabled ? styles.dropzoneDisabled : undefined
             )}
-            onClick={() => !disabled && fileRef.current?.click()}
+            onClick={() => !disabled && internalRef.current?.click()}
             onKeyDown={(e) => {
               if (!disabled && (e.key === 'Enter' || e.key === ' ')) {
                 e.preventDefault();
-                fileRef.current?.click();
+                internalRef.current?.click();
               }
             }}
             onDragOver={(e) => { e.preventDefault(); if (!disabled) setIsDragActive(true); }}
@@ -192,7 +195,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
             type="button"
             className={styles.fileButton}
             disabled={disabled}
-            onClick={() => fileRef.current?.click()}
+            onClick={() => internalRef.current?.click()}
             aria-controls={inputId}
           >
             📁 {buttonLabel}

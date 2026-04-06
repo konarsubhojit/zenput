@@ -128,8 +128,12 @@ export function MoneyInput({
         <select
           id={currencyId}
           value={currentCurrency}
-          disabled={disabled}
-          aria-label="Currency"
+          disabled={disabled || readOnly}
+          aria-label={label ? undefined : 'Currency'}
+          aria-labelledby={label ? labelId : undefined}
+          aria-describedby={ariaDescribedBy}
+          aria-invalid={ariaInvalid}
+          aria-readonly={readOnly || undefined}
           className={styles.currencySelect}
           onChange={handleCurrencyChange}
         >

@@ -443,19 +443,21 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
       </div>
 
       {/* Pagination controls */}
-      {pagination && !loading && (
+      {pagination && (
         <div className={styles.pagination}>
           <span className={styles.paginationInfo}>
-            {`${(pagination.currentPage - 1) * pagination.pageSize + 1}–${Math.min(
-              pagination.currentPage * pagination.pageSize,
-              pagination.totalCount
-            )} of ${pagination.totalCount}`}
+            {loading || pagination.totalCount === 0
+              ? `0–0 of ${pagination.totalCount}`
+              : `${(pagination.currentPage - 1) * pagination.pageSize + 1}–${Math.min(
+                  pagination.currentPage * pagination.pageSize,
+                  pagination.totalCount
+                )} of ${pagination.totalCount}`}
           </span>
           <div className={styles.paginationControls}>
             <button
               type="button"
               className={styles.pageButton}
-              disabled={pagination.currentPage <= 1}
+              disabled={loading || pagination.currentPage <= 1}
               onClick={() => pagination.onPageChange(pagination.currentPage - 1)}
               aria-label="Previous page"
             >
@@ -474,6 +476,7 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
                     styles.pageButton,
                     item === pagination.currentPage ? styles.pageButtonActive : undefined
                   )}
+                  disabled={loading}
                   onClick={() => pagination.onPageChange(item)}
                   aria-label={`Page ${item}`}
                   aria-current={item === pagination.currentPage ? 'page' : undefined}
@@ -485,7 +488,7 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
             <button
               type="button"
               className={styles.pageButton}
-              disabled={pagination.currentPage >= totalPages}
+              disabled={loading || pagination.currentPage >= totalPages}
               onClick={() => pagination.onPageChange(pagination.currentPage + 1)}
               aria-label="Next page"
             >

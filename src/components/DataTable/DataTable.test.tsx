@@ -402,4 +402,28 @@ describe('DataTable', () => {
     );
     expect(screen.getByLabelText('Next page')).toBeDisabled();
   });
+
+  it('renders pagination chrome while loading with all controls disabled', () => {
+    render(
+      <DataTable
+        columns={columns}
+        data={[]}
+        loading
+        pagination={{ currentPage: 1, pageSize: 2, totalCount: 4, onPageChange: jest.fn() }}
+      />
+    );
+    expect(screen.getByLabelText('Previous page')).toBeDisabled();
+    expect(screen.getByLabelText('Next page')).toBeDisabled();
+  });
+
+  it('displays 0–0 of 0 when totalCount is 0', () => {
+    render(
+      <DataTable
+        columns={columns}
+        data={[]}
+        pagination={{ currentPage: 1, pageSize: 10, totalCount: 0, onPageChange: jest.fn() }}
+      />
+    );
+    expect(screen.getByText('0–0 of 0')).toBeInTheDocument();
+  });
 });
