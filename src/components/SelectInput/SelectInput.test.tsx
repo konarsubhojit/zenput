@@ -62,4 +62,46 @@ describe('SelectInput', () => {
     render(<SelectInput options={OPTIONS} ref={ref} />);
     expect(ref.current).toBeInstanceOf(HTMLSelectElement);
   });
+
+  // ── Multi-select ──────────────────────────────────────────────────────────
+
+  it('renders chips for preselected values when multiple is true', () => {
+    render(
+      <SelectInput
+        options={OPTIONS}
+        multiple
+        selectedValues={['us', 'ca']}
+      />
+    );
+    expect(screen.getByRole('button', { name: 'Remove United States' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove Canada' })).toBeInTheDocument();
+  });
+
+  it('calls onSelectedValuesChange when a chip is removed', async () => {
+    const handleChange = jest.fn();
+    render(
+      <SelectInput
+        options={OPTIONS}
+        multiple
+        selectedValues={['us', 'ca']}
+        onSelectedValuesChange={handleChange}
+      />
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Remove United States' }));
+    expect(handleChange).toHaveBeenCalledWith(['ca']);
+  });
+
+  it('adds a value via the select when multiple is true', async () => {
+    const handleChange = jest.fn();
+    render(
+      <SelectInput
+        options={OPTIONS}
+        multiple
+        selectedValues={[]}
+        onSelectedValuesChange={handleChange}
+      />
+    );
+    await userEvent.selectOptions(screen.getByRole('combobox'), 'uk');
+    expect(handleChange).toHaveBeenCalledWith(['uk']);
+  });
 });

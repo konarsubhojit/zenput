@@ -28,6 +28,18 @@ export const HideControls: Story = {
   args: { label: 'No Stepper', defaultValue: 5, hideControls: true },
 };
 
+export const WithFormatValue: Story = {
+  args: {
+    label: 'Price (USD)',
+    defaultValue: 1234.5,
+    step: 0.01,
+    min: 0,
+    helperText: 'Click the field to edit the raw number; blur to see formatted value',
+    formatValue: (v) =>
+      new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v),
+  },
+};
+
 export const ValidationStates: Story = {
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

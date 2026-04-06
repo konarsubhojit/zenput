@@ -1,0 +1,203 @@
+.wrapper {
+  --input-primary-color: #3b82f6;
+  --input-error-color: #ef4444;
+  --input-success-color: #22c55e;
+  --input-warning-color: #f59e0b;
+  --input-border-color: #d1d5db;
+  --input-bg-color: #ffffff;
+  --input-text-color: #111827;
+  --input-placeholder-color: #9ca3af;
+  --input-border-radius: 6px;
+  --input-font-family: inherit;
+  --input-focus-ring-color: rgba(59, 130, 246, 0.5);
+  --input-disabled-bg: #f3f4f6;
+  --input-disabled-text: #9ca3af;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--input-font-family);
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--input-text-color);
+}
+
+.required::after {
+  content: ' *';
+  color: var(--input-error-color);
+}
+
+/* ── Input row ───────────────────────────────────────── */
+
+.inputRow {
+  display: flex;
+  align-items: stretch;
+  border-radius: var(--input-border-radius);
+  overflow: hidden;
+}
+
+.outlined .inputRow {
+  border: 1px solid var(--input-border-color);
+}
+
+.outlined .inputRow:focus-within:not(.disabled) {
+  border-color: var(--input-primary-color);
+  box-shadow: 0 0 0 3px var(--input-focus-ring-color);
+}
+
+.filled .inputRow {
+  border: 1px solid transparent;
+  background-color: #f3f4f6;
+}
+
+.filled .inputRow:focus-within:not(.disabled) {
+  background-color: var(--input-bg-color);
+  border-color: var(--input-primary-color);
+  box-shadow: 0 0 0 3px var(--input-focus-ring-color);
+}
+
+.underlined .inputRow {
+  border: none;
+  border-bottom: 2px solid var(--input-border-color);
+  border-radius: 0;
+}
+
+.underlined .inputRow:focus-within:not(.disabled) {
+  border-bottom-color: var(--input-primary-color);
+  box-shadow: 0 2px 0 0 var(--input-focus-ring-color);
+}
+
+.error .inputRow {
+  border-color: var(--input-error-color) !important;
+}
+
+.error .inputRow:focus-within {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3) !important;
+}
+
+.success .inputRow {
+  border-color: var(--input-success-color) !important;
+}
+
+.warning .inputRow {
+  border-color: var(--input-warning-color) !important;
+}
+
+.disabled .inputRow,
+.inputRow.disabled {
+  background-color: var(--input-disabled-bg);
+  cursor: not-allowed;
+}
+
+/* ── Currency select ─────────────────────────────────── */
+
+.currencySelect {
+  flex-shrink: 0;
+  background-color: #f9fafb;
+  border: none;
+  outline: none;
+  font-family: var(--input-font-family);
+  font-size: 0.875rem;
+  color: var(--input-text-color);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 0 10px;
+}
+
+.currencySelect:disabled {
+  background-color: var(--input-disabled-bg);
+  color: var(--input-disabled-text);
+  cursor: not-allowed;
+}
+
+.sm .currencySelect {
+  font-size: 0.75rem;
+  padding: 0 8px;
+  height: 32px;
+}
+
+.md .currencySelect {
+  font-size: 0.875rem;
+  padding: 0 10px;
+  height: 40px;
+}
+
+.lg .currencySelect {
+  font-size: 1rem;
+  padding: 0 12px;
+  height: 48px;
+}
+
+/* ── Divider between currency and amount ─────────────── */
+
+.divider {
+  width: 1px;
+  background-color: var(--input-border-color);
+  flex-shrink: 0;
+}
+
+/* ── Amount input ────────────────────────────────────── */
+
+.amountInput {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  font-family: var(--input-font-family);
+  color: var(--input-text-color);
+  background-color: var(--input-bg-color);
+  box-sizing: border-box;
+}
+
+.amountInput:disabled {
+  background-color: var(--input-disabled-bg);
+  color: var(--input-disabled-text);
+  cursor: not-allowed;
+}
+
+.sm .amountInput {
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  height: 32px;
+}
+
+.md .amountInput {
+  padding: 8px 12px;
+  font-size: 0.875rem;
+  height: 40px;
+}
+
+.lg .amountInput {
+  padding: 10px 16px;
+  font-size: 1rem;
+  height: 48px;
+}
+
+/* ── Validation messages ─────────────────────────────── */
+
+.helperText {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.errorText {
+  font-size: 0.75rem;
+  color: var(--input-error-color);
+}
+
+.successText {
+  font-size: 0.75rem;
+  color: var(--input-success-color);
+}
+
+.warningText {
+  font-size: 0.75rem;
+  color: var(--input-warning-color);
+}

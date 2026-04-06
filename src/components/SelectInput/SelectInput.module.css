@@ -178,3 +178,52 @@
   font-size: 0.75rem;
   color: var(--input-warning-color);
 }
+
+/* ── Multi-select chips ───────────────────────────────── */
+
+.chipList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px 2px 10px;
+  background-color: #dbeafe;
+  color: #1e40af;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.chipRemove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0;
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  color: #3b82f6;
+  font-size: 1rem;
+  line-height: 1;
+  border-radius: 50%;
+  transition: background-color 0.1s ease;
+}
+
+.chipRemove:hover:not(:disabled) {
+  background-color: #bfdbfe;
+}
+
+.chipRemove:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+

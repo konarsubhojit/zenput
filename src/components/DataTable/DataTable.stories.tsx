@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { DataTable } from './DataTable';
 import type { DataTableColumn } from './DataTable.types';
@@ -66,6 +66,114 @@ export const WithFilterableColumns: Story = {
         rowKey={(row) => row.id}
       />
     );
+  },
+};
+
+export const WithSortableColumns: Story = {
+  render: () => {
+    const sortableColumns: DataTableColumn<Employee>[] = [
+      { key: 'id', header: 'ID', width: '60px', sortable: true },
+      { key: 'name', header: 'Name', sortable: true },
+      { key: 'department', header: 'Department', filterable: true, sortable: true },
+      { key: 'status', header: 'Status', filterable: true },
+      { key: 'salary', header: 'Salary', sortable: true },
+    ];
+
+    return (
+      <DataTable
+        columns={sortableColumns}
+        data={employees}
+        rowKey={(row) => row.id}
+        onSort={(key, dir) => console.log('Sort', key, dir)}
+      />
+    );
+  },
+};
+
+export const WithLoading: Story = {
+  args: {
+    columns: basicColumns,
+    data: [],
+    loading: true,
+    skeletonRowCount: 4,
+  },
+};
+
+export const WithPagination: Story = {
+  render: () => {
+    const PaginatedTable = () => {
+      const [currentPage, setCurrentPage] = useState(1);
+      const pageSize = 3;
+      const pagedData = employees.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+      return (
+        <DataTable
+          columns={basicColumns}
+          data={pagedData}
+          rowKey={(row) => row.id}
+          pagination={{
+            currentPage,
+            pageSize,
+            totalCount: employees.length,
+            onPageChange: setCurrentPage,
+          }}
+        />
+      );
+    };
+    return <PaginatedTable />;
+  },
+};
+
+export const WithRowClickAndExpand: Story = {
+  render: () => (
+    <DataTable
+      columns={basicColumns}
+      data={employees}
+      rowKey={(row) => row.id}
+      onRowClick={(row) => console.log('Row clicked:', row)}
+      expandedRowRender={(row) => (
+        <div style={{ padding: '8px 0', fontSize: '0.875rem', color: '#374151' }}>
+          <strong>{row.name}</strong> — {row.role} in {row.department}. Salary:{' '}
+          {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(row.salary)}
+        </div>
+      )}
+    />
+  ),
+};
+
+export const WithBulkSelection: Story = {
+  render: () => {
+    const SelectableTable = () => {
+      const [selected, setSelected] = useState<Set<string | number>>(new Set());
+
+      return (
+        <DataTable
+          columns={basicColumns}
+          data={employees}
+          rowKey={(row) => row.id}
+          selectable
+          selectedRows={selected}
+          onSelectionChange={setSelected}
+          bulkActions={
+            <button
+              style={{
+                padding: '4px 12px',
+                background: '#ef4444',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '0.8125rem',
+              }}
+              onClick={() => setSelected(new Set())}
+            >
+              Delete selected
+            </button>
+          }
+        />
+      );
+    };
+    return <SelectableTable />;
   },
 };
 

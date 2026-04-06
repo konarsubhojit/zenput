@@ -48,4 +48,40 @@ describe('FileInput', () => {
     render(<FileInput ref={ref} />);
     expect(ref.current).toBeInstanceOf(HTMLInputElement);
   });
+
+  it('renders image preview when previewSrc is provided', () => {
+    render(<FileInput previewSrc="https://example.com/image.jpg" />);
+    const img = screen.getByRole('img', { name: 'Selected image preview' });
+    expect(img).toBeInTheDocument();
+    expect(img).toHaveAttribute('src', 'https://example.com/image.jpg');
+  });
+
+  it('uses label in preview alt text when label is provided', () => {
+    render(<FileInput previewSrc="https://example.com/image.jpg" label="Avatar" />);
+    expect(screen.getByRole('img', { name: 'Avatar preview' })).toBeInTheDocument();
+  });
+
+  it('does not render image preview when previewSrc is not provided', () => {
+    render(<FileInput />);
+    expect(screen.queryByRole('img', { name: 'Selected image preview' })).not.toBeInTheDocument();
+  });
+
+  it('renders progress bar when uploadProgress is provided', () => {
+    render(<FileInput uploadProgress={50} />);
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '50');
+  });
+
+  it('renders progress bar when uploading is true', () => {
+    render(<FileInput uploading />);
+    const progressbar = screen.getByRole('progressbar');
+    expect(progressbar).toBeInTheDocument();
+    // Indeterminate — aria-valuenow should not be set
+    expect(progressbar).not.toHaveAttribute('aria-valuenow');
+  });
+
+  it('clamps uploadProgress to 0–100', () => {
+    render(<FileInput uploadProgress={120} />);
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '100');
+  });
 });

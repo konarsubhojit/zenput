@@ -213,4 +213,217 @@ describe('DataTable', () => {
     );
     expect(screen.getByText('Alice')).toBeInTheDocument();
   });
+
+  // ── Sorting ───────────────────────────────────────────────────────────────
+
+  it('renders sort button for sortable columns', () => {
+    const sortableColumns: DataTableColumn<Person>[] = [
+      { key: 'id', header: 'ID', sortable: true },
+      ...columns.slice(1),
+    ];
+    render(<DataTable columns={sortableColumns} data={data} />);
+    expect(screen.getByRole('button', { name: /Sort by ID/i })).toBeInTheDocument();
+  });
+
+  it('calls onSort when a sortable column header is clicked', async () => {
+    const handleSort = jest.fn();
+    const sortableColumns: DataTableColumn<Person>[] = [
+      { key: 'name', header: 'Name', sortable: true },
+      ...columns.slice(2),
+    ];
+    render(<DataTable columns={sortableColumns} data={data} onSort={handleSort} />);
+    await userEvent.click(screen.getByRole('button', { name: /Sort by Name/i }));
+    expect(handleSort).toHaveBeenCalledWith('name', 'asc');
+  });
+
+  it('toggles sort direction on second click', async () => {
+    const handleSort = jest.fn();
+    const sortableColumns: DataTableColumn<Person>[] = [
+      { key: 'name', header: 'Name', sortable: true },
+      ...columns.slice(2),
+    ];
+    render(<DataTable columns={sortableColumns} data={data} onSort={handleSort} />);
+    const sortBtn = screen.getByRole('button', { name: /Sort by Name/i });
+    await userEvent.click(sortBtn);
+    await userEvent.click(sortBtn);
+    expect(handleSort).toHaveBeenLastCalledWith('name', 'desc');
+  });
+
+  // ── Loading skeleton ──────────────────────────────────────────────────────
+
+  it('renders skeleton rows when loading is true', () => {
+    render(<DataTable columns={columns} data={[]} loading skeletonRowCount={3} />);
+    // Data cells are replaced by skeleton cells; no real data shown
+    expect(screen.queryByText('Alice')).not.toBeInTheDocument();
+    // The empty message should NOT appear during loading
+    expect(screen.queryByText('No data available')).not.toBeInTheDocument();
+  });
+
+  // ── Row click / expand ────────────────────────────────────────────────────
+
+  it('calls onRowClick when a row is clicked', async () => {
+    const handleRowClick = jest.fn();
+    render(<DataTable columns={columns} data={data} onRowClick={handleRowClick} rowKey={(r) => r.id} />);
+    await userEvent.click(screen.getByText('Alice'));
+    expect(handleRowClick).toHaveBeenCalledWith(data[0]);
+  });
+
+  it('expands row when expandedRowRender is provided and row is clicked', async () => {
+    render(
+      <DataTable
+        columns={columns}
+        data={data}
+        rowKey={(r) => r.id}
+        expandedRowRender={(row) => <div data-testid="expanded">{row.name} details</div>}
+      />
+    );
+    await userEvent.click(screen.getByText('Alice'));
+    expect(screen.getByTestId('expanded')).toHaveTextContent('Alice details');
+  });
+
+  it('collapses expanded row on second click', async () => {
+    render(
+      <DataTable
+        columns={columns}
+        data={data}
+        rowKey={(r) => r.id}
+        expandedRowRender={(row) => <div data-testid="expanded">{row.name} details</div>}
+      />
+    );
+    await userEvent.click(screen.getByText('Alice'));
+    expect(screen.getByTestId('expanded')).toBeInTheDocument();
+    await userEvent.click(screen.getByText('Alice'));
+    expect(screen.queryByTestId('expanded')).not.toBeInTheDocument();
+  });
+
+  // ── Selection ─────────────────────────────────────────────────────────────
+
+  it('renders checkbox column when selectable is true', () => {
+    render(<DataTable columns={columns} data={data} selectable rowKey={(r) => r.id} />);
+    expect(screen.getByLabelText('Select all rows')).toBeInTheDocument();
+    const rowCheckboxes = screen.getAllByRole('checkbox', { name: /^Select row/ });
+    expect(rowCheckboxes).toHaveLength(data.length);
+  });
+
+  it('calls onSelectionChange when a row checkbox is clicked', async () => {
+    const handleSelectionChange = jest.fn();
+    render(
+      <DataTable
+        columns={columns}
+        data={data}
+        selectable
+        rowKey={(r) => r.id}
+        onSelectionChange={handleSelectionChange}
+      />
+    );
+    const [firstCheckbox] = screen.getAllByRole('checkbox', { name: /^Select row/ });
+    await userEvent.click(firstCheckbox);
+    expect(handleSelectionChange).toHaveBeenCalledWith(new Set([1]));
+  });
+
+  it('selects all rows when select-all checkbox is clicked', async () => {
+    const handleSelectionChange = jest.fn();
+    render(
+      <DataTable
+        columns={columns}
+        data={data}
+        selectable
+        rowKey={(r) => r.id}
+        onSelectionChange={handleSelectionChange}
+      />
+    );
+    await userEvent.click(screen.getByLabelText('Select all rows'));
+    expect(handleSelectionChange).toHaveBeenCalledWith(new Set([1, 2, 3, 4]));
+  });
+
+  it('shows bulkActions bar when rows are selected', async () => {
+    render(
+      <DataTable
+        columns={columns}
+        data={data}
+        selectable
+        rowKey={(r) => r.id}
+        bulkActions={<button>Delete</button>}
+      />
+    );
+    const [firstCheckbox] = screen.getAllByRole('checkbox', { name: /^Select row/ });
+    await userEvent.click(firstCheckbox);
+    expect(screen.getByText('Delete')).toBeInTheDocument();
+    expect(screen.getByText(/1 selected/i)).toBeInTheDocument();
+  });
+
+  // ── Pagination ────────────────────────────────────────────────────────────
+
+  it('renders pagination controls when pagination prop is provided', () => {
+    render(
+      <DataTable
+        columns={columns}
+        data={data}
+        pagination={{ currentPage: 1, pageSize: 2, totalCount: 4, onPageChange: jest.fn() }}
+      />
+    );
+    expect(screen.getByLabelText('Previous page')).toBeInTheDocument();
+    expect(screen.getByLabelText('Next page')).toBeInTheDocument();
+    expect(screen.getByLabelText('Page 1')).toBeInTheDocument();
+    expect(screen.getByLabelText('Page 2')).toBeInTheDocument();
+  });
+
+  it('calls onPageChange when a page button is clicked', async () => {
+    const handlePageChange = jest.fn();
+    render(
+      <DataTable
+        columns={columns}
+        data={data}
+        pagination={{ currentPage: 1, pageSize: 2, totalCount: 4, onPageChange: handlePageChange }}
+      />
+    );
+    await userEvent.click(screen.getByLabelText('Page 2'));
+    expect(handlePageChange).toHaveBeenCalledWith(2);
+  });
+
+  it('disables previous button on first page', () => {
+    render(
+      <DataTable
+        columns={columns}
+        data={data}
+        pagination={{ currentPage: 1, pageSize: 2, totalCount: 4, onPageChange: jest.fn() }}
+      />
+    );
+    expect(screen.getByLabelText('Previous page')).toBeDisabled();
+  });
+
+  it('disables next button on last page', () => {
+    render(
+      <DataTable
+        columns={columns}
+        data={data}
+        pagination={{ currentPage: 2, pageSize: 2, totalCount: 4, onPageChange: jest.fn() }}
+      />
+    );
+    expect(screen.getByLabelText('Next page')).toBeDisabled();
+  });
+
+  it('renders pagination chrome while loading with all controls disabled', () => {
+    render(
+      <DataTable
+        columns={columns}
+        data={[]}
+        loading
+        pagination={{ currentPage: 1, pageSize: 2, totalCount: 4, onPageChange: jest.fn() }}
+      />
+    );
+    expect(screen.getByLabelText('Previous page')).toBeDisabled();
+    expect(screen.getByLabelText('Next page')).toBeDisabled();
+  });
+
+  it('displays 0–0 of 0 when totalCount is 0', () => {
+    render(
+      <DataTable
+        columns={columns}
+        data={[]}
+        pagination={{ currentPage: 1, pageSize: 10, totalCount: 0, onPageChange: jest.fn() }}
+      />
+    );
+    expect(screen.getByText('0–0 of 0')).toBeInTheDocument();
+  });
 });

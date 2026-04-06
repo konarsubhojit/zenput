@@ -136,3 +136,50 @@
 .errorText { font-size: 0.75rem; color: var(--input-error-color); }
 .successText { font-size: 0.75rem; color: var(--input-success-color); }
 .warningText { font-size: 0.75rem; color: var(--input-warning-color); }
+
+/* ── Image preview ────────────────────────────────────── */
+
+.imagePreview {
+  margin-top: 6px;
+  display: inline-block;
+  border: 1px solid var(--input-border-color);
+  border-radius: var(--input-border-radius);
+  overflow: hidden;
+  line-height: 0;
+}
+
+.previewImage {
+  display: block;
+  max-width: 200px;
+  max-height: 150px;
+  object-fit: cover;
+}
+
+/* ── Upload progress ─────────────────────────────────── */
+
+.uploadProgress {
+  margin-top: 6px;
+  height: 4px;
+  width: 100%;
+  background-color: #e5e7eb;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.uploadProgressBar {
+  height: 100%;
+  background-color: var(--input-primary-color);
+  border-radius: 2px;
+  transition: width 0.2s ease;
+}
+
+@keyframes indeterminate {
+  0% { transform: translateX(-100%); width: 40%; }
+  100% { transform: translateX(350%); width: 40%; }
+}
+
+.uploadProgressIndeterminate {
+  width: 40% !important;
+  animation: indeterminate 1.2s ease-in-out infinite;
+}
+
