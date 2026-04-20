@@ -25,12 +25,17 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   count?: number;
   /** Maximum displayable count before truncating. Default: `99`. */
   max?: number;
+  /** When `count` is 0, render '0' instead of hiding the badge. Default: `false`. */
+  showZero?: boolean;
   className?: string;
 }
 
 /**
  * Small status / count indicator. Supports labeled pills (with optional
  * numeric count capped by `max`) and a minimal `dot` variant.
+ *
+ * When `count` is `0`, the badge is hidden unless `showZero` is set,
+ * matching the common "empty-count" convention used by Fluent and Ant.
  */
 export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(function Badge(
   {
@@ -40,14 +45,19 @@ export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(function Badge(
     dot,
     count,
     max = 99,
+    showZero = false,
     className,
     children,
     ...rest
   },
   ref
 ) {
+  // Hide a labelled count badge when count is 0 unless showZero is requested.
+  if (!dot && count === 0 && !showZero && children === undefined) {
+    return null;
+  }
   let content: React.ReactNode = children;
-  if (!dot && count !== undefined) {
+  if (!dot && count !== undefined && children === undefined) {
     content = count > max ? `${max}+` : String(count);
   }
   return (

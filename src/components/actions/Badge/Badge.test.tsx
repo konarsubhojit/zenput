@@ -25,6 +25,16 @@ describe('Badge', () => {
     expect(screen.getByText('5')).toBeInTheDocument();
   });
 
+  it('hides by default when count is 0', () => {
+    const { container } = render(<Badge count={0} />);
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('renders 0 when showZero is set', () => {
+    render(<Badge count={0} showZero />);
+    expect(screen.getByText('0')).toBeInTheDocument();
+  });
+
   it('caps count at max', () => {
     render(<Badge count={250} max={99} />);
     expect(screen.getByText('99+')).toBeInTheDocument();
