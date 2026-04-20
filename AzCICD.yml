@@ -63,7 +63,7 @@ stages:
           - task: SonarCloudPrepare@3
             displayName: 'SonarCloud Prepare'
             inputs:
-              SonarCloud: 'SonarCloudServiceConnection'   # ← replace with your service connection name
+              SonarCloud: 'SonarQube'
               organization: 'konarsubhojit'               # ← your SonarCloud org
               scannerMode: 'CLI'
               configMode: 'file'                          # uses sonar-project.properties
