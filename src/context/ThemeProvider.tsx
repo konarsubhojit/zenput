@@ -110,6 +110,15 @@ function legacyCssVars(theme: Theme): Record<string, string> {
 
 interface ThemeProviderProps {
   theme?: Theme;
+  /**
+   * Element type for the wrapper element. Defaults to "div".
+   * Note: The wrapper element is required to scope CSS custom properties
+   * (design tokens) to descendant components, but may impact layout if you
+   * expect the provider to be transparent. Choose an appropriate element
+   * (e.g., "span" for inline contexts) or ensure your layout accounts for
+   * the wrapper.
+   */
+  as?: keyof JSX.IntrinsicElements | React.ElementType;
   children: React.ReactNode;
 }
 
@@ -117,7 +126,7 @@ interface ThemeProviderProps {
  * don't invalidate memoization on every render. */
 const EMPTY_THEME: Theme = Object.freeze({}) as Theme;
 
-export function ThemeProvider({ theme = EMPTY_THEME, children }: ThemeProviderProps): JSX.Element {
+export function ThemeProvider({ theme = EMPTY_THEME, as = 'div', children }: ThemeProviderProps): JSX.Element {
   const { mode, semantic, cssVars } = useMemo(() => createTheme(theme), [theme]);
   const legacy = useMemo(() => legacyCssVars(theme), [theme]);
 
@@ -131,11 +140,13 @@ export function ThemeProvider({ theme = EMPTY_THEME, children }: ThemeProviderPr
     [theme, mode, semantic, mergedVars]
   );
 
+  const WrapperComponent = as as React.ElementType;
+
   return (
     <ThemeContext.Provider value={contextValue}>
-      <div data-zp-theme={mode} style={mergedVars as CSSProperties}>
+      <WrapperComponent data-zp-theme={mode} style={mergedVars as CSSProperties}>
         {children}
-      </div>
+      </WrapperComponent>
     </ThemeContext.Provider>
   );
 }
@@ -148,14 +159,13 @@ export function useTheme(): ThemeContextValue {
  * Resolve a token reference to its CSS `var(...)` expression.
  *
  * Examples:
- *   useToken('color-brand')             -> 'var(--zp-color-brand)'
- *   useToken('space-4')                 -> 'var(--zp-space-4)'
- *   useToken('color-brand', '#0000ff')  -> 'var(--zp-color-brand, #0000ff)'
+ *   tokenVar('color-brand')             -> 'var(--zp-color-brand)'
+ *   tokenVar('space-4')                 -> 'var(--zp-space-4)'
+ *   tokenVar('color-brand', '#0000ff')  -> 'var(--zp-color-brand, #0000ff)'
  */
-export function useToken(name: string, fallback?: string): string {
+export function tokenVar(name: string, fallback?: string): string {
   // Context is intentionally not read: CSS variables are scoped via the
   // ThemeProvider wrapper element, and `var(...)` just references them.
-  // The hook exists for ergonomics and future extensibility.
   return fallback
     ? `var(${CSS_VAR_PREFIX}-${name}, ${fallback})`
     : `var(${CSS_VAR_PREFIX}-${name})`;

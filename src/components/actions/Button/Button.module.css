@@ -142,7 +142,7 @@
 .spinner {
   width: 1em;
   height: 1em;
-  border: 2px solid currentColor;
+  border: 2px solid currentcolor;
   border-top-color: transparent;
   border-radius: 50%;
   animation: zp-btn-spin 600ms linear infinite;
@@ -180,6 +180,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .spinner {
-    animation-duration: 2s;
+    animation: none;
   }
 }

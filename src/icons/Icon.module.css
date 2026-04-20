@@ -2,9 +2,9 @@
   display: inline-block;
   flex-shrink: 0;
   vertical-align: middle;
-  color: currentColor;
+  color: currentcolor;
   fill: none;
-  stroke: currentColor;
+  stroke: currentcolor;
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;

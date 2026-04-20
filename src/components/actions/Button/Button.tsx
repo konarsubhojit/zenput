@@ -11,8 +11,7 @@ export type ButtonVariant =
   | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonBaseProps {
   /** Visual variant. Default: `'primary'`. */
   variant?: ButtonVariant;
   /** Size. Default: `'md'`. */
@@ -21,8 +20,6 @@ export interface ButtonProps
   leftIcon?: React.ReactNode;
   /** Icon rendered after the label. */
   rightIcon?: React.ReactNode;
-  /** Render as an icon-only square button. `aria-label` becomes required. */
-  iconOnly?: boolean;
   /** When true, shows a spinner and marks the button busy/disabled. */
   loading?: boolean;
   /**
@@ -35,6 +32,10 @@ export interface ButtonProps
   fullWidth?: boolean;
   className?: string;
 }
+
+export type ButtonProps =
+  | ({ iconOnly: true; 'aria-label': string } & Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'aria-label'> & ButtonBaseProps)
+  | ({ iconOnly?: false } & React.ButtonHTMLAttributes<HTMLButtonElement> & ButtonBaseProps);
 
 /**
  * Primary action primitive. Six variants (primary, secondary, subtle,

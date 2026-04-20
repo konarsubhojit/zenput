@@ -191,7 +191,7 @@ export const lightSemantic: SemanticColors = {
 
   textPrimary: neutral['900'],
   textSecondary: neutral['600'],
-  textDisabled: neutral['400'],
+  textDisabled: '#9ca3af', // neutral-400: muted gray for disabled text; WHCM overrides apply when forced colors are active
   textInverse: '#ffffff',
 
   border: neutral['300'],
@@ -233,7 +233,7 @@ export const darkSemantic: SemanticColors = {
 
   textPrimary: neutral['50'],
   textSecondary: neutral['300'],
-  textDisabled: neutral['500'],
+  textDisabled: '#6b7280', // neutral-500: muted gray for disabled text; WHCM overrides apply when forced colors are active
   textInverse: neutral['900'],
 
   border: neutral['700'],

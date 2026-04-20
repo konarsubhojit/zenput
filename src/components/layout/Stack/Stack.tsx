@@ -108,7 +108,7 @@ export const HStack = forwardRef(function HStack(
   props: PolymorphicProps<React.ElementType, StackOwnProps>,
   ref: React.ForwardedRef<Element>
 ) {
-  return <Stack direction="row" ref={ref} {...props} />;
+  return <Stack ref={ref} {...props} direction="row" />;
 }) as unknown as StackComponent & { displayName?: string };
 
 (HStack as { displayName?: string }).displayName = 'HStack';
@@ -118,7 +118,7 @@ export const VStack = forwardRef(function VStack(
   props: PolymorphicProps<React.ElementType, StackOwnProps>,
   ref: React.ForwardedRef<Element>
 ) {
-  return <Stack direction="column" ref={ref} {...props} />;
+  return <Stack ref={ref} {...props} direction="column" />;
 }) as unknown as StackComponent & { displayName?: string };
 
 (VStack as { displayName?: string }).displayName = 'VStack';

@@ -36,6 +36,8 @@ export const Divider = forwardRef<HTMLDivElement, DividerProps>(function Divider
         role={role}
         aria-orientation={orientation}
         className={classNames(
+          styles.divider,
+          styles.horizontal,
           styles.labelWrapper,
           strong ? styles.labelWrapperStrong : undefined,
           className
