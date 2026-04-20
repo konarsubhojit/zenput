@@ -1,5 +1,3 @@
-# azure-pipelines.yml
-
 trigger:
   branches:
     include:
@@ -12,12 +10,12 @@ pr:
       - '*'
 
 variables:
-  nodeVersion: '20'
+  # Updated to 22 as it's the current stable LTS for 2026
+  nodeVersion: '22' 
   npm_config_cache: $(Pipeline.Workspace)/.npm
+  # Point to the Java 17 you installed for SonarCloud
+  JAVA_HOME: /usr/lib/jvm/java-17-openjdk-arm64 
 
-# ──────────────────────────────────────────────────────────────────
-# Stage 1 – Build & Test
-# ──────────────────────────────────────────────────────────────────
 stages:
   - stage: Build
     displayName: 'Build & Test'
@@ -26,16 +24,21 @@ stages:
         displayName: 'Build, Lint, Test & Scan'
         pool:
           name: default
+          demands:
+            - Agent.OS -equals Linux
         steps:
           - checkout: self
             fetchDepth: 0
 
-          - task: UseNode@1
-            displayName: 'Set up Node.js $(nodeVersion)'
-            inputs:
-              version: $(nodeVersion)
+          # Use NVM instead of UseNode task for better ARM64 compatibility
+          - script: |
+              export NVM_DIR="$HOME/.nvm"
+              [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+              nvm install $(nodeVersion)
+              nvm use $(nodeVersion)
+              echo "##vso[task.prependpath]$PATH"
+            displayName: 'Set up Node.js via NVM'
 
-          # Cache npm dependencies for faster runs
           - task: Cache@2
             displayName: 'Cache npm packages'
             inputs:
@@ -59,28 +62,25 @@ stages:
           - script: npm run build
             displayName: 'Build'
 
-          # SonarCloud scan (configure service connection in Azure DevOps)
+          # SonarCloud needs JAVA_HOME to be set to JDK 17
           - task: SonarCloudPrepare@3
             displayName: 'SonarCloud Prepare'
             inputs:
               SonarCloud: 'SonarQube'
-              organization: 'konarsubhojit'               # ← your SonarCloud org
+              organization: 'konarsubhojit'
               scannerMode: 'CLI'
-              configMode: 'file'                          # uses sonar-project.properties
+              configMode: 'file'
+            env:
+              JAVA_HOME: $(JAVA_HOME)
 
           - task: SonarCloudAnalyze@3
             displayName: 'SonarCloud Analyze'
+            env:
+              JAVA_HOME: $(JAVA_HOME)
 
           - task: SonarCloudPublish@3
-            displayName: 'SonarCloud Publish Quality Gate'
-            inputs:
-              pollingTimeoutSec: '300'
+            displayName: 'SonarCloud Publish'
 
-  # ──────────────────────────────────────────────────────────────────
-  # Stage 2 – Publish to npm
-  # Runs only on pushes to release/* branches (not PRs).
-  # Uses an Environment with approval gates for manual sign-off.
-  # ──────────────────────────────────────────────────────────────────
   - stage: Publish
     displayName: 'Publish to npm'
     dependsOn: Build
@@ -90,25 +90,19 @@ stages:
         displayName: 'Publish to npm registry'
         pool:
           name: default
-        environment: 'npm-publish'        # configure approval checks on this environment in Azure DevOps
+        environment: 'npm-publish'
         strategy:
           runOnce:
             deploy:
               steps:
                 - checkout: self
 
-                - task: UseNode@1
-                  displayName: 'Set up Node.js $(nodeVersion)'
-                  inputs:
-                    version: $(nodeVersion)
-
-                - task: Cache@2
-                  displayName: 'Cache npm packages'
-                  inputs:
-                    key: 'npm | "$(Agent.OS)" | package-lock.json'
-                    restoreKeys: |
-                      npm | "$(Agent.OS)"
-                    path: $(npm_config_cache)
+                - script: |
+                    export NVM_DIR="$HOME/.nvm"
+                    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                    nvm use $(nodeVersion)
+                    echo "##vso[task.prependpath]$PATH"
+                  displayName: 'Set up Node.js via NVM'
 
                 - script: npm ci
                   displayName: 'Install dependencies'
@@ -121,4 +115,4 @@ stages:
                     npm publish --access public --provenance
                   displayName: 'Publish to npm'
                   env:
-                    NPM_TOKEN: $(NPM_TOKEN)   # store as a secret variable or in a Variable Group
+                    NPM_TOKEN: $(NPM_TOKEN)
