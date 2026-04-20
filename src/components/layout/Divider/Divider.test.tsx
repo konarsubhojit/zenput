@@ -27,4 +27,9 @@ describe('Divider', () => {
     render(<Divider strong />);
     expect(screen.getByRole('separator').className).toMatch(/strong/);
   });
+
+  it('applies strong styling even when a label is present', () => {
+    render(<Divider label="or" strong />);
+    expect(screen.getByRole('separator').className).toMatch(/labelWrapperStrong/);
+  });
 });

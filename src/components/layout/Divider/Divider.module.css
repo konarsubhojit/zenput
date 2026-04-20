@@ -36,3 +36,8 @@
   height: 1px;
   background-color: var(--zp-color-border-subtle);
 }
+
+.labelWrapperStrong::before,
+.labelWrapperStrong::after {
+  background-color: var(--zp-color-border);
+}

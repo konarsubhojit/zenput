@@ -26,9 +26,10 @@ export interface ButtonProps
   /** When true, shows a spinner and marks the button busy/disabled. */
   loading?: boolean;
   /**
-   * Accessible label announced while `loading` is true. Provide a
-   * localized string. Default: `'Loading'`.
-   */
+   * Optional localized accessible label to announce while `loading` is
+   * true. When set, it overrides the button's content-derived name via
+   * `aria-label` while loading. Leave unset to keep the content as the
+   * accessible name. */
   loadingLabel?: string;
   /** Span the full available width. */
   fullWidth?: boolean;
@@ -40,10 +41,11 @@ export interface ButtonProps
  * outline, ghost, danger), three sizes, icon slots, `iconOnly` and
  * `loading` states.
  *
- * When `loading` is true the button is both `disabled` and
- * `aria-busy="true"`. The label is visually hidden and marked
- * `aria-hidden` to avoid stale announcements, while a live region
- * exposes `loadingLabel` (default `'Loading'`) to assistive tech.
+ * While `loading` is true the button is both `disabled` and
+ * `aria-busy="true"`. The content is visually hidden (via a
+ * visually-hidden style so the label is still exposed to assistive
+ * tech) and a decorative spinner is rendered. Pass `loadingLabel` to
+ * override the accessible name with a localized "loading" phrase.
  */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   {
@@ -53,24 +55,27 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     rightIcon,
     iconOnly,
     loading,
-    loadingLabel = 'Loading',
+    loadingLabel,
     fullWidth,
     disabled,
     type = 'button',
     className,
     children,
     'aria-busy': ariaBusy,
+    'aria-label': ariaLabel,
     ...rest
   },
   ref
 ) {
   const isDisabled = Boolean(disabled || loading);
+  const resolvedAriaLabel = loading && loadingLabel ? loadingLabel : ariaLabel;
   return (
     <button
       ref={ref}
       type={type}
       disabled={isDisabled}
       aria-busy={loading ? true : ariaBusy}
+      aria-label={resolvedAriaLabel}
       className={classNames(
         styles.button,
         styles[`variant-${variant}`],
@@ -82,23 +87,14 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       {...rest}
     >
       {loading && (
-        <>
-          <span
-            className={styles.spinner}
-            aria-hidden="true"
-            data-testid="button-spinner"
-          />
-          <span role="status" className={styles.srOnly}>
-            {loadingLabel}
-          </span>
-        </>
+        <span
+          className={styles.spinner}
+          aria-hidden="true"
+          data-testid="button-spinner"
+        />
       )}
       <span
-        aria-hidden={loading ? true : undefined}
-        className={classNames(
-          styles.content,
-          loading ? styles.contentHidden : undefined
-        )}
+        className={classNames(loading ? styles.contentHidden : undefined)}
         style={{ display: 'inline-flex', alignItems: 'center', gap: 'inherit' }}
       >
         {leftIcon && <span aria-hidden="true">{leftIcon}</span>}

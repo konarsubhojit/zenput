@@ -113,7 +113,11 @@ interface ThemeProviderProps {
   children: React.ReactNode;
 }
 
-export function ThemeProvider({ theme = {}, children }: ThemeProviderProps): JSX.Element {
+/** Referentially-stable default theme so consumers that omit `theme`
+ * don't invalidate memoization on every render. */
+const EMPTY_THEME: Theme = Object.freeze({}) as Theme;
+
+export function ThemeProvider({ theme = EMPTY_THEME, children }: ThemeProviderProps): JSX.Element {
   const { mode, semantic, cssVars } = useMemo(() => createTheme(theme), [theme]);
   const legacy = useMemo(() => legacyCssVars(theme), [theme]);
 

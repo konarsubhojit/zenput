@@ -40,26 +40,26 @@ describe('Button', () => {
     expect(onClick).not.toHaveBeenCalled();
   });
 
-  it('sets aria-busy, hides content from AT, and exposes a loading label when loading', () => {
+  it('sets aria-busy and keeps the accessible name from the content when loading', () => {
     render(<Button loading>Saving</Button>);
-    const btn = screen.getByRole('button');
+    const btn = screen.getByRole('button', { name: 'Saving' });
     expect(btn).toHaveAttribute('aria-busy', 'true');
     expect(btn).toBeDisabled();
     expect(screen.getByTestId('button-spinner')).toBeInTheDocument();
-    // Default loading label exposed via live region
-    expect(screen.getByRole('status')).toHaveTextContent('Loading');
-    // Original content is hidden from assistive tech
-    const content = btn.querySelector('[aria-hidden="true"]');
-    expect(content).not.toBeNull();
+    // No extra role="status" live region (would duplicate announcements).
+    expect(screen.queryByRole('status')).toBeNull();
   });
 
-  it('supports a custom loadingLabel', () => {
+  it('uses loadingLabel to override the accessible name while loading', () => {
     render(
       <Button loading loadingLabel="Guardando…">
         Save
       </Button>
     );
-    expect(screen.getByRole('status')).toHaveTextContent('Guardando…');
+    // aria-label takes precedence while loading.
+    expect(
+      screen.getByRole('button', { name: 'Guardando…' })
+    ).toBeInTheDocument();
   });
 
   it('renders icons on both sides', () => {

@@ -1,5 +1,6 @@
 import React, { forwardRef } from 'react';
 import { classNames } from '../../../utils';
+import { normalizeSpacingKey } from '../../../tokens';
 import type {
   PolymorphicProps,
   PolymorphicRef,
@@ -78,7 +79,7 @@ export const Stack = forwardRef(function Stack(
   const Component = (as ?? 'div') as React.ElementType;
   const resolvedStyle: React.CSSProperties = {
     flexDirection: direction,
-    gap: `var(--zp-space-${gap})`,
+    gap: `var(--zp-space-${normalizeSpacingKey(gap)})`,
     alignItems: align ? alignMap[align] : undefined,
     justifyContent: justify ? justifyMap[justify] : undefined,
     ...style,

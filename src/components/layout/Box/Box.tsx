@@ -1,5 +1,6 @@
 import React, { forwardRef } from 'react';
 import { classNames } from '../../../utils';
+import { normalizeSpacingKey } from '../../../tokens';
 import type {
   PolymorphicProps,
   PolymorphicRef,
@@ -76,7 +77,7 @@ type BoxComponent = <C extends React.ElementType = 'div'>(
 ) => React.ReactElement | null;
 
 function spacingToken(v: SpacingValue | undefined): string | undefined {
-  return v === undefined ? undefined : `var(--zp-space-${v})`;
+  return v === undefined ? undefined : `var(--zp-space-${normalizeSpacingKey(v)})`;
 }
 
 function radiusToken(v: RadiusValue | undefined): string | undefined {

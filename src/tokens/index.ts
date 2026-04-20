@@ -51,6 +51,14 @@ function kebab(value: string): string {
   return value.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
 }
 
+/** Spacing-token keys may contain dots (e.g. `"0.5"`), which are not
+ * valid in CSS custom-property identifiers. Normalize to a dash form
+ * when emitting/consuming the variable name (e.g. `"0.5"` → `"0-5"`).
+ */
+export function normalizeSpacingKey(key: string): string {
+  return key.replace(/\./g, '-');
+}
+
 /**
  * Build the flat CSS-variable map for a given semantic palette and
  * the static token categories. Output keys are already prefixed with
@@ -92,7 +100,7 @@ export function buildCssVariables(
 
   // Spacing / radii / borders / shadows / motion / zIndex / breakpoints.
   for (const [key, value] of Object.entries(spacing)) {
-    vars[`${CSS_VAR_PREFIX}-space-${key}`] = value;
+    vars[`${CSS_VAR_PREFIX}-space-${normalizeSpacingKey(key)}`] = value;
   }
   for (const [key, value] of Object.entries(radii)) {
     vars[`${CSS_VAR_PREFIX}-radius-${key}`] = value;
