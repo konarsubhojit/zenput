@@ -1,0 +1,137 @@
+# azure-pipelines.yml
+
+trigger:
+  branches:
+    include:
+      - master
+      - release/*
+
+pr:
+  branches:
+    include:
+      - '*'
+
+variables:
+  nodeVersion: '20'
+  npm_config_cache: $(Pipeline.Workspace)/.npm
+
+# ──────────────────────────────────────────────────────────────────
+# Stage 1 – Build & Test
+# ──────────────────────────────────────────────────────────────────
+stages:
+  - stage: Build
+    displayName: 'Build & Test'
+    jobs:
+      - job: BuildAndTest
+        displayName: 'Build, Lint, Test & Scan'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - checkout: self
+            fetchDepth: 0
+
+          - task: UseNode@1
+            displayName: 'Set up Node.js $(nodeVersion)'
+            inputs:
+              version: $(nodeVersion)
+
+          # Cache npm dependencies for faster runs
+          - task: Cache@2
+            displayName: 'Cache npm packages'
+            inputs:
+              key: 'npm | "$(Agent.OS)" | package-lock.json'
+              restoreKeys: |
+                npm | "$(Agent.OS)"
+              path: $(npm_config_cache)
+
+          - script: npm ci
+            displayName: 'Install dependencies'
+
+          - script: npm run type-check
+            displayName: 'Type check'
+
+          - script: npm run lint
+            displayName: 'Lint'
+
+          - script: npm run test:coverage
+            displayName: 'Test with coverage'
+
+          # Publish test/coverage results so they appear in Azure DevOps UI
+          - task: PublishTestResults@2
+            displayName: 'Publish test results'
+            condition: succeededOrFailed()
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsResults@2
+            displayName: 'Publish code coverage'
+            condition: succeededOrFailed()
+            inputs:
+              summaryFileLocation: '**/coverage/cobertura-coverage.xml'
+            continueOnError: true
+
+          - script: npm run build
+            displayName: 'Build'
+
+          # SonarCloud scan (configure service connection in Azure DevOps)
+          - task: SonarCloudPrepare@3
+            displayName: 'SonarCloud Prepare'
+            inputs:
+              SonarCloud: 'SonarCloudServiceConnection'   # ← replace with your service connection name
+              organization: 'konarsubhojit'               # ← your SonarCloud org
+              scannerMode: 'CLI'
+              configMode: 'file'                          # uses sonar-project.properties
+
+          - task: SonarCloudAnalyze@3
+            displayName: 'SonarCloud Analyze'
+
+          - task: SonarCloudPublish@3
+            displayName: 'SonarCloud Publish Quality Gate'
+            inputs:
+              pollingTimeoutSec: '300'
+
+  # ──────────────────────────────────────────────────────────────────
+  # Stage 2 – Publish to npm
+  # Runs only on pushes to release/* branches (not PRs).
+  # Uses an Environment with approval gates for manual sign-off.
+  # ──────────────────────────────────────────────────────────────────
+  - stage: Publish
+    displayName: 'Publish to npm'
+    dependsOn: Build
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))
+    jobs:
+      - deployment: PublishNpm
+        displayName: 'Publish to npm registry'
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment: 'npm-publish'        # configure approval checks on this environment in Azure DevOps
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+
+                - task: UseNode@1
+                  displayName: 'Set up Node.js $(nodeVersion)'
+                  inputs:
+                    version: $(nodeVersion)
+
+                - task: Cache@2
+                  displayName: 'Cache npm packages'
+                  inputs:
+                    key: 'npm | "$(Agent.OS)" | package-lock.json'
+                    restoreKeys: |
+                      npm | "$(Agent.OS)"
+                    path: $(npm_config_cache)
+
+                - script: npm ci
+                  displayName: 'Install dependencies'
+
+                - script: npm run build
+                  displayName: 'Build'
+
+                - script: |
+                    echo "//registry.npmjs.org/:_authToken=$(NPM_TOKEN)" > .npmrc
+                    npm publish --access public --provenance
+                  displayName: 'Publish to npm'
+                  env:
+                    NPM_TOKEN: $(NPM_TOKEN)   # store as a secret variable or in a Variable Group
