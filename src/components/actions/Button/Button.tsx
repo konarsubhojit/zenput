@@ -25,6 +25,11 @@ export interface ButtonProps
   iconOnly?: boolean;
   /** When true, shows a spinner and marks the button busy/disabled. */
   loading?: boolean;
+  /**
+   * Accessible label announced while `loading` is true. Provide a
+   * localized string. Default: `'Loading'`.
+   */
+  loadingLabel?: string;
   /** Span the full available width. */
   fullWidth?: boolean;
   className?: string;
@@ -36,8 +41,9 @@ export interface ButtonProps
  * `loading` states.
  *
  * When `loading` is true the button is both `disabled` and
- * `aria-busy="true"`, and its label is visually hidden while a spinner
- * is shown.
+ * `aria-busy="true"`. The label is visually hidden and marked
+ * `aria-hidden` to avoid stale announcements, while a live region
+ * exposes `loadingLabel` (default `'Loading'`) to assistive tech.
  */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   {
@@ -47,6 +53,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     rightIcon,
     iconOnly,
     loading,
+    loadingLabel = 'Loading',
     fullWidth,
     disabled,
     type = 'button',
@@ -75,14 +82,19 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       {...rest}
     >
       {loading && (
-        <span
-          className={styles.spinner}
-          role="status"
-          aria-label="Loading"
-          data-testid="button-spinner"
-        />
+        <>
+          <span
+            className={styles.spinner}
+            aria-hidden="true"
+            data-testid="button-spinner"
+          />
+          <span role="status" className={styles.srOnly}>
+            {loadingLabel}
+          </span>
+        </>
       )}
       <span
+        aria-hidden={loading ? true : undefined}
         className={classNames(
           styles.content,
           loading ? styles.contentHidden : undefined

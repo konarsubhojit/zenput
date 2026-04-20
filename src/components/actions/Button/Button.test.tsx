@@ -40,12 +40,26 @@ describe('Button', () => {
     expect(onClick).not.toHaveBeenCalled();
   });
 
-  it('sets aria-busy and renders a spinner when loading', () => {
+  it('sets aria-busy, hides content from AT, and exposes a loading label when loading', () => {
     render(<Button loading>Saving</Button>);
     const btn = screen.getByRole('button');
     expect(btn).toHaveAttribute('aria-busy', 'true');
     expect(btn).toBeDisabled();
     expect(screen.getByTestId('button-spinner')).toBeInTheDocument();
+    // Default loading label exposed via live region
+    expect(screen.getByRole('status')).toHaveTextContent('Loading');
+    // Original content is hidden from assistive tech
+    const content = btn.querySelector('[aria-hidden="true"]');
+    expect(content).not.toBeNull();
+  });
+
+  it('supports a custom loadingLabel', () => {
+    render(
+      <Button loading loadingLabel="Guardando…">
+        Save
+      </Button>
+    );
+    expect(screen.getByRole('status')).toHaveTextContent('Guardando…');
   });
 
   it('renders icons on both sides', () => {
