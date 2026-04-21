@@ -10,9 +10,8 @@ pr:
       - '*'
 
 variables:
-  # Updated to 22 as it's the current stable LTS for 2026
-  nodeVersion: '22' 
-  npm_config_cache: $(Pipeline.Workspace)/.npm
+  # Node 24 — SonarCloud scanner requires Node 20+ and warns on older LTS
+  nodeVersion: '24'
   # Point to the Java 17 you installed for SonarCloud
   JAVA_HOME: /usr/lib/jvm/java-21-openjdk-arm64
 
@@ -26,28 +25,38 @@ stages:
           name: default
           demands:
             - Agent.OS -equals Linux
+        workspace:
+          clean: none   # self-hosted: preserve node_modules & incremental artifacts between runs
         steps:
           - checkout: self
             fetchDepth: 0
 
-          # Use NVM instead of UseNode task for better ARM64 compatibility
+          # Use NVM instead of UseNode task for better ARM64 compatibility.
+          # Only install the Node version if it isn't already present on the self-hosted agent.
           - script: |
               export NVM_DIR="$HOME/.nvm"
               [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-              nvm install $(nodeVersion)
-              nvm use $(nodeVersion)
-              echo "##vso[task.prependpath]$PATH"
+              if ! nvm use $(nodeVersion) >/dev/null 2>&1; then
+                echo "Node $(nodeVersion) not installed on agent; installing..."
+                nvm install $(nodeVersion)
+                nvm use $(nodeVersion)
+              fi
+              echo "Using Node $(node --version) / npm $(npm --version)"
+              echo "##vso[task.prependpath]$(dirname $(which node))"
             displayName: 'Set up Node.js via NVM'
 
-          - task: Cache@2
-            displayName: 'Cache npm packages'
-            inputs:
-              key: 'npm | "$(Agent.OS)" | package-lock.json'
-              restoreKeys: |
-                npm | "$(Agent.OS)"
-              path: $(npm_config_cache)
-
-          - script: npm ci
+          # Self-hosted agent retains node_modules between runs. Only re-install when the
+          # lockfile changed (or node_modules is missing). Falls back to `npm ci` for a
+          # clean, reproducible tree; uses offline cache for speed.
+          - script: |
+              set -e
+              if [ -d node_modules ] && [ -f node_modules/.package-lock.json ] \
+                  && cmp -s package-lock.json node_modules/.package-lock.json; then
+                echo "Dependencies already match package-lock.json - skipping install."
+              else
+                echo "Installing root dependencies with npm ci..."
+                npm ci --prefer-offline --no-audit --no-fund
+              fi
             displayName: 'Install dependencies'
 
           - script: npm run type-check
@@ -61,6 +70,28 @@ stages:
 
           - script: npm run build
             displayName: 'Build'
+
+          - script: |
+              set -e
+              if [ -d node_modules ] && [ -f node_modules/.package-lock.json ] \
+                  && cmp -s package-lock.json node_modules/.package-lock.json; then
+                echo "Demo dependencies already match package-lock.json - skipping install."
+              else
+                echo "Installing demo dependencies with npm ci..."
+                npm ci --prefer-offline --no-audit --no-fund
+              fi
+            displayName: 'Install demo dependencies'
+            workingDirectory: demo
+
+          - script: npm run build
+            displayName: 'Build demo site'
+            workingDirectory: demo
+
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish demo site artifact'
+            inputs:
+              targetPath: 'demo/dist'
+              artifact: 'demo-site'
 
           - task: SonarCloudPrepare@4
             displayName: 'SonarCloud Prepare'
@@ -99,11 +130,22 @@ stages:
                 - script: |
                     export NVM_DIR="$HOME/.nvm"
                     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-                    nvm use $(nodeVersion)
-                    echo "##vso[task.prependpath]$PATH"
+                    if ! nvm use $(nodeVersion) >/dev/null 2>&1; then
+                      echo "Node $(nodeVersion) not installed on agent; installing..."
+                      nvm install $(nodeVersion)
+                      nvm use $(nodeVersion)
+                    fi
+                    echo "##vso[task.prependpath]$(dirname $(which node))"
                   displayName: 'Set up Node.js via NVM'
 
-                - script: npm ci
+                - script: |
+                    set -e
+                    if [ -d node_modules ] && [ -f node_modules/.package-lock.json ] \
+                        && cmp -s package-lock.json node_modules/.package-lock.json; then
+                      echo "Dependencies already match package-lock.json - skipping install."
+                    else
+                      npm ci --prefer-offline --no-audit --no-fund
+                    fi
                   displayName: 'Install dependencies'
 
                 - script: npm run build
