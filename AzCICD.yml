@@ -62,6 +62,20 @@ stages:
           - script: npm run build
             displayName: 'Build'
 
+          - script: npm ci
+            displayName: 'Install demo dependencies'
+            workingDirectory: demo
+
+          - script: npm run build
+            displayName: 'Build demo site'
+            workingDirectory: demo
+
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish demo site artifact'
+            inputs:
+              targetPath: 'demo/dist'
+              artifact: 'demo-site'
+
           - task: SonarCloudPrepare@4
             displayName: 'SonarCloud Prepare'
             inputs:
