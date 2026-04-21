@@ -111,6 +111,61 @@ stages:
           - task: SonarCloudPublish@4
             displayName: 'SonarCloud Publish'
 
+  - stage: DeployDemoToVercel
+    displayName: 'Deploy demo to Vercel'
+    dependsOn: Build
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    jobs:
+      - job: DeployVercel
+        displayName: 'Deploy Vite demo'
+        pool:
+          name: default
+          demands:
+            - Agent.OS -equals Linux
+        steps:
+          - checkout: self
+
+          - script: |
+              export NVM_DIR="$HOME/.nvm"
+              [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+              if ! nvm use $(nodeVersion) >/dev/null 2>&1; then
+                echo "Node $(nodeVersion) not installed on agent; installing..."
+                nvm install $(nodeVersion)
+                nvm use $(nodeVersion)
+              fi
+              echo "##vso[task.prependpath]$(dirname $(which node))"
+            displayName: 'Set up Node.js via NVM'
+
+          - script: npm install -g vercel
+            displayName: 'Install Vercel CLI'
+
+          - script: |
+              vercel pull --yes --environment=$(VERCEL_ENV) --token=$(VERCEL_TOKEN)
+            displayName: 'Pull Vercel project settings'
+            workingDirectory: demo
+            env:
+              VERCEL_ORG_ID: $(VERCEL_ORG_ID)
+              VERCEL_PROJECT_ID: $(VERCEL_PROJECT_ID)
+              VERCEL_TOKEN: $(VERCEL_TOKEN)
+
+          - script: |
+              vercel build --prod --token=$(VERCEL_TOKEN)
+            displayName: 'Build Vercel deployment'
+            workingDirectory: demo
+            env:
+              VERCEL_ORG_ID: $(VERCEL_ORG_ID)
+              VERCEL_PROJECT_ID: $(VERCEL_PROJECT_ID)
+              VERCEL_TOKEN: $(VERCEL_TOKEN)
+
+          - script: |
+              vercel deploy --prebuilt --prod --token=$(VERCEL_TOKEN)
+            displayName: 'Deploy to Vercel'
+            workingDirectory: demo
+            env:
+              VERCEL_ORG_ID: $(VERCEL_ORG_ID)
+              VERCEL_PROJECT_ID: $(VERCEL_PROJECT_ID)
+              VERCEL_TOKEN: $(VERCEL_TOKEN)
+
   - stage: Publish
     displayName: 'Publish to npm'
     dependsOn: Build
