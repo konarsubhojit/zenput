@@ -1,6 +1,8 @@
+import { vi } from 'vitest';
 import React from 'react';
 import { render, screen, act } from '@testing-library/react';
 import { useDisclosure } from './useDisclosure';
+import { expectNoA11yViolations } from '../test-utils/axe';
 
 function Harness({
   open,
@@ -62,7 +64,7 @@ describe('useDisclosure', () => {
   });
 
   it('reports changes via onOpenChange in uncontrolled mode only when value changes', () => {
-    const onOpenChange = jest.fn();
+    const onOpenChange = vi.fn();
     render(<Harness onOpenChange={onOpenChange} />);
     act(() => {
       screen.getByText('open').click();
@@ -76,7 +78,7 @@ describe('useDisclosure', () => {
   });
 
   it('in controlled mode, notifies onOpenChange and resolves updater against the current prop', () => {
-    const onOpenChange = jest.fn();
+    const onOpenChange = vi.fn();
     const { rerender } = render(
       <Harness open={false} onOpenChange={onOpenChange} />
     );
@@ -91,5 +93,12 @@ describe('useDisclosure', () => {
     });
     // Should resolve against current prop (true) => false.
     expect(onOpenChange).toHaveBeenLastCalledWith(false);
+  });
+});
+
+describe('a11y (axe)', () => {
+  it('has no detectable axe violations in default render', async () => {
+    const { container } = render(<Harness defaultOpen />);
+    await expectNoA11yViolations(container);
   });
 });

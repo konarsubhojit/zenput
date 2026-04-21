@@ -1,8 +1,10 @@
+import { vi } from 'vitest';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 import { RadioGroup } from './RadioGroup';
+import { expectNoA11yViolations } from '../../test-utils/axe';
 
 const OPTIONS = [
   { value: 'free', label: 'Free' },
@@ -34,7 +36,7 @@ describe('RadioGroup', () => {
   });
 
   it('calls onChange with selected value', async () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
     render(<RadioGroup name="plan" options={OPTIONS} onChange={handleChange} />);
     await userEvent.click(screen.getByLabelText('Pro'));
     expect(handleChange).toHaveBeenCalledWith('pro');
@@ -62,5 +64,12 @@ describe('RadioGroup', () => {
     const ref = React.createRef<HTMLDivElement>();
     render(<RadioGroup name="plan" options={OPTIONS} ref={ref} />);
     expect(ref.current).toBeInstanceOf(HTMLDivElement);
+  });
+});
+
+describe('a11y (axe)', () => {
+  it('has no detectable axe violations in default render', async () => {
+    const { container } = render(<RadioGroup name="plan" label="Plan" options={OPTIONS} />);
+    await expectNoA11yViolations(container);
   });
 });

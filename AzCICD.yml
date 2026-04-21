@@ -1,3 +1,39 @@
+# ═════════════════════════════════════════════════════════════════════════════
+# Zenput — Azure Pipeline (self-hosted agent)
+#
+# Mirrors the GitHub Actions workflow (.github/workflows/ci.yml). Both systems
+# invoke the same npm scripts so there is a single source of truth:
+#
+#     npm run lint && npm run type-check && npm run test:ci && npm run build
+#
+# ── Agent requirements ──────────────────────────────────────────────────────
+#   Pool:          "Default" (self-hosted). Adjust `pool.name` below if yours
+#                  is named differently (e.g. "default", "zenput-linux").
+#   OS:            Linux (the demands filter can be edited for Windows/macOS).
+#   Pre-installed: git, Node 20.x (via nvm is fine), npm 10+.
+#                  Playwright browsers will be installed once into the agent
+#                  cache (`~/.cache/ms-playwright`) on the A11y job.
+#
+# ── Pipeline variables / service connections ────────────────────────────────
+#   SonarCloud service connection : "SonarCloud"  (tasks: SonarCloudPrepare@3,
+#                                   SonarCloudAnalyze@3, SonarCloudPublish@3)
+#   SONAR_TOKEN                   : secret variable (optional — Sonar steps
+#                                   are gated behind ne(SONAR_TOKEN, ''))
+#   CODECOV_TOKEN                 : optional; only required for private repos
+#   NPM_TOKEN                     : required only by the "Publish" stage
+#   VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID
+#                                 : used by the optional demo deploy stage
+#
+# ── Running the same steps locally ──────────────────────────────────────────
+#   npm ci
+#   npm run lint
+#   npm run type-check
+#   npm run test:ci
+#   npm run build
+#   npm run build-storybook
+#   npm run size
+# ═════════════════════════════════════════════════════════════════════════════
+
 trigger:
   branches:
     include:
@@ -9,201 +45,303 @@ pr:
     include:
       - '*'
 
+# Weekly "clean" run — guards against stale state on a long-lived self-hosted
+# agent. Regular CI runs skip the nuke (see `workspace.clean` below).
+schedules:
+  - cron: '0 6 * * 1'        # Mondays 06:00 UTC
+    displayName: Weekly clean rebuild
+    branches:
+      include: [master]
+    always: true
+
 variables:
-  # Node 24 — SonarCloud scanner requires Node 20+ and warns on older LTS
-  nodeVersion: '24'
-  # Point to the Java 17 you installed for SonarCloud
-  JAVA_HOME: /usr/lib/jvm/java-21-openjdk-arm64
-  VERCEL_ENV: 'production'
+  - name: NODE_VERSION
+    value: '20.x'
+  - name: npm_config_cache
+    value: $(Pipeline.Workspace)/.npm
+  # On a self-hosted agent we persist installs across runs in a stable location.
+  - name: PERSISTENT_CACHE_ROOT
+    value: $(Agent.HomeDirectory)/_zenput_cache
+  - name: CI
+    value: 'true'
+  - name: FORCE_COLOR
+    value: '1'
+
+pool:
+  name: Default              # self-hosted pool — rename if your pool differs
+  demands:
+    - Agent.OS -equals Linux # adjust for Windows/macOS self-hosted agents
 
 stages:
-  - stage: Build
-    displayName: 'Build & Test'
+  - stage: CI
+    displayName: 'CI (lint, test, build, size, a11y)'
     jobs:
-      - job: BuildAndTest
-        displayName: 'Build, Lint, Test & Scan'
-        pool:
-          name: default
-          demands:
-            - Agent.OS -equals Linux
+
+      # ──────────────────────────────────────────────────────────────────────
+      # Install — warms the npm cache. On self-hosted, the cache is re-used
+      # across runs so this job is usually a few-second no-op after the first
+      # run. `node_modules` itself is NOT published as an artifact (it would
+      # be slower than a cache hit on the same machine); other jobs re-install
+      # using the warmed cache via `npm ci --prefer-offline`.
+      # ──────────────────────────────────────────────────────────────────────
+      - job: Install
+        displayName: 'Install dependencies'
         workspace:
-          clean: none   # self-hosted: preserve node_modules & incremental artifacts between runs
+          clean: outputs       # only wipe build outputs between runs
         steps:
           - checkout: self
+            clean: false       # self-hosted: keep checkout to maximize cache hits
             fetchDepth: 0
 
-          # Use NVM instead of UseNode task for better ARM64 compatibility.
-          # Only install the Node version if it isn't already present on the self-hosted agent.
-          - script: |
-              export NVM_DIR="$HOME/.nvm"
-              [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-              if ! nvm use $(nodeVersion) >/dev/null 2>&1; then
-                echo "Node $(nodeVersion) not installed on agent; installing..."
-                nvm install $(nodeVersion)
-                nvm use $(nodeVersion)
-              fi
-              echo "Using Node $(node --version) / npm $(npm --version)"
-              echo "##vso[task.prependpath]$(dirname $(which node))"
-            displayName: 'Set up Node.js via NVM'
-
-          # Self-hosted agent retains node_modules between runs. Only re-install when the
-          # lockfile changed (or node_modules is missing). Falls back to `npm ci` for a
-          # clean, reproducible tree; uses offline cache for speed.
+          # Skip NodeTool download if the correct Node is already on PATH
+          # (common on self-hosted agents managed via nvm).
           - script: |
               set -e
-              if [ -d node_modules ] && [ -f node_modules/.package-lock.json ] \
-                  && cmp -s package-lock.json node_modules/.package-lock.json; then
-                echo "Dependencies already match package-lock.json - skipping install."
-              else
-                echo "Installing root dependencies with npm ci..."
-                npm ci --prefer-offline --no-audit --no-fund
+              NEED_NODE_TASK=true
+              if command -v node >/dev/null 2>&1; then
+                CURRENT="$(node -v | sed -E 's/^v([0-9]+).*/\1/')"
+                WANTED="$(echo "$(NODE_VERSION)" | sed -E 's/^([0-9]+).*/\1/')"
+                if [ "$CURRENT" = "$WANTED" ]; then
+                  echo "Node $(node -v) already on PATH — skipping NodeTool."
+                  NEED_NODE_TASK=false
+                fi
               fi
-            displayName: 'Install dependencies'
+              echo "##vso[task.setvariable variable=needNodeTask]$NEED_NODE_TASK"
+            displayName: 'Detect pre-installed Node'
 
-          - script: npm run type-check
-            displayName: 'Type check'
+          - task: NodeTool@0
+            displayName: 'Install Node $(NODE_VERSION) (only if missing)'
+            condition: eq(variables['needNodeTask'], 'true')
+            inputs:
+              versionSpec: $(NODE_VERSION)
 
+          - task: Cache@2
+            displayName: 'Cache ~/.npm'
+            inputs:
+              key: 'npm | "$(Agent.OS)" | package-lock.json'
+              restoreKeys: |
+                npm | "$(Agent.OS)"
+              path: $(npm_config_cache)
+
+          - script: npm ci --prefer-offline --no-audit --fund=false
+            displayName: 'npm ci'
+
+      # ──────────────────────────────────────────────────────────────────────
+      # Lint & Type-check — runs both in parallel as sibling steps inside one
+      # job (cheap; reuses the warmed cache).
+      # ──────────────────────────────────────────────────────────────────────
+      - job: LintAndTypecheck
+        displayName: 'Lint & Type-check'
+        dependsOn: Install
+        workspace:
+          clean: outputs
+        steps:
+          - checkout: self
+            clean: false
+          - task: Cache@2
+            inputs:
+              key: 'npm | "$(Agent.OS)" | package-lock.json'
+              path: $(npm_config_cache)
+          - script: npm ci --prefer-offline --no-audit --fund=false
+            displayName: 'npm ci (cache warm)'
           - script: npm run lint
-            displayName: 'Lint'
+            displayName: 'ESLint (flat config)'
+          - script: npm run type-check
+            displayName: 'tsc --noEmit'
 
-          - script: npm run test:coverage
-            displayName: 'Test with coverage'
-
-          - script: npm run build
-            displayName: 'Build'
-
-          - script: |
-              set -e
-              if [ -d node_modules ] && [ -f node_modules/.package-lock.json ] \
-                  && cmp -s package-lock.json node_modules/.package-lock.json; then
-                echo "Demo dependencies already match package-lock.json - skipping install."
-              else
-                echo "Installing demo dependencies with npm ci..."
-                npm ci --prefer-offline --no-audit --no-fund
-              fi
-            displayName: 'Install demo dependencies'
-            workingDirectory: demo
-
-          - script: npm run build
-            displayName: 'Build demo site'
-            workingDirectory: demo
-
-          - task: PublishPipelineArtifact@1
-            displayName: 'Publish demo site artifact'
+      # ──────────────────────────────────────────────────────────────────────
+      # Test — Vitest with coverage, publishes JUnit + Cobertura to Azure, and
+      # runs SonarCloud analysis when SONAR_TOKEN is configured.
+      # ──────────────────────────────────────────────────────────────────────
+      - job: Test
+        displayName: 'Test (Vitest + coverage)'
+        dependsOn: Install
+        workspace:
+          clean: outputs
+        steps:
+          - checkout: self
+            clean: false
+          - task: Cache@2
             inputs:
-              targetPath: 'demo/dist'
-              artifact: 'demo-site'
+              key: 'npm | "$(Agent.OS)" | package-lock.json'
+              path: $(npm_config_cache)
+          - script: npm ci --prefer-offline --no-audit --fund=false
+            displayName: 'npm ci (cache warm)'
 
-          - task: SonarCloudPrepare@4
+          - task: SonarCloudPrepare@3
             displayName: 'SonarCloud Prepare'
+            condition: and(succeeded(), ne(variables['SONAR_TOKEN'], ''))
             inputs:
-              SonarCloud: 'SonarQube'
+              SonarCloud: 'SonarCloud'
               organization: 'konarsubhojit'
               scannerMode: 'CLI'
               configMode: 'file'
-            env:
-              JAVA_HOME: $(JAVA_HOME)
 
-          - task: SonarCloudAnalyze@4
+          - script: npm run test:ci
+            displayName: 'npm run test:ci'
+
+          - task: PublishTestResults@2
+            displayName: 'Publish JUnit results'
+            condition: succeededOrFailed()
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: 'reports/junit.xml'
+              mergeTestResults: true
+              failTaskOnFailedTests: true
+
+          - task: PublishCodeCoverageResults@2
+            displayName: 'Publish Cobertura coverage'
+            condition: succeededOrFailed()
+            inputs:
+              summaryFileLocation: 'coverage/cobertura-coverage.xml'
+              pathToSources: 'src'
+
+          - task: SonarCloudAnalyze@3
             displayName: 'SonarCloud Analyze'
-            env:
-              JAVA_HOME: $(JAVA_HOME)
+            condition: and(succeeded(), ne(variables['SONAR_TOKEN'], ''))
 
-          - task: SonarCloudPublish@4
+          - task: SonarCloudPublish@3
             displayName: 'SonarCloud Publish'
+            condition: and(succeeded(), ne(variables['SONAR_TOKEN'], ''))
+            inputs:
+              pollingTimeoutSec: '300'
 
-  - stage: DeployDemoToVercel
-    displayName: 'Deploy demo to Vercel'
-    dependsOn: Build
-    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-    jobs:
-      - job: DeployVercel
-        displayName: 'Deploy Vite demo'
-        pool:
-          name: default
-          demands:
-            - Agent.OS -equals Linux
+      # ──────────────────────────────────────────────────────────────────────
+      # Build — library + Storybook static site. Publishes both as pipeline
+      # artifacts so the Size and A11y jobs can consume them.
+      # ──────────────────────────────────────────────────────────────────────
+      - job: Build
+        displayName: 'Build library + Storybook'
+        dependsOn: Install
+        workspace:
+          clean: outputs
         steps:
           - checkout: self
+            clean: false
+          - task: Cache@2
+            inputs:
+              key: 'npm | "$(Agent.OS)" | package-lock.json'
+              path: $(npm_config_cache)
+          - script: npm ci --prefer-offline --no-audit --fund=false
+            displayName: 'npm ci (cache warm)'
+          - script: npm run build
+            displayName: 'Build library (rollup)'
+          - script: npm run build-storybook
+            displayName: 'Build Storybook'
 
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish dist/'
+            inputs:
+              targetPath: 'dist'
+              artifact: 'dist'
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish storybook-static/'
+            inputs:
+              targetPath: 'storybook-static'
+              artifact: 'storybook-static'
+
+      # ──────────────────────────────────────────────────────────────────────
+      # Size — bundle-size budget via size-limit. Runs against the freshly
+      # built `dist/`. Fails the job on regression.
+      # ──────────────────────────────────────────────────────────────────────
+      - job: Size
+        displayName: 'Bundle size (size-limit)'
+        dependsOn: Build
+        workspace:
+          clean: outputs
+        steps:
+          - checkout: self
+            clean: false
+          - task: Cache@2
+            inputs:
+              key: 'npm | "$(Agent.OS)" | package-lock.json'
+              path: $(npm_config_cache)
+          - script: npm ci --prefer-offline --no-audit --fund=false
+            displayName: 'npm ci (cache warm)'
+          - task: DownloadPipelineArtifact@2
+            displayName: 'Download dist/'
+            inputs:
+              artifact: dist
+              path: dist
+          - script: npx size-limit
+            displayName: 'size-limit'
+
+      # ──────────────────────────────────────────────────────────────────────
+      # A11y — serve the built Storybook and run @storybook/test-runner with
+      # axe-playwright. Playwright browsers are cached across runs.
+      # ──────────────────────────────────────────────────────────────────────
+      - job: A11y
+        displayName: 'Storybook a11y (axe)'
+        dependsOn: Build
+        workspace:
+          clean: outputs
+        steps:
+          - checkout: self
+            clean: false
+          - task: Cache@2
+            inputs:
+              key: 'npm | "$(Agent.OS)" | package-lock.json'
+              path: $(npm_config_cache)
+          - task: Cache@2
+            displayName: 'Cache ~/.cache/ms-playwright'
+            inputs:
+              key: 'playwright | "$(Agent.OS)" | package-lock.json'
+              path: $(HOME)/.cache/ms-playwright
+          - script: npm ci --prefer-offline --no-audit --fund=false
+            displayName: 'npm ci (cache warm)'
+          - task: DownloadPipelineArtifact@2
+            displayName: 'Download storybook-static/'
+            inputs:
+              artifact: storybook-static
+              path: storybook-static
           - script: |
-              export NVM_DIR="$HOME/.nvm"
-              [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-              if ! nvm use $(nodeVersion) >/dev/null 2>&1; then
-                echo "Node $(nodeVersion) not installed on agent; installing..."
-                nvm install $(nodeVersion)
-                nvm use $(nodeVersion)
+              set -e
+              # Install Playwright browsers only when missing.
+              if [ ! -d "$HOME/.cache/ms-playwright" ] || \
+                 [ -z "$(ls -A "$HOME/.cache/ms-playwright" 2>/dev/null)" ]; then
+                npx playwright install --with-deps chromium
+              else
+                echo "Playwright browsers already cached — skipping install."
               fi
-              echo "##vso[task.prependpath]$(dirname $(which node))"
-            displayName: 'Set up Node.js via NVM'
+            displayName: 'Install Playwright chromium (if missing)'
+          - script: |
+              set -e
+              npx http-server storybook-static -p 6006 -s &
+              SERVER_PID=$!
+              npx wait-on http://127.0.0.1:6006 --timeout 60000
+              npx test-storybook --url http://127.0.0.1:6006
+              kill "$SERVER_PID" || true
+            displayName: 'Run @storybook/test-runner (axe)'
 
-          - script: npm install -g vercel
-            displayName: 'Install Vercel CLI'
-
-          - script: vercel pull --yes --environment=$(VERCEL_ENV) --token=$(VERCEL_TOKEN)
-            displayName: 'Pull Vercel project settings'
-            env:
-              VERCEL_ORG_ID: $(VERCEL_ORG_ID)
-              VERCEL_PROJECT_ID: $(VERCEL_PROJECT_ID)
-              VERCEL_TOKEN: $(VERCEL_TOKEN)
-
-          - script: vercel build --prod --token=$(VERCEL_TOKEN)
-            displayName: 'Build Vercel deployment'
-            env:
-              VERCEL_ORG_ID: $(VERCEL_ORG_ID)
-              VERCEL_PROJECT_ID: $(VERCEL_PROJECT_ID)
-              VERCEL_TOKEN: $(VERCEL_TOKEN)
-
-          - script: vercel deploy --prebuilt --prod --token=$(VERCEL_TOKEN)
-            displayName: 'Deploy to Vercel'
-            env:
-              VERCEL_ORG_ID: $(VERCEL_ORG_ID)
-              VERCEL_PROJECT_ID: $(VERCEL_PROJECT_ID)
-              VERCEL_TOKEN: $(VERCEL_TOKEN)
-
+  # ───────────────────────────────────────────────────────────────────────────
+  # Optional publish stage — retained from previous pipeline configuration.
+  # Runs only on pushes to release/** branches.
+  # ───────────────────────────────────────────────────────────────────────────
   - stage: Publish
     displayName: 'Publish to npm'
-    dependsOn: Build
+    dependsOn: CI
     condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))
     jobs:
       - deployment: PublishNpm
         displayName: 'Publish to npm registry'
-        pool:
-          name: default
         environment: 'npm-publish'
         strategy:
           runOnce:
             deploy:
               steps:
                 - checkout: self
-
-                - script: |
-                    export NVM_DIR="$HOME/.nvm"
-                    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-                    if ! nvm use $(nodeVersion) >/dev/null 2>&1; then
-                      echo "Node $(nodeVersion) not installed on agent; installing..."
-                      nvm install $(nodeVersion)
-                      nvm use $(nodeVersion)
-                    fi
-                    echo "##vso[task.prependpath]$(dirname $(which node))"
-                  displayName: 'Set up Node.js via NVM'
-
-                - script: |
-                    set -e
-                    if [ -d node_modules ] && [ -f node_modules/.package-lock.json ] \
-                        && cmp -s package-lock.json node_modules/.package-lock.json; then
-                      echo "Dependencies already match package-lock.json - skipping install."
-                    else
-                      npm ci --prefer-offline --no-audit --no-fund
-                    fi
-                  displayName: 'Install dependencies'
-
+                  clean: false
+                - task: Cache@2
+                  inputs:
+                    key: 'npm | "$(Agent.OS)" | package-lock.json'
+                    path: $(npm_config_cache)
+                - script: npm ci --prefer-offline --no-audit --fund=false
+                  displayName: 'npm ci'
                 - script: npm run build
                   displayName: 'Build'
-
                 - script: |
                     echo "//registry.npmjs.org/:_authToken=$(NPM_TOKEN)" > .npmrc
                     npm publish --access public --provenance
-                  displayName: 'Publish to npm'
+                  displayName: 'npm publish'
                   env:
                     NPM_TOKEN: $(NPM_TOKEN)

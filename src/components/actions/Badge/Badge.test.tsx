@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { Badge } from './Badge';
+import { expectNoA11yViolations } from '../../../test-utils/axe';
 
 describe('Badge', () => {
   it('renders children by default', () => {
@@ -49,5 +50,14 @@ describe('Badge', () => {
     const el = screen.getByTestId('b');
     expect(el.className).toMatch(/dot/);
     expect(el.textContent).toBe('');
+  });
+});
+
+describe('a11y (axe)', () => {
+  it('has no detectable axe violations in default render', async () => {
+    const { container } = render(<Badge data-testid="b" tone="danger" variant="solid" size="lg">
+        x
+      </Badge>);
+    await expectNoA11yViolations(container);
   });
 });

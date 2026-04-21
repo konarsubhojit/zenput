@@ -1,8 +1,10 @@
+import { vi } from 'vitest';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 import { CheckboxGroup } from './CheckboxGroup';
+import { expectNoA11yViolations } from '../../test-utils/axe';
 
 const OPTIONS = [
   { value: 'react', label: 'React' },
@@ -34,14 +36,14 @@ describe('CheckboxGroup', () => {
   });
 
   it('calls onChange when an option is toggled', async () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
     render(<CheckboxGroup options={OPTIONS} onChange={handleChange} />);
     await userEvent.click(screen.getByLabelText('React'));
     expect(handleChange).toHaveBeenCalledWith(['react']);
   });
 
   it('removes value when already-checked option is unchecked', async () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
     render(<CheckboxGroup options={OPTIONS} defaultValue={['react']} onChange={handleChange} />);
     await userEvent.click(screen.getByLabelText('React'));
     expect(handleChange).toHaveBeenCalledWith([]);
@@ -61,5 +63,12 @@ describe('CheckboxGroup', () => {
     const ref = React.createRef<HTMLDivElement>();
     render(<CheckboxGroup options={OPTIONS} ref={ref} />);
     expect(ref.current).toBeInstanceOf(HTMLDivElement);
+  });
+});
+
+describe('a11y (axe)', () => {
+  it('has no detectable axe violations in default render', async () => {
+    const { container } = render(<CheckboxGroup label="Frameworks" options={OPTIONS} />);
+    await expectNoA11yViolations(container);
   });
 });

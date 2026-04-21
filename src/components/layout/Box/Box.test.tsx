@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { Box } from './Box';
+import { expectNoA11yViolations } from '../../../test-utils/axe';
 
 describe('Box', () => {
   it('renders a div by default with box class', () => {
@@ -57,5 +58,12 @@ describe('Box', () => {
       </Box>
     );
     expect(screen.getByTestId('b').className).toMatch(/fullWidth/);
+  });
+});
+
+describe('a11y (axe)', () => {
+  it('has no detectable axe violations in default render', async () => {
+    const { container } = render(<Box data-testid="b">x</Box>);
+    await expectNoA11yViolations(container);
   });
 });

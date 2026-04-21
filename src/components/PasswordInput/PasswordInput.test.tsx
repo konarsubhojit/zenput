@@ -1,8 +1,9 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 import { PasswordInput } from './PasswordInput';
+import { expectNoA11yViolations } from '../../test-utils/axe';
 
 describe('PasswordInput', () => {
   it('renders without errors', () => {
@@ -58,5 +59,12 @@ describe('PasswordInput', () => {
     const ref = React.createRef<HTMLInputElement>();
     render(<PasswordInput ref={ref} />);
     expect(ref.current).toBeInstanceOf(HTMLInputElement);
+  });
+});
+
+describe('a11y (axe)', () => {
+  it('has no detectable axe violations in default render', async () => {
+    const { container } = render(<PasswordInput label="Password" />);
+    await expectNoA11yViolations(container);
   });
 });

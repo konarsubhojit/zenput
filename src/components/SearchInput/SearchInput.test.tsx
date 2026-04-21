@@ -1,8 +1,10 @@
+import { vi } from 'vitest';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 import { SearchInput } from './SearchInput';
+import { expectNoA11yViolations } from '../../test-utils/axe';
 
 describe('SearchInput', () => {
   it('renders without errors', () => {
@@ -37,7 +39,7 @@ describe('SearchInput', () => {
   });
 
   it('calls onSearch when Enter is pressed', async () => {
-    const handleSearch = jest.fn();
+    const handleSearch = vi.fn();
     render(<SearchInput onSearch={handleSearch} />);
     const input = document.querySelector('input') as HTMLInputElement;
     await userEvent.type(input, 'react{Enter}');
@@ -58,5 +60,12 @@ describe('SearchInput', () => {
     const ref = React.createRef<HTMLInputElement>();
     render(<SearchInput ref={ref} />);
     expect(ref.current).toBeInstanceOf(HTMLInputElement);
+  });
+});
+
+describe('a11y (axe)', () => {
+  it('has no detectable axe violations in default render', async () => {
+    const { container } = render(<SearchInput label="Search" />);
+    await expectNoA11yViolations(container);
   });
 });

@@ -1,6 +1,8 @@
+import { vi } from 'vitest';
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Button } from './Button';
+import { expectNoA11yViolations } from '../../../test-utils/axe';
 
 describe('Button', () => {
   it('renders as a button with default type="button"', () => {
@@ -21,14 +23,14 @@ describe('Button', () => {
   });
 
   it('fires onClick', () => {
-    const onClick = jest.fn();
+    const onClick = vi.fn();
     render(<Button onClick={onClick}>go</Button>);
     fireEvent.click(screen.getByRole('button'));
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 
   it('is disabled and does not fire onClick when disabled', () => {
-    const onClick = jest.fn();
+    const onClick = vi.fn();
     render(
       <Button disabled onClick={onClick}>
         x
@@ -87,5 +89,14 @@ describe('Button', () => {
   it('respects a custom type', () => {
     render(<Button type="submit">s</Button>);
     expect(screen.getByRole('button')).toHaveAttribute('type', 'submit');
+  });
+});
+
+describe('a11y (axe)', () => {
+  it('has no detectable axe violations in default render', async () => {
+    const { container } = render(<Button iconOnly aria-label="close">
+        <span>×</span>
+      </Button>);
+    await expectNoA11yViolations(container);
   });
 });

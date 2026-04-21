@@ -1,7 +1,8 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 import { ColorInput } from './ColorInput';
+import { expectNoA11yViolations } from '../../test-utils/axe';
 
 describe('ColorInput', () => {
   it('renders without errors', () => {
@@ -47,5 +48,12 @@ describe('ColorInput', () => {
     const ref = React.createRef<HTMLInputElement>();
     render(<ColorInput ref={ref} />);
     expect(ref.current).toBeInstanceOf(HTMLInputElement);
+  });
+});
+
+describe('a11y (axe)', () => {
+  it('has no detectable axe violations in default render', async () => {
+    const { container } = render(<ColorInput label="Brand color" />);
+    await expectNoA11yViolations(container);
   });
 });

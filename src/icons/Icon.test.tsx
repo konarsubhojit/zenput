@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { Icon } from './Icon';
 import { CheckIcon, CloseIcon } from './icons';
+import { expectNoA11yViolations } from '../test-utils/axe';
 
 describe('Icon', () => {
   it('renders decoratively (aria-hidden) when no label is provided', () => {
@@ -48,5 +49,14 @@ describe('Icon', () => {
   it('passes label through on built-in icons', () => {
     render(<CheckIcon label="Done" />);
     expect(screen.getByRole('img', { name: 'Done' })).toBeInTheDocument();
+  });
+});
+
+describe('a11y (axe)', () => {
+  it('has no detectable axe violations in default render', async () => {
+    const { container } = render(<Icon label="Close">
+        <path d="M0 0h24v24H0z" />
+      </Icon>);
+    await expectNoA11yViolations(container);
   });
 });

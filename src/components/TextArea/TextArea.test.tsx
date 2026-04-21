@@ -1,8 +1,10 @@
+import { vi } from 'vitest';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 import { TextArea } from './TextArea';
+import { expectNoA11yViolations } from '../../test-utils/axe';
 
 describe('TextArea', () => {
   it('renders without errors', () => {
@@ -52,7 +54,7 @@ describe('TextArea', () => {
   });
 
   it('calls onChange when user types', async () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
     render(<TextArea onChange={handleChange} />);
     await userEvent.type(screen.getByRole('textbox'), 'hello');
     expect(handleChange).toHaveBeenCalled();
@@ -67,5 +69,12 @@ describe('TextArea', () => {
     const ref = React.createRef<HTMLTextAreaElement>();
     render(<TextArea ref={ref} />);
     expect(ref.current).toBeInstanceOf(HTMLTextAreaElement);
+  });
+});
+
+describe('a11y (axe)', () => {
+  it('has no detectable axe violations in default render', async () => {
+    const { container } = render(<TextArea label="Bio" />);
+    await expectNoA11yViolations(container);
   });
 });

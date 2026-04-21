@@ -1,5 +1,12 @@
 # Zenput
 
+[![CI](https://github.com/konarsubhojit/zenput/actions/workflows/ci.yml/badge.svg)](https://github.com/konarsubhojit/zenput/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/konarsubhojit/zenput/branch/master/graph/badge.svg)](https://codecov.io/gh/konarsubhojit/zenput)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=konarsubhojit_simple-app&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=konarsubhojit_simple-app)
+[![npm](https://img.shields.io/npm/v/zenput.svg)](https://www.npmjs.com/package/zenput)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/zenput)](https://bundlephobia.com/package/zenput)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+
 A production-ready, accessible React TypeScript input components library with 18 fully-featured components.
 
 ## Features
@@ -250,21 +257,58 @@ import { ThemeProvider } from 'zenput';
 # Install dependencies
 npm install
 
-# Run tests
+# Run tests (Vitest)
 npm test
 
-# Run tests with coverage
+# Watch tests / open Vitest UI
+npm run test:watch
+npm run test:ui
+
+# Run tests with coverage (90% lines / 85% branches threshold)
 npm run test:coverage
 
-# Build the library
+# Build the library (Rollup → dist/)
 npm run build
 
-# Lint
+# Lint (ESLint 9 flat config + jsx-a11y)
 npm run lint
 
 # Type check
 npm run type-check
+
+# Bundle-size budget (size-limit)
+npm run size
+npm run size:why
+
+# Storybook
+npm run storybook         # dev server on :6006
+npm run build-storybook   # static build → storybook-static/
+npm run test:storybook    # Storybook a11y via @storybook/test-runner
 ```
+
+## Running CI locally
+
+Both GitHub Actions and the Azure Pipeline delegate to the same npm scripts,
+so a local run that matches CI is:
+
+```bash
+npm ci
+npm run lint
+npm run type-check
+npm run test:ci          # coverage + JUnit (reports/junit.xml)
+npm run build
+npm run build-storybook
+npm run size
+```
+
+### Azure self-hosted prerequisites
+
+The Azure Pipeline (`AzCICD.yml`) targets a self-hosted Linux agent pool
+named `Default`. The agent needs `git`, Node 20.x (ideally managed via `nvm`),
+and npm 10+ pre-installed. Playwright browsers are cached under
+`~/.cache/ms-playwright` and installed only when missing. SonarCloud analysis
+is gated on a `SONAR_TOKEN` pipeline variable and a service connection named
+`SonarCloud`.
 
 ## License
 

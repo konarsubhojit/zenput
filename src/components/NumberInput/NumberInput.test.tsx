@@ -1,8 +1,10 @@
+import { vi } from 'vitest';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 import { NumberInput } from './NumberInput';
+import { expectNoA11yViolations } from '../../test-utils/axe';
 
 describe('NumberInput', () => {
   it('renders without errors', () => {
@@ -54,7 +56,7 @@ describe('NumberInput', () => {
   });
 
   it('calls onChange with numeric value', async () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
     render(<NumberInput onChange={handleChange} />);
     await userEvent.type(screen.getByRole('spinbutton'), '42');
     expect(handleChange).toHaveBeenCalled();
@@ -82,5 +84,12 @@ describe('NumberInput', () => {
       />
     );
     expect(screen.getByDisplayValue('$1234.50')).toBeInTheDocument();
+  });
+});
+
+describe('a11y (axe)', () => {
+  it('has no detectable axe violations in default render', async () => {
+    const { container } = render(<NumberInput label="Quantity" />);
+    await expectNoA11yViolations(container);
   });
 });

@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { Stack, HStack, VStack } from './Stack';
+import { expectNoA11yViolations } from '../../../test-utils/axe';
 
 describe('Stack', () => {
   it('renders with column direction by default and token gap', () => {
@@ -46,5 +47,15 @@ describe('Stack', () => {
     const el = screen.getByTestId('s') as HTMLElement;
     expect(el.style.alignItems).toBe('center');
     expect(el.style.justifyContent).toBe('space-between');
+  });
+});
+
+describe('a11y (axe)', () => {
+  it('has no detectable axe violations in default render', async () => {
+    const { container } = render(<Stack data-testid="s">
+        <span>a</span>
+        <span>b</span>
+      </Stack>);
+    await expectNoA11yViolations(container);
   });
 });

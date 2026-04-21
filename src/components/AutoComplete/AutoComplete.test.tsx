@@ -1,8 +1,10 @@
+import { vi } from 'vitest';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 import { AutoComplete } from './AutoComplete';
+import { expectNoA11yViolations } from '../../test-utils/axe';
 
 const OPTIONS = [
   { value: 'react', label: 'React' },
@@ -41,7 +43,7 @@ describe('AutoComplete', () => {
   });
 
   it('selects an option on click', async () => {
-    const handleSelect = jest.fn();
+    const handleSelect = vi.fn();
     render(<AutoComplete options={OPTIONS} onSelect={handleSelect} />);
     await userEvent.click(screen.getByRole('combobox'));
     await userEvent.click(screen.getByRole('option', { name: 'React' }));
@@ -66,7 +68,7 @@ describe('AutoComplete', () => {
   });
 
   it('calls onSearch when typing', async () => {
-    const handleSearch = jest.fn();
+    const handleSearch = vi.fn();
     render(<AutoComplete options={OPTIONS} onSearch={handleSearch} />);
     await userEvent.type(screen.getByRole('combobox'), 'reac');
     expect(handleSearch).toHaveBeenCalledWith('reac');
@@ -89,5 +91,12 @@ describe('AutoComplete', () => {
     const ref = React.createRef<HTMLInputElement>();
     render(<AutoComplete options={OPTIONS} ref={ref} />);
     expect(ref.current).toBeInstanceOf(HTMLInputElement);
+  });
+});
+
+describe('a11y (axe)', () => {
+  it('has no detectable axe violations in default render', async () => {
+    const { container } = render(<AutoComplete label="Framework" options={OPTIONS} />);
+    await expectNoA11yViolations(container);
   });
 });
