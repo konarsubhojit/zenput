@@ -29,6 +29,7 @@ export const Icon = forwardRef<SVGSVGElement, IconProps>(function Icon(
   const decorative = !label;
   return (
     <svg
+      {...rest}
       ref={ref}
       role={decorative ? undefined : 'img'}
       aria-hidden={decorative || undefined}
@@ -38,7 +39,6 @@ export const Icon = forwardRef<SVGSVGElement, IconProps>(function Icon(
       height={size}
       viewBox={viewBox}
       className={classNames(styles.icon, className)}
-      {...rest}
     >
       {children}
     </svg>

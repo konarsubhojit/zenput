@@ -118,9 +118,15 @@ function assignTokens(
 /**
  * Helper to reference a CSS variable by semantic key (typed).
  * Example: `cssVar('color-brand')` -> `var(--zp-color-brand)`.
+ *
+ * Numeric spacing keys with decimals are normalized to the same dash form
+ * used by {@link buildCssVariables} (e.g. `space-0.5` -> `--zp-space-0-5`)
+ * so callers can pass the raw token key without having to know the
+ * normalization rules.
  */
 export function cssVar(name: string, fallback?: string): string {
+  const normalized = name.replace(/\./g, '-');
   return fallback
-    ? `var(${CSS_VAR_PREFIX}-${name}, ${fallback})`
-    : `var(${CSS_VAR_PREFIX}-${name})`;
+    ? `var(${CSS_VAR_PREFIX}-${normalized}, ${fallback})`
+    : `var(${CSS_VAR_PREFIX}-${normalized})`;
 }

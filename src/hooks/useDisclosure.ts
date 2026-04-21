@@ -36,16 +36,24 @@ export function useDisclosure(options: UseDisclosureOptions = {}): UseDisclosure
   const isControlled = controlledOpen !== undefined;
   const open = controlledOpen !== undefined ? controlledOpen : uncontrolledOpen;
 
-  // Track the latest `open` so updater-form calls in controlled mode can
-  // resolve against the current value without a stale closure.
-  const openRef = useRef(open);
-  openRef.current = open;
+  // In controlled mode the parent only updates `open` after it processes
+  // `onOpenChange`, so within a synchronous burst of `setOpen` calls the
+  // underlying prop is still stale. `pendingRef` tracks the value we most
+  // recently emitted so rapid successive functional updates compose
+  // against the latest pending state instead of collapsing.
+  const pendingRef = useRef<boolean>(open);
+  pendingRef.current = open;
 
   const setOpen = useCallback<SetOpen>(
     (next) => {
       if (isControlled) {
-        const resolved =
-          typeof next === 'function' ? next(openRef.current) : next;
+        const base = pendingRef.current;
+        const resolved = typeof next === 'function' ? next(base) : next;
+        if (resolved === base) {
+          // No-op: don't emit duplicate change events.
+          return;
+        }
+        pendingRef.current = resolved;
         onOpenChange?.(resolved);
         return;
       }

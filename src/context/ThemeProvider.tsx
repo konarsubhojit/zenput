@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useMemo, CSSProperties } from 'react';
 import {
   buildCssVariables,
+  cssVar,
   semanticByMode,
-  CSS_VAR_PREFIX,
   SemanticColors,
   ThemeMode,
 } from '../tokens';
@@ -158,15 +158,18 @@ export function useTheme(): ThemeContextValue {
 /**
  * Resolve a token reference to its CSS `var(...)` expression.
  *
+ * Delegates to {@link cssVar} so spacing keys with decimals (e.g.
+ * `space-0.5`) are normalized to the same dash form used in the emitted
+ * CSS custom-property names (e.g. `--zp-space-0-5`).
+ *
  * Examples:
  *   tokenVar('color-brand')             -> 'var(--zp-color-brand)'
  *   tokenVar('space-4')                 -> 'var(--zp-space-4)'
+ *   tokenVar('space-0.5')               -> 'var(--zp-space-0-5)'
  *   tokenVar('color-brand', '#0000ff')  -> 'var(--zp-color-brand, #0000ff)'
  */
 export function tokenVar(name: string, fallback?: string): string {
   // Context is intentionally not read: CSS variables are scoped via the
   // ThemeProvider wrapper element, and `var(...)` just references them.
-  return fallback
-    ? `var(${CSS_VAR_PREFIX}-${name}, ${fallback})`
-    : `var(${CSS_VAR_PREFIX}-${name})`;
+  return cssVar(name, fallback);
 }
