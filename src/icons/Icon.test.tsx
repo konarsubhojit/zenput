@@ -13,7 +13,7 @@ describe('Icon', () => {
     const svg = container.querySelector('svg');
     expect(svg).toBeInTheDocument();
     expect(svg).toHaveAttribute('aria-hidden', 'true');
-    expect(svg).toHaveAttribute('role', 'presentation');
+    expect(svg).not.toHaveAttribute('role');
   });
 
   it('sets role="img" and aria-label when label is provided', () => {

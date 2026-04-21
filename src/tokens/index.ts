@@ -76,55 +76,43 @@ export function buildCssVariables(
     }
   }
 
-  // Semantic colors.
-  for (const [key, value] of Object.entries(semantic)) {
-    vars[`${CSS_VAR_PREFIX}-color-${kebab(key)}`] = value;
-  }
+  // Semantic colors use kebab-cased keys.
+  assignTokens(vars, 'color', semantic, kebab);
 
   // Typography.
-  for (const [key, value] of Object.entries(fontFamilies)) {
-    vars[`${CSS_VAR_PREFIX}-font-family-${key}`] = value;
-  }
-  for (const [key, value] of Object.entries(fontSizes)) {
-    vars[`${CSS_VAR_PREFIX}-font-size-${key}`] = value;
-  }
-  for (const [key, value] of Object.entries(fontWeights)) {
-    vars[`${CSS_VAR_PREFIX}-font-weight-${key}`] = String(value);
-  }
-  for (const [key, value] of Object.entries(lineHeights)) {
-    vars[`${CSS_VAR_PREFIX}-line-height-${key}`] = String(value);
-  }
-  for (const [key, value] of Object.entries(letterSpacings)) {
-    vars[`${CSS_VAR_PREFIX}-letter-spacing-${key}`] = value;
-  }
+  assignTokens(vars, 'font-family', fontFamilies);
+  assignTokens(vars, 'font-size', fontSizes);
+  assignTokens(vars, 'font-weight', fontWeights);
+  assignTokens(vars, 'line-height', lineHeights);
+  assignTokens(vars, 'letter-spacing', letterSpacings);
 
-  // Spacing / radii / borders / shadows / motion / zIndex / breakpoints.
-  for (const [key, value] of Object.entries(spacing)) {
-    vars[`${CSS_VAR_PREFIX}-space-${normalizeSpacingKey(key)}`] = value;
-  }
-  for (const [key, value] of Object.entries(radii)) {
-    vars[`${CSS_VAR_PREFIX}-radius-${key}`] = value;
-  }
-  for (const [key, value] of Object.entries(borderWidths)) {
-    vars[`${CSS_VAR_PREFIX}-border-width-${key}`] = value;
-  }
-  for (const [key, value] of Object.entries(shadows)) {
-    vars[`${CSS_VAR_PREFIX}-shadow-${key}`] = value;
-  }
-  for (const [key, value] of Object.entries(durations)) {
-    vars[`${CSS_VAR_PREFIX}-duration-${key}`] = value;
-  }
-  for (const [key, value] of Object.entries(easings)) {
-    vars[`${CSS_VAR_PREFIX}-easing-${key}`] = value;
-  }
-  for (const [key, value] of Object.entries(zIndex)) {
-    vars[`${CSS_VAR_PREFIX}-z-${key}`] = String(value);
-  }
-  for (const [key, value] of Object.entries(breakpoints)) {
-    vars[`${CSS_VAR_PREFIX}-breakpoint-${key}`] = value;
-  }
+  // Spacing uses a dash-normalized key so decimal steps remain valid
+  // CSS custom-property identifiers (e.g. "0.5" -> "0-5").
+  assignTokens(vars, 'space', spacing, normalizeSpacingKey);
+
+  // Radii / borders / shadows / motion / zIndex / breakpoints.
+  assignTokens(vars, 'radius', radii);
+  assignTokens(vars, 'border-width', borderWidths);
+  assignTokens(vars, 'shadow', shadows);
+  assignTokens(vars, 'duration', durations);
+  assignTokens(vars, 'easing', easings);
+  assignTokens(vars, 'z', zIndex);
+  assignTokens(vars, 'breakpoint', breakpoints);
 
   return vars;
+}
+
+/** Emit `${CSS_VAR_PREFIX}-${category}-${keyFn(key)}` entries for every
+ * own property of `source`, coercing non-string values to string. */
+function assignTokens(
+  target: Record<string, string>,
+  category: string,
+  source: object,
+  keyFn: (key: string) => string = (k) => k
+): void {
+  for (const [key, value] of Object.entries(source)) {
+    target[`${CSS_VAR_PREFIX}-${category}-${keyFn(key)}`] = String(value);
+  }
 }
 
 /**

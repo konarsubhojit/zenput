@@ -76,11 +76,11 @@ export function createTheme(theme: Theme = {}): {
   const mode = theme.mode ?? defaultMode;
   const semantic: SemanticColors = {
     ...semanticByMode[mode],
-    ...(theme.semantic ?? {}),
+    ...theme.semantic,
   };
   const cssVars: Record<string, string> = {
     ...buildCssVariables(semantic),
-    ...(theme.cssVars ?? {}),
+    ...theme.cssVars,
   };
   return { mode, semantic, cssVars };
 }
@@ -126,7 +126,7 @@ interface ThemeProviderProps {
  * don't invalidate memoization on every render. */
 const EMPTY_THEME: Theme = Object.freeze({}) as Theme;
 
-export function ThemeProvider({ theme = EMPTY_THEME, as = 'div', children }: ThemeProviderProps): JSX.Element {
+export function ThemeProvider({ theme = EMPTY_THEME, as = 'div', children }: Readonly<ThemeProviderProps>): JSX.Element {
   const { mode, semantic, cssVars } = useMemo(() => createTheme(theme), [theme]);
   const legacy = useMemo(() => legacyCssVars(theme), [theme]);
 

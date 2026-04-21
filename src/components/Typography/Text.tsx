@@ -71,7 +71,7 @@ export const Text = forwardRef(function Text(
   }: PolymorphicProps<React.ElementType, TextOwnProps>,
   ref: React.ForwardedRef<Element>
 ) {
-  const Component = (as ?? 'span') as React.ElementType;
+  const Component: React.ElementType = as ?? 'span';
   return (
     <Component
       ref={ref}

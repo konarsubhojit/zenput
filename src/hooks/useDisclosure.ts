@@ -34,7 +34,7 @@ export function useDisclosure(options: UseDisclosureOptions = {}): UseDisclosure
   const [uncontrolledOpen, setUncontrolledOpen] = useState<boolean>(defaultOpen);
 
   const isControlled = controlledOpen !== undefined;
-  const open = isControlled ? (controlledOpen as boolean) : uncontrolledOpen;
+  const open = controlledOpen !== undefined ? controlledOpen : uncontrolledOpen;
 
   // Track the latest `open` so updater-form calls in controlled mode can
   // resolve against the current value without a stale closure.

@@ -60,7 +60,7 @@ export const Heading = forwardRef(function Heading(
   }: PolymorphicProps<React.ElementType, HeadingOwnProps>,
   ref: React.ForwardedRef<Element>
 ) {
-  const Component = (as ?? (`h${level}` as React.ElementType)) as React.ElementType;
+  const Component: React.ElementType = as ?? `h${level}`;
   const resolvedSize = size ?? defaultSizeByLevel[level];
   return (
     <Component

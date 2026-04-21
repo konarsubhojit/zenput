@@ -30,7 +30,7 @@ export const Icon = forwardRef<SVGSVGElement, IconProps>(function Icon(
   return (
     <svg
       ref={ref}
-      role={decorative ? 'presentation' : 'img'}
+      role={decorative ? undefined : 'img'}
       aria-hidden={decorative || undefined}
       aria-label={label}
       focusable="false"

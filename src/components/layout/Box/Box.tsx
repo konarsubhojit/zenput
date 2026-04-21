@@ -125,7 +125,7 @@ export const Box = forwardRef(function Box(
   }: PolymorphicProps<React.ElementType, BoxOwnProps>,
   ref: React.ForwardedRef<Element>
 ) {
-  const Component = (as ?? 'div') as React.ElementType;
+  const Component: React.ElementType = as ?? 'div';
   const resolvedStyle: React.CSSProperties = {
     padding: spacingToken(p),
     paddingLeft: spacingToken(pl) ?? spacingToken(px),

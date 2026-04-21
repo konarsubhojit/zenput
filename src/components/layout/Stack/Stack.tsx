@@ -76,7 +76,7 @@ export const Stack = forwardRef(function Stack(
   }: PolymorphicProps<React.ElementType, StackOwnProps>,
   ref: React.ForwardedRef<Element>
 ) {
-  const Component = (as ?? 'div') as React.ElementType;
+  const Component: React.ElementType = as ?? 'div';
   const resolvedStyle: React.CSSProperties = {
     flexDirection: direction,
     gap: `var(--zp-space-${normalizeSpacingKey(gap)})`,
