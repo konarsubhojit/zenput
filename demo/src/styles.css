@@ -1,0 +1,251 @@
+/* Demo-site-only styles. Values are sourced from the Zenput design-system
+ * CSS variables emitted by <ThemeProvider>, so the demo shell reacts to
+ * theme switches the same way the components do. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--zp-font-family-sans, system-ui, -apple-system, Segoe UI, Roboto, sans-serif);
+  background: var(--zp-color-surface-canvas, #f8fafc);
+  color: var(--zp-color-text-default, #0f172a);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 100vh;
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.875rem 1.5rem;
+  background: var(--zp-color-surface-raised, #ffffff);
+  border-bottom: 1px solid var(--zp-color-border-default, #e2e8f0);
+  box-shadow: var(--zp-shadow-sm, 0 1px 2px rgba(15, 23, 42, 0.04));
+}
+
+.app-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.app-brand-name {
+  font-size: var(--zp-font-size-lg, 1.125rem);
+  font-weight: var(--zp-font-weight-semibold, 600);
+  letter-spacing: -0.01em;
+}
+
+.app-brand-tag {
+  font-size: var(--zp-font-size-sm, 0.875rem);
+  color: var(--zp-color-text-muted, #64748b);
+}
+
+.app-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-left: auto;
+  align-items: center;
+}
+
+.app-control {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: var(--zp-font-size-sm, 0.875rem);
+  color: var(--zp-color-text-muted, #64748b);
+}
+
+.app-control select {
+  padding: 0.35rem 0.55rem;
+  border-radius: var(--zp-radius-md, 6px);
+  border: 1px solid var(--zp-color-border-default, #cbd5e1);
+  background: var(--zp-color-surface-raised, #ffffff);
+  color: var(--zp-color-text-default, #0f172a);
+  font: inherit;
+}
+
+.app-body {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 0;
+}
+
+.app-nav {
+  position: sticky;
+  top: 60px;
+  align-self: start;
+  max-height: calc(100vh - 60px);
+  overflow-y: auto;
+  padding: 1.25rem 1rem;
+  border-right: 1px solid var(--zp-color-border-default, #e2e8f0);
+  background: var(--zp-color-surface-canvas, #f8fafc);
+}
+
+.app-nav h2 {
+  font-size: var(--zp-font-size-xs, 0.75rem);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--zp-color-text-muted, #64748b);
+  margin: 1rem 0 0.5rem;
+}
+
+.app-nav h2:first-child {
+  margin-top: 0;
+}
+
+.app-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.app-nav a {
+  display: block;
+  padding: 0.35rem 0.6rem;
+  border-radius: var(--zp-radius-sm, 4px);
+  color: var(--zp-color-text-default, #0f172a);
+  font-size: var(--zp-font-size-sm, 0.875rem);
+  text-decoration: none;
+}
+
+.app-nav a:hover,
+.app-nav a:focus-visible {
+  background: var(--zp-color-surface-subtle, #f1f5f9);
+  outline: none;
+}
+
+.app-main {
+  padding: 2rem clamp(1rem, 3vw, 2.5rem);
+  max-width: 1200px;
+}
+
+.component-section {
+  padding-top: 1rem;
+  margin-bottom: 3rem;
+  scroll-margin-top: 80px;
+}
+
+.component-section > header {
+  margin-bottom: 1rem;
+}
+
+.component-section h2 {
+  margin: 0 0 0.25rem;
+  font-size: var(--zp-font-size-xl, 1.5rem);
+  font-weight: var(--zp-font-weight-semibold, 600);
+  letter-spacing: -0.01em;
+}
+
+.component-section .description {
+  margin: 0;
+  color: var(--zp-color-text-muted, #64748b);
+  font-size: var(--zp-font-size-sm, 0.9375rem);
+}
+
+.scenarios {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(360px, 100%), 1fr));
+  gap: 1rem;
+}
+
+.scenario {
+  padding: 1.25rem;
+  border-radius: var(--zp-radius-lg, 10px);
+  border: 1px solid var(--zp-color-border-default, #e2e8f0);
+  background: var(--zp-color-surface-raised, #ffffff);
+  box-shadow: var(--zp-shadow-xs, 0 1px 1px rgba(15, 23, 42, 0.03));
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.scenario-title {
+  font-size: var(--zp-font-size-sm, 0.8125rem);
+  font-weight: var(--zp-font-weight-semibold, 600);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--zp-color-text-muted, #64748b);
+}
+
+.scenario-full {
+  grid-column: 1 / -1;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.muted {
+  color: var(--zp-color-text-muted, #64748b);
+  font-size: var(--zp-font-size-sm, 0.875rem);
+}
+
+.intro {
+  margin-bottom: 2.5rem;
+  padding: 1.5rem 1.75rem;
+  border-radius: var(--zp-radius-lg, 10px);
+  background: linear-gradient(
+    135deg,
+    var(--zp-color-brand-subtle, #eef2ff),
+    var(--zp-color-surface-raised, #ffffff)
+  );
+  border: 1px solid var(--zp-color-border-default, #e2e8f0);
+}
+
+.intro h1 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.5rem, 2.2vw, 2rem);
+  letter-spacing: -0.02em;
+}
+
+.intro p {
+  margin: 0;
+  color: var(--zp-color-text-muted, #334155);
+  max-width: 64ch;
+}
+
+@media (max-width: 880px) {
+  .app-body {
+    grid-template-columns: 1fr;
+  }
+  .app-nav {
+    position: static;
+    max-height: none;
+    border-right: 0;
+    border-bottom: 1px solid var(--zp-color-border-default, #e2e8f0);
+  }
+}
