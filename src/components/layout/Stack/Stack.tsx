@@ -103,22 +103,30 @@ export const Stack = forwardRef(function Stack(
 
 (Stack as { displayName?: string }).displayName = 'Stack';
 
+type HStackComponent = <C extends React.ElementType = 'div'>(
+  props: PolymorphicProps<C, Omit<StackOwnProps, 'direction'>> & { ref?: PolymorphicRef<C> }
+) => React.ReactElement | null;
+
 /** Horizontal stack — `Stack` with `direction="row"`. */
 export const HStack = forwardRef(function HStack(
-  props: PolymorphicProps<React.ElementType, StackOwnProps>,
+  props: PolymorphicProps<React.ElementType, Omit<StackOwnProps, 'direction'>>,
   ref: React.ForwardedRef<Element>
 ) {
   return <Stack ref={ref} {...props} direction="row" />;
-}) as unknown as StackComponent & { displayName?: string };
+}) as unknown as HStackComponent & { displayName?: string };
 
 (HStack as { displayName?: string }).displayName = 'HStack';
 
+type VStackComponent = <C extends React.ElementType = 'div'>(
+  props: PolymorphicProps<C, Omit<StackOwnProps, 'direction'>> & { ref?: PolymorphicRef<C> }
+) => React.ReactElement | null;
+
 /** Vertical stack — `Stack` with `direction="column"` (the default). */
 export const VStack = forwardRef(function VStack(
-  props: PolymorphicProps<React.ElementType, StackOwnProps>,
+  props: PolymorphicProps<React.ElementType, Omit<StackOwnProps, 'direction'>>,
   ref: React.ForwardedRef<Element>
 ) {
   return <Stack ref={ref} {...props} direction="column" />;
-}) as unknown as StackComponent & { displayName?: string };
+}) as unknown as VStackComponent & { displayName?: string };
 
 (VStack as { displayName?: string }).displayName = 'VStack';
