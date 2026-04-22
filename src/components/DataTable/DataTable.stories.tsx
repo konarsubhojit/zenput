@@ -158,7 +158,7 @@ export const WithBulkSelection: Story = {
             <button
               style={{
                 padding: '4px 12px',
-                background: '#ef4444',
+                background: '#dc2626',
                 color: '#fff',
                 border: 'none',
                 borderRadius: '4px',
