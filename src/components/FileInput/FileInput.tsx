@@ -92,7 +92,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
 
     const handleChange = useCallback(
       (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
+        const { files } = e.target;
         if (files && showFileNames) {
           setFileNames(Array.from(files).map((f) => f.name));
         }
@@ -108,7 +108,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
         setIsDragActive(false);
         if (disabled || !internalRef.current) return;
         const dt = e.dataTransfer;
-        const files = dt.files;
+        const { files } = dt;
         if (files && showFileNames) {
           setFileNames(Array.from(files).map((f) => f.name));
         }
