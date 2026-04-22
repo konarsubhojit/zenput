@@ -154,12 +154,12 @@ stages:
               mergeTestResults: true
               failTaskOnFailedTests: true
 
-          - task: PublishCodeCoverageResults@2
-            displayName: 'Publish Cobertura coverage'
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish coverage/ (html + lcov)'
             condition: succeededOrFailed()
             inputs:
-              summaryFileLocation: 'coverage/cobertura-coverage.xml'
-              pathToSources: 'src'
+              targetPath: 'coverage'
+              artifact: 'coverage'
 
           - task: SonarCloudAnalyze@3
             displayName: 'SonarCloud Analyze'

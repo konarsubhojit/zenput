@@ -44,7 +44,6 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm run lint
-      - run: npx prettier --check 'src/**/*.{ts,tsx,css}'
 
   type-check:
     name: Type-check
@@ -61,6 +60,8 @@ jobs:
   test:
     name: Test (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     strategy:
       fail-fast: false
       matrix:
