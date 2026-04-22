@@ -1,8 +1,10 @@
+import { vi } from 'vitest';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 import { MoneyInput } from './MoneyInput';
+import { expectNoA11yViolations } from '../../test-utils/axe';
 
 const CURRENCIES = [
   { code: 'USD', symbol: '$', label: 'US Dollar' },
@@ -34,14 +36,14 @@ describe('MoneyInput', () => {
   });
 
   it('calls onCurrencyChange when currency is changed', async () => {
-    const handleCurrencyChange = jest.fn();
+    const handleCurrencyChange = vi.fn();
     render(<MoneyInput currencies={CURRENCIES} onCurrencyChange={handleCurrencyChange} />);
     await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Currency' }), 'EUR');
     expect(handleCurrencyChange).toHaveBeenCalledWith('EUR');
   });
 
   it('calls onChange when amount is typed', async () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
     render(<MoneyInput currencies={CURRENCIES} onChange={handleChange} />);
     await userEvent.type(screen.getByRole('spinbutton'), '99');
     expect(handleChange).toHaveBeenCalled();
@@ -77,12 +79,15 @@ describe('MoneyInput', () => {
 
   it('uses controlled currency value', () => {
     render(
-      <MoneyInput
-        currencies={CURRENCIES}
-        currency="EUR"
-        onCurrencyChange={() => undefined}
-      />
+      <MoneyInput currencies={CURRENCIES} currency="EUR" onCurrencyChange={() => undefined} />
     );
     expect(screen.getByRole('combobox', { name: 'Currency' })).toHaveValue('EUR');
+  });
+});
+
+describe('a11y (axe)', () => {
+  it('has no detectable axe violations in default render', async () => {
+    const { container } = render(<MoneyInput currencies={CURRENCIES} label="Price" />);
+    await expectNoA11yViolations(container);
   });
 });

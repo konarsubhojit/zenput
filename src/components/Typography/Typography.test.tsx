@@ -5,6 +5,7 @@ import { Heading } from './Heading';
 import { Link } from './Link';
 import { Code } from './Code';
 import { Kbd } from './Kbd';
+import { expectNoA11yViolations } from '../../test-utils/axe';
 
 describe('Typography', () => {
   describe('Text', () => {
@@ -98,5 +99,12 @@ describe('Typography', () => {
       const { container } = render(<Kbd>Ctrl</Kbd>);
       expect(container.querySelector('kbd')).toBeInTheDocument();
     });
+  });
+});
+
+describe('a11y (axe)', () => {
+  it('has no detectable axe violations in default render', async () => {
+    const { container } = render(<Text as="p">hello</Text>);
+    await expectNoA11yViolations(container);
   });
 });

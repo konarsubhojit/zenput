@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { Divider } from './Divider';
+import { expectNoA11yViolations } from '../../../test-utils/axe';
 
 describe('Divider', () => {
   it('renders a separator with horizontal orientation by default', () => {
@@ -31,5 +32,12 @@ describe('Divider', () => {
   it('applies strong styling even when a label is present', () => {
     render(<Divider label="or" strong />);
     expect(screen.getByRole('separator').className).toMatch(/labelWrapperStrong/);
+  });
+});
+
+describe('a11y (axe)', () => {
+  it('has no detectable axe violations in default render', async () => {
+    const { container } = render(<Divider label="or" />);
+    await expectNoA11yViolations(container);
   });
 });

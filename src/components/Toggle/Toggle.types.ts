@@ -2,7 +2,8 @@ import React from 'react';
 import { BaseInputProps } from '../../types';
 
 export interface ToggleProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size' | 'type'>,
+  extends
+    Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size' | 'type'>,
     Pick<
       BaseInputProps,
       | 'size'

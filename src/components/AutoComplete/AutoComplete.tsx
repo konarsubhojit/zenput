@@ -1,13 +1,11 @@
-import React, {
-  forwardRef,
-  useState,
-  useCallback,
-  useRef,
-  useEffect,
-  useId,
-} from 'react';
+import React, { forwardRef, useState, useCallback, useRef, useEffect, useId } from 'react';
 import { AutoCompleteProps, AutoCompleteOption } from './AutoComplete.types';
-import { classNames, getValidationMessage, getValidationMessageClass, DROPDOWN_BLUR_DELAY_MS } from '../../utils';
+import {
+  classNames,
+  getValidationMessage,
+  getValidationMessageClass,
+  DROPDOWN_BLUR_DELAY_MS,
+} from '../../utils';
 import { useFormField } from '../../hooks';
 import styles from './AutoComplete.module.css';
 
@@ -209,7 +207,11 @@ export const AutoComplete = forwardRef<HTMLInputElement, AutoCompleteProps>(
         {label && (
           <label
             {...labelProps}
-            className={classNames(styles.label, required ? styles.required : undefined, labelClassName)}
+            className={classNames(
+              styles.label,
+              required ? styles.required : undefined,
+              labelClassName
+            )}
             style={labelStyle}
           >
             {label}
@@ -236,9 +238,7 @@ export const AutoComplete = forwardRef<HTMLInputElement, AutoCompleteProps>(
             aria-controls={listboxId}
             aria-autocomplete="list"
             aria-activedescendant={
-              highlightedIndex >= 0
-                ? `${listboxId}-option-${highlightedIndex}`
-                : undefined
+              highlightedIndex >= 0 ? `${listboxId}-option-${highlightedIndex}` : undefined
             }
             className={classNames(styles.input, inputClassName, className)}
             style={inputStyle}

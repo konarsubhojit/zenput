@@ -25,16 +25,41 @@ export const AutoResize: Story = {
 };
 
 export const ShowCharCount: Story = {
-  args: { label: 'With Character Count', placeholder: 'Max 200 chars', maxLength: 200, showCharCount: true },
+  args: {
+    label: 'With Character Count',
+    placeholder: 'Max 200 chars',
+    maxLength: 200,
+    showCharCount: true,
+  },
 };
 
 export const ValidationStates: Story = {
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      <TextArea label="Default" placeholder="default" validationState="default" helperText="Helper text" />
-      <TextArea label="Error" placeholder="error" validationState="error" errorMessage="This field is required" />
-      <TextArea label="Success" placeholder="success" validationState="success" successMessage="Looks good!" />
-      <TextArea label="Warning" placeholder="warning" validationState="warning" warningMessage="Check this value" />
+      <TextArea
+        label="Default"
+        placeholder="default"
+        validationState="default"
+        helperText="Helper text"
+      />
+      <TextArea
+        label="Error"
+        placeholder="error"
+        validationState="error"
+        errorMessage="This field is required"
+      />
+      <TextArea
+        label="Success"
+        placeholder="success"
+        validationState="success"
+        successMessage="Looks good!"
+      />
+      <TextArea
+        label="Warning"
+        placeholder="warning"
+        validationState="warning"
+        warningMessage="Check this value"
+      />
     </div>
   ),
 };

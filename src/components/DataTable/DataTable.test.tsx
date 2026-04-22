@@ -1,9 +1,11 @@
+import { vi } from 'vitest';
 import React from 'react';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 import { DataTable } from './DataTable';
 import { DataTableColumn } from './DataTable.types';
+import { expectNoA11yViolations } from '../../test-utils/axe';
 
 interface Person {
   id: number;
@@ -152,7 +154,9 @@ describe('DataTable', () => {
     expect(screen.getByRole('dialog', { name: 'Filter options for Role' })).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Filter by Status' }));
-    expect(screen.queryByRole('dialog', { name: 'Filter options for Role' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('dialog', { name: 'Filter options for Role' })
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('dialog', { name: 'Filter options for Status' })).toBeInTheDocument();
   });
 
@@ -163,7 +167,9 @@ describe('DataTable', () => {
     expect(screen.getByRole('dialog', { name: 'Filter options for Role' })).toBeInTheDocument();
 
     await userEvent.click(filterBtn);
-    expect(screen.queryByRole('dialog', { name: 'Filter options for Role' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('dialog', { name: 'Filter options for Role' })
+    ).not.toBeInTheDocument();
   });
 
   it('uses custom cell renderer when render prop is provided', () => {
@@ -204,13 +210,7 @@ describe('DataTable', () => {
   });
 
   it('uses rowKey prop for stable row keys', () => {
-    render(
-      <DataTable
-        columns={columns}
-        data={data}
-        rowKey={(row) => row.id}
-      />
-    );
+    render(<DataTable columns={columns} data={data} rowKey={(row) => row.id} />);
     expect(screen.getByText('Alice')).toBeInTheDocument();
   });
 
@@ -226,7 +226,7 @@ describe('DataTable', () => {
   });
 
   it('calls onSort when a sortable column header is clicked', async () => {
-    const handleSort = jest.fn();
+    const handleSort = vi.fn();
     const sortableColumns: DataTableColumn<Person>[] = [
       { key: 'name', header: 'Name', sortable: true },
       ...columns.slice(2),
@@ -237,7 +237,7 @@ describe('DataTable', () => {
   });
 
   it('toggles sort direction on second click', async () => {
-    const handleSort = jest.fn();
+    const handleSort = vi.fn();
     const sortableColumns: DataTableColumn<Person>[] = [
       { key: 'name', header: 'Name', sortable: true },
       ...columns.slice(2),
@@ -262,8 +262,10 @@ describe('DataTable', () => {
   // ── Row click / expand ────────────────────────────────────────────────────
 
   it('calls onRowClick when a row is clicked', async () => {
-    const handleRowClick = jest.fn();
-    render(<DataTable columns={columns} data={data} onRowClick={handleRowClick} rowKey={(r) => r.id} />);
+    const handleRowClick = vi.fn();
+    render(
+      <DataTable columns={columns} data={data} onRowClick={handleRowClick} rowKey={(r) => r.id} />
+    );
     await userEvent.click(screen.getByText('Alice'));
     expect(handleRowClick).toHaveBeenCalledWith(data[0]);
   });
@@ -306,7 +308,7 @@ describe('DataTable', () => {
   });
 
   it('calls onSelectionChange when a row checkbox is clicked', async () => {
-    const handleSelectionChange = jest.fn();
+    const handleSelectionChange = vi.fn();
     render(
       <DataTable
         columns={columns}
@@ -322,7 +324,7 @@ describe('DataTable', () => {
   });
 
   it('selects all rows when select-all checkbox is clicked', async () => {
-    const handleSelectionChange = jest.fn();
+    const handleSelectionChange = vi.fn();
     render(
       <DataTable
         columns={columns}
@@ -359,7 +361,7 @@ describe('DataTable', () => {
       <DataTable
         columns={columns}
         data={data}
-        pagination={{ currentPage: 1, pageSize: 2, totalCount: 4, onPageChange: jest.fn() }}
+        pagination={{ currentPage: 1, pageSize: 2, totalCount: 4, onPageChange: vi.fn() }}
       />
     );
     expect(screen.getByLabelText('Previous page')).toBeInTheDocument();
@@ -369,7 +371,7 @@ describe('DataTable', () => {
   });
 
   it('calls onPageChange when a page button is clicked', async () => {
-    const handlePageChange = jest.fn();
+    const handlePageChange = vi.fn();
     render(
       <DataTable
         columns={columns}
@@ -386,7 +388,7 @@ describe('DataTable', () => {
       <DataTable
         columns={columns}
         data={data}
-        pagination={{ currentPage: 1, pageSize: 2, totalCount: 4, onPageChange: jest.fn() }}
+        pagination={{ currentPage: 1, pageSize: 2, totalCount: 4, onPageChange: vi.fn() }}
       />
     );
     expect(screen.getByLabelText('Previous page')).toBeDisabled();
@@ -397,7 +399,7 @@ describe('DataTable', () => {
       <DataTable
         columns={columns}
         data={data}
-        pagination={{ currentPage: 2, pageSize: 2, totalCount: 4, onPageChange: jest.fn() }}
+        pagination={{ currentPage: 2, pageSize: 2, totalCount: 4, onPageChange: vi.fn() }}
       />
     );
     expect(screen.getByLabelText('Next page')).toBeDisabled();
@@ -409,7 +411,7 @@ describe('DataTable', () => {
         columns={columns}
         data={[]}
         loading
-        pagination={{ currentPage: 1, pageSize: 2, totalCount: 4, onPageChange: jest.fn() }}
+        pagination={{ currentPage: 1, pageSize: 2, totalCount: 4, onPageChange: vi.fn() }}
       />
     );
     expect(screen.getByLabelText('Previous page')).toBeDisabled();
@@ -421,9 +423,16 @@ describe('DataTable', () => {
       <DataTable
         columns={columns}
         data={[]}
-        pagination={{ currentPage: 1, pageSize: 10, totalCount: 0, onPageChange: jest.fn() }}
+        pagination={{ currentPage: 1, pageSize: 10, totalCount: 0, onPageChange: vi.fn() }}
       />
     );
     expect(screen.getByText('0–0 of 0')).toBeInTheDocument();
+  });
+});
+
+describe('a11y (axe)', () => {
+  it('has no detectable axe violations in default render', async () => {
+    const { container } = render(<DataTable columns={columns} data={data} />);
+    await expectNoA11yViolations(container);
   });
 });

@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { Box } from './Box';
+import { expectNoA11yViolations } from '../../../test-utils/axe';
 
 describe('Box', () => {
   it('renders a div by default with box class', () => {
@@ -34,9 +35,7 @@ describe('Box', () => {
     // React sets the CSS properties on style; JSDOM may drop invalid
     // values, but we can at least assert that padding is not a stray
     // non-token value.
-    expect(el.style.padding === '' || el.style.padding.includes('--zp-space')).toBe(
-      true
-    );
+    expect(el.style.padding === '' || el.style.padding.includes('--zp-space')).toBe(true);
   });
 
   it('maps radius/shadow to token vars', () => {
@@ -57,5 +56,12 @@ describe('Box', () => {
       </Box>
     );
     expect(screen.getByTestId('b').className).toMatch(/fullWidth/);
+  });
+});
+
+describe('a11y (axe)', () => {
+  it('has no detectable axe violations in default render', async () => {
+    const { container } = render(<Box data-testid="b">x</Box>);
+    await expectNoA11yViolations(container);
   });
 });

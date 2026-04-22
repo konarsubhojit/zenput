@@ -76,19 +76,19 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
       validationState === 'error'
         ? errorMessage
         : validationState === 'success'
-        ? successMessage
-        : validationState === 'warning'
-        ? warningMessage
-        : helperText;
+          ? successMessage
+          : validationState === 'warning'
+            ? warningMessage
+            : helperText;
 
     const messageClass =
       validationState === 'error'
         ? styles.errorText
         : validationState === 'success'
-        ? styles.successText
-        : validationState === 'warning'
-        ? styles.warningText
-        : styles.helperText;
+          ? styles.successText
+          : validationState === 'warning'
+            ? styles.warningText
+            : styles.helperText;
 
     const isExceeded = maxLength !== undefined && charCount > maxLength;
 
@@ -107,7 +107,11 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
         {label && (
           <label
             {...labelProps}
-            className={classNames(styles.label, required ? styles.required : undefined, labelClassName)}
+            className={classNames(
+              styles.label,
+              required ? styles.required : undefined,
+              labelClassName
+            )}
             style={labelStyle}
           >
             {label}
@@ -149,7 +153,12 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
               <span />
             )}
             {showCharCount && (
-              <span className={classNames(styles.charCount, isExceeded ? styles.charCountExceeded : undefined)}>
+              <span
+                className={classNames(
+                  styles.charCount,
+                  isExceeded ? styles.charCountExceeded : undefined
+                )}
+              >
                 {maxLength !== undefined ? `${charCount}/${maxLength}` : charCount}
               </span>
             )}

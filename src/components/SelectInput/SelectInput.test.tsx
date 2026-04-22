@@ -1,8 +1,10 @@
+import { vi } from 'vitest';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 import { SelectInput } from './SelectInput';
+import { expectNoA11yViolations } from '../../test-utils/axe';
 
 const OPTIONS = [
   { value: 'us', label: 'United States' },
@@ -51,7 +53,7 @@ describe('SelectInput', () => {
   });
 
   it('calls onChange when option is selected', async () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
     render(<SelectInput options={OPTIONS} onChange={handleChange} />);
     await userEvent.selectOptions(screen.getByRole('combobox'), 'uk');
     expect(handleChange).toHaveBeenCalled();
@@ -66,19 +68,13 @@ describe('SelectInput', () => {
   // ── Multi-select ──────────────────────────────────────────────────────────
 
   it('renders chips for preselected values when multiple is true', () => {
-    render(
-      <SelectInput
-        options={OPTIONS}
-        multiple
-        selectedValues={['us', 'ca']}
-      />
-    );
+    render(<SelectInput options={OPTIONS} multiple selectedValues={['us', 'ca']} />);
     expect(screen.getByRole('button', { name: 'Remove United States' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Remove Canada' })).toBeInTheDocument();
   });
 
   it('calls onSelectedValuesChange when a chip is removed', async () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
     render(
       <SelectInput
         options={OPTIONS}
@@ -92,7 +88,7 @@ describe('SelectInput', () => {
   });
 
   it('adds a value via the select when multiple is true', async () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
     render(
       <SelectInput
         options={OPTIONS}
@@ -103,5 +99,12 @@ describe('SelectInput', () => {
     );
     await userEvent.selectOptions(screen.getByRole('combobox'), 'uk');
     expect(handleChange).toHaveBeenCalledWith(['uk']);
+  });
+});
+
+describe('a11y (axe)', () => {
+  it('has no detectable axe violations in default render', async () => {
+    const { container } = render(<SelectInput label="Country" options={OPTIONS} />);
+    await expectNoA11yViolations(container);
   });
 });

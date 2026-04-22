@@ -72,8 +72,19 @@ export const ValidationStates: Story = {
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       <MoneyInput currencies={CURRENCIES} label="Default" helperText="Enter a price" />
-      <MoneyInput currencies={CURRENCIES} label="Error" validationState="error" errorMessage="Price must be greater than 0" />
-      <MoneyInput currencies={CURRENCIES} label="Success" validationState="success" successMessage="Price is valid" defaultValue={10} />
+      <MoneyInput
+        currencies={CURRENCIES}
+        label="Error"
+        validationState="error"
+        errorMessage="Price must be greater than 0"
+      />
+      <MoneyInput
+        currencies={CURRENCIES}
+        label="Success"
+        validationState="success"
+        successMessage="Price is valid"
+        defaultValue={10}
+      />
     </div>
   ),
 };

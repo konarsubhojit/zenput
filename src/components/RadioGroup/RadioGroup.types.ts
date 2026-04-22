@@ -6,23 +6,22 @@ export interface RadioOption {
   disabled?: boolean;
 }
 
-export interface RadioGroupProps
-  extends Pick<
-    BaseInputProps,
-    | 'size'
-    | 'validationState'
-    | 'label'
-    | 'helperText'
-    | 'errorMessage'
-    | 'required'
-    | 'disabled'
-    | 'wrapperClassName'
-    | 'wrapperStyle'
-    | 'labelClassName'
-    | 'labelStyle'
-    | 'helperTextClassName'
-    | 'helperTextStyle'
-  > {
+export interface RadioGroupProps extends Pick<
+  BaseInputProps,
+  | 'size'
+  | 'validationState'
+  | 'label'
+  | 'helperText'
+  | 'errorMessage'
+  | 'required'
+  | 'disabled'
+  | 'wrapperClassName'
+  | 'wrapperStyle'
+  | 'labelClassName'
+  | 'labelStyle'
+  | 'helperTextClassName'
+  | 'helperTextStyle'
+> {
   /** Name attribute for radio inputs */
   name: string;
   /** List of radio options */

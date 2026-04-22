@@ -30,7 +30,11 @@ export const ValidationStates: Story = {
       <PasswordInput label="Default" validationState="default" helperText="Min. 8 characters" />
       <PasswordInput label="Error" validationState="error" errorMessage="Password too weak" />
       <PasswordInput label="Success" validationState="success" successMessage="Strong password!" />
-      <PasswordInput label="Warning" validationState="warning" warningMessage="Consider using symbols" />
+      <PasswordInput
+        label="Warning"
+        validationState="warning"
+        warningMessage="Consider using symbols"
+      />
     </div>
   ),
 };

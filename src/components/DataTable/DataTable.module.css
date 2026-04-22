@@ -73,9 +73,12 @@
   border-radius: 4px;
   padding: 2px 4px;
   cursor: pointer;
-  color: #9ca3af;
+  color: #6b7280;
   line-height: 1;
-  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .filterButton:hover {
@@ -165,7 +168,7 @@
 .filterEmpty {
   padding: 10px 12px;
   font-size: 0.8125rem;
-  color: #9ca3af;
+  color: #6b7280;
   text-align: center;
 }
 
@@ -222,7 +225,7 @@
 .emptyCell {
   padding: 24px 14px;
   text-align: center;
-  color: #9ca3af;
+  color: #6b7280;
   font-size: 0.875rem;
 }
 
@@ -292,8 +295,12 @@
 }
 
 @keyframes shimmer {
-  0% { background-position: -400px 0; }
-  100% { background-position: 400px 0; }
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
 }
 
 .skeletonCell {
@@ -389,7 +396,10 @@
   color: var(--dt-text-color);
   font-size: 0.8125rem;
   cursor: pointer;
-  transition: border-color 0.1s ease, background-color 0.1s ease, color 0.1s ease;
+  transition:
+    border-color 0.1s ease,
+    background-color 0.1s ease,
+    color 0.1s ease;
 }
 
 .pageButton:hover:not(:disabled) {
@@ -425,7 +435,6 @@
   min-width: 30px;
   height: 30px;
   font-size: 0.8125rem;
-  color: #9ca3af;
+  color: #6b7280;
   user-select: none;
 }
-

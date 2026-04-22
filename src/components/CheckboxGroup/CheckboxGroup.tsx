@@ -42,9 +42,7 @@ export const CheckboxGroup = forwardRef<HTMLDivElement, CheckboxGroupProps>(
 
     const handleChange = (optionValue: string, checked: boolean) => {
       const current = selectedValues ?? [];
-      const next = checked
-        ? [...current, optionValue]
-        : current.filter((v) => v !== optionValue);
+      const next = checked ? [...current, optionValue] : current.filter((v) => v !== optionValue);
       setSelectedValues(next);
     };
 

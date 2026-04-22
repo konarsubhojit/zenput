@@ -66,9 +66,24 @@ export const NoOptions: Story = {
 export const ValidationStates: Story = {
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      <AutoComplete label="Default" options={FRUIT_OPTIONS} validationState="default" helperText="Start typing to search" />
-      <AutoComplete label="Error" options={FRUIT_OPTIONS} validationState="error" errorMessage="Please select a valid option" />
-      <AutoComplete label="Success" options={FRUIT_OPTIONS} validationState="success" successMessage="Great choice!" />
+      <AutoComplete
+        label="Default"
+        options={FRUIT_OPTIONS}
+        validationState="default"
+        helperText="Start typing to search"
+      />
+      <AutoComplete
+        label="Error"
+        options={FRUIT_OPTIONS}
+        validationState="error"
+        errorMessage="Please select a valid option"
+      />
+      <AutoComplete
+        label="Success"
+        options={FRUIT_OPTIONS}
+        validationState="success"
+        successMessage="Great choice!"
+      />
     </div>
   ),
 };

@@ -62,10 +62,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
         style={wrapperStyle}
       >
         <label
-          className={classNames(
-            styles.checkboxRow,
-            disabled ? styles.disabled : undefined
-          )}
+          className={classNames(styles.checkboxRow, disabled ? styles.disabled : undefined)}
           style={labelStyle}
         >
           <input

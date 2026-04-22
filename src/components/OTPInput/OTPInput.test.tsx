@@ -1,8 +1,10 @@
+import { vi } from 'vitest';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 import { OTPInput } from './OTPInput';
+import { expectNoA11yViolations } from '../../test-utils/axe';
 
 describe('OTPInput', () => {
   it('renders without errors', () => {
@@ -41,7 +43,7 @@ describe('OTPInput', () => {
   });
 
   it('calls onChange when a digit is entered', async () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
     render(<OTPInput length={4} onChange={handleChange} />);
     const inputs = document.querySelectorAll('input');
     await userEvent.type(inputs[0], '5');
@@ -49,7 +51,7 @@ describe('OTPInput', () => {
   });
 
   it('calls onComplete when all digits are filled', async () => {
-    const handleComplete = jest.fn();
+    const handleComplete = vi.fn();
     render(<OTPInput length={4} onComplete={handleComplete} />);
     const inputs = document.querySelectorAll('input');
     await userEvent.type(inputs[0], '1');
@@ -75,5 +77,12 @@ describe('OTPInput', () => {
     const ref = React.createRef<HTMLDivElement>();
     render(<OTPInput ref={ref} />);
     expect(ref.current).toBeInstanceOf(HTMLDivElement);
+  });
+});
+
+describe('a11y (axe)', () => {
+  it('has no detectable axe violations in default render', async () => {
+    const { container } = render(<OTPInput label="Verification code" />);
+    await expectNoA11yViolations(container);
   });
 });

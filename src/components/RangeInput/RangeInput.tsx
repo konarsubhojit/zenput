@@ -82,19 +82,19 @@ export const RangeInput = forwardRef<HTMLInputElement, RangeInputProps>(
       validationState === 'error'
         ? errorMessage
         : validationState === 'success'
-        ? successMessage
-        : validationState === 'warning'
-        ? warningMessage
-        : helperText;
+          ? successMessage
+          : validationState === 'warning'
+            ? warningMessage
+            : helperText;
 
     const messageClass =
       validationState === 'error'
         ? styles.errorText
         : validationState === 'success'
-        ? styles.successText
-        : validationState === 'warning'
-        ? styles.warningText
-        : styles.helperText;
+          ? styles.successText
+          : validationState === 'warning'
+            ? styles.warningText
+            : styles.helperText;
 
     return (
       <div
@@ -110,7 +110,11 @@ export const RangeInput = forwardRef<HTMLInputElement, RangeInputProps>(
         {label && (
           <label
             {...labelProps}
-            className={classNames(styles.label, required ? styles.required : undefined, labelClassName)}
+            className={classNames(
+              styles.label,
+              required ? styles.required : undefined,
+              labelClassName
+            )}
             style={labelStyle}
           >
             {label}
@@ -133,9 +137,7 @@ export const RangeInput = forwardRef<HTMLInputElement, RangeInputProps>(
             className={classNames(styles.input, inputClassName, className)}
             style={inputStyle}
           />
-          {showValue && (
-            <span className={styles.valueDisplay}>{displayValue}</span>
-          )}
+          {showValue && <span className={styles.valueDisplay}>{displayValue}</span>}
         </div>
         <div className={styles.rangeFooter}>
           <span>{min}</span>

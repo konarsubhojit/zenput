@@ -17,9 +17,8 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>(function Link(
   ref
 ) {
   const resolvedTarget = external ? '_blank' : target;
-  const resolvedRel = resolvedTarget === '_blank'
-    ? [rel, 'noopener', 'noreferrer'].filter(Boolean).join(' ')
-    : rel;
+  const resolvedRel =
+    resolvedTarget === '_blank' ? [rel, 'noopener', 'noreferrer'].filter(Boolean).join(' ') : rel;
   return (
     <a
       ref={ref}

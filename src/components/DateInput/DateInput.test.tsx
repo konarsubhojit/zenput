@@ -1,7 +1,8 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 import { DateInput } from './DateInput';
+import { expectNoA11yViolations } from '../../test-utils/axe';
 
 describe('DateInput', () => {
   it('renders without errors', () => {
@@ -56,5 +57,12 @@ describe('DateInput', () => {
     const ref = React.createRef<HTMLInputElement>();
     render(<DateInput ref={ref} />);
     expect(ref.current).toBeInstanceOf(HTMLInputElement);
+  });
+});
+
+describe('a11y (axe)', () => {
+  it('has no detectable axe violations in default render', async () => {
+    const { container } = render(<DateInput label="Date of birth" />);
+    await expectNoA11yViolations(container);
   });
 });

@@ -73,7 +73,11 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
         {label && (
           <label
             {...labelProps}
-            className={classNames(styles.label, required ? styles.required : undefined, labelClassName)}
+            className={classNames(
+              styles.label,
+              required ? styles.required : undefined,
+              labelClassName
+            )}
             style={labelStyle}
           >
             {label}

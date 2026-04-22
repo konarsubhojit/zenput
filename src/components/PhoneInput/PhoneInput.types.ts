@@ -9,7 +9,8 @@ export interface CountryCode {
 }
 
 export interface PhoneInputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size' | 'type' | 'onChange'>,
+  extends
+    Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size' | 'type' | 'onChange'>,
     BaseInputProps {
   /** Selected dial code (e.g. "+1") */
   dialCode?: string;

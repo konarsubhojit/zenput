@@ -1,7 +1,8 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 import { FileInput } from './FileInput';
+import { expectNoA11yViolations } from '../../test-utils/axe';
 
 describe('FileInput', () => {
   it('renders without errors', () => {
@@ -83,5 +84,12 @@ describe('FileInput', () => {
   it('clamps uploadProgress to 0–100', () => {
     render(<FileInput uploadProgress={120} />);
     expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '100');
+  });
+});
+
+describe('a11y (axe)', () => {
+  it('has no detectable axe violations in default render', async () => {
+    const { container } = render(<FileInput label="Upload file" />);
+    await expectNoA11yViolations(container);
   });
 });

@@ -21,7 +21,12 @@ export const Default: Story = {
 };
 
 export const WithRange: Story = {
-  args: { label: 'Appointment Date', min: '2024-01-01', max: '2025-12-31', helperText: 'Between Jan 2024 and Dec 2025' },
+  args: {
+    label: 'Appointment Date',
+    min: '2024-01-01',
+    max: '2025-12-31',
+    helperText: 'Between Jan 2024 and Dec 2025',
+  },
 };
 
 export const ValidationStates: Story = {

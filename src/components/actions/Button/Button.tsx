@@ -2,13 +2,7 @@ import React, { forwardRef } from 'react';
 import { classNames } from '../../../utils';
 import styles from './Button.module.css';
 
-export type ButtonVariant =
-  | 'primary'
-  | 'secondary'
-  | 'subtle'
-  | 'outline'
-  | 'ghost'
-  | 'danger';
+export type ButtonVariant = 'primary' | 'secondary' | 'subtle' | 'outline' | 'ghost' | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonBaseProps {
@@ -34,7 +28,11 @@ interface ButtonBaseProps {
 }
 
 export type ButtonProps =
-  | ({ iconOnly: true; 'aria-label': string } & Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'aria-label'> & ButtonBaseProps)
+  | ({ iconOnly: true; 'aria-label': string } & Omit<
+      React.ButtonHTMLAttributes<HTMLButtonElement>,
+      'aria-label'
+    > &
+      ButtonBaseProps)
   | ({ iconOnly?: false } & React.ButtonHTMLAttributes<HTMLButtonElement> & ButtonBaseProps);
 
 /**
@@ -88,11 +86,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       {...rest}
     >
       {loading && (
-        <span
-          className={styles.spinner}
-          aria-hidden="true"
-          data-testid="button-spinner"
-        />
+        <span className={styles.spinner} aria-hidden="true" data-testid="button-spinner" />
       )}
       <span
         className={classNames(loading ? styles.contentHidden : undefined)}

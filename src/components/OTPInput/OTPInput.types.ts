@@ -2,23 +2,22 @@ import { BaseInputProps } from '../../types';
 
 export type OTPInputType = 'numeric' | 'alphanumeric';
 
-export interface OTPInputProps
-  extends Pick<
-    BaseInputProps,
-    | 'size'
-    | 'validationState'
-    | 'label'
-    | 'helperText'
-    | 'errorMessage'
-    | 'required'
-    | 'disabled'
-    | 'wrapperClassName'
-    | 'wrapperStyle'
-    | 'labelClassName'
-    | 'labelStyle'
-    | 'helperTextClassName'
-    | 'helperTextStyle'
-  > {
+export interface OTPInputProps extends Pick<
+  BaseInputProps,
+  | 'size'
+  | 'validationState'
+  | 'label'
+  | 'helperText'
+  | 'errorMessage'
+  | 'required'
+  | 'disabled'
+  | 'wrapperClassName'
+  | 'wrapperStyle'
+  | 'labelClassName'
+  | 'labelStyle'
+  | 'helperTextClassName'
+  | 'helperTextStyle'
+> {
   /** Number of OTP digits */
   length?: number;
   /** Current value */

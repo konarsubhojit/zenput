@@ -1,105 +1,212 @@
-name: CI/CD Pipeline
+# Zenput GitHub Actions CI
+#
+# This workflow is the public, OSS-facing CI for zenput. It mirrors the Azure
+# Pipeline (`AzCICD.yml`) and shares the same npm scripts as its single source
+# of truth — drift between the two systems is therefore minimized.
+#
+# Jobs:
+#   - lint        : ESLint (flat config) + Prettier check
+#   - type-check  : tsc --noEmit
+#   - test        : Vitest + coverage → Codecov + SonarCloud
+#   - build       : Rollup library build (dist/)
+#   - storybook   : Storybook static build (storybook-static/)
+#   - a11y        : @storybook/test-runner + axe against built Storybook
+#   - size        : size-limit bundle budget
+#   - publish     : npm publish (release branches only, retained from previous CI)
+name: CI
 
 on:
   pull_request:
   push:
     branches:
-      - main
       - master
+      - main
       - 'release/**'
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: 'true'
+  FORCE_COLOR: '1'
 
 jobs:
-  # ─────────────────────────────────────────────────────────────────────────────
-  # Stage 1 – Build
-  # Runs on every pull request and on every push to master or release/** branches.
-  # ─────────────────────────────────────────────────────────────────────────────
-  build:
-    name: Build & Test
+  lint:
+    name: Lint & Format
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: |
-            package-lock.json
-            demo/package-lock.json
+      - run: npm ci
+      - run: npm run lint
 
-      - name: Install dependencies
-        run: npm ci
+  type-check:
+    name: Type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run type-check
 
-      - name: Type check
-        run: npm run type-check
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Test with coverage
-        run: npm run test:coverage
-
-      - name: Build
-        run: npm run build
-
-      - name: Install demo dependencies
-        working-directory: demo
-        run: npm ci
-
-      - name: Build demo site
-        working-directory: demo
-        run: npm run build
-
-      - name: Upload demo build artifact
+  test:
+    name: Test (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['18', '20', '22']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run test:ci
+      - name: Upload coverage artifact
+        if: matrix.node == '20'
         uses: actions/upload-artifact@v4
         with:
-          name: demo-site
-          path: demo/dist
-          if-no-files-found: error
-
-      - name: SonarCloud Scan
+          name: coverage
+          path: coverage/
+          if-no-files-found: warn
+      - name: Upload JUnit results
+        if: matrix.node == '20'
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit
+          path: reports/junit.xml
+          if-no-files-found: warn
+      - name: Upload coverage to Codecov
+        if: matrix.node == '20'
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage/lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+      - name: SonarQube / SonarCloud scan
+        if: matrix.node == '20' && env.SONAR_TOKEN != ''
         uses: SonarSource/sonarqube-scan-action@v4
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
+  build:
+    name: Build library
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  storybook:
+    name: Build Storybook
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build-storybook
+      - uses: actions/upload-artifact@v4
+        with:
+          name: storybook-static
+          path: storybook-static/
+          if-no-files-found: error
+
+  a11y:
+    name: Storybook a11y (axe)
+    runs-on: ubuntu-latest
+    needs: storybook
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: storybook-static
+          path: storybook-static
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      - name: Serve Storybook and run test-runner
+        run: |
+          npx http-server storybook-static -p 6006 -s &
+          SERVER_PID=$!
+          npx wait-on http://127.0.0.1:6006 --timeout 60000
+          npx test-storybook --url http://127.0.0.1:6006
+          kill "$SERVER_PID" || true
+
+  size:
+    name: Bundle size
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+      # NOTE: We intentionally avoid `andresz1/size-limit-action` here because
+      # it checks out the base branch to produce a diff, and the base branch
+      # may not yet have `size-limit` configured (causing the comparison run
+      # to fail with "Install Size Limit preset depends on type of the
+      # project"). A simple budget check is sufficient until the base branch
+      # also carries this configuration.
+      - name: Size-limit
+        run: npx size-limit
+
   # ─────────────────────────────────────────────────────────────────────────────
-  # Stage 2 – Publish to npm
-  # Runs only on pushes to branches matching the "release/**" pattern.
-  # Requires manual approval via the "npm-publish" GitHub Environment before
-  # the publish step executes.
+  # Publish to npm — preserved from previous workflow. Runs only on release/**
+  # pushes and requires manual approval via the "npm-publish" GitHub Environment.
   # ─────────────────────────────────────────────────────────────────────────────
   publish:
     name: Publish to npm
-    needs: build
+    needs: [lint, type-check, test, build]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/release/')
-    environment: npm-publish          # configured with required reviewers for approval
+    environment: npm-publish
     permissions:
       contents: read
-      id-token: write                 # needed for npm provenance
+      id-token: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
           cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-
-      - name: Publish to npm registry
+      - run: npm ci
+      - run: npm run build
+      - name: Publish
         run: npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

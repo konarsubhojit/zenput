@@ -1,6 +1,8 @@
+import { vi } from 'vitest';
 import React from 'react';
 import { render, screen, act } from '@testing-library/react';
 import { useDisclosure } from './useDisclosure';
+import { expectNoA11yViolations } from '../test-utils/axe';
 
 function Harness({
   open,
@@ -18,10 +20,7 @@ function Harness({
       <button onClick={d.onOpen}>open</button>
       <button onClick={d.onClose}>close</button>
       <button onClick={d.onToggle}>toggle</button>
-      <button
-        onClick={() => d.setOpen((prev) => !prev)}
-        data-testid="updater"
-      >
+      <button onClick={() => d.setOpen((prev) => !prev)} data-testid="updater">
         updater
       </button>
     </div>
@@ -62,7 +61,7 @@ describe('useDisclosure', () => {
   });
 
   it('reports changes via onOpenChange in uncontrolled mode only when value changes', () => {
-    const onOpenChange = jest.fn();
+    const onOpenChange = vi.fn();
     render(<Harness onOpenChange={onOpenChange} />);
     act(() => {
       screen.getByText('open').click();
@@ -76,10 +75,8 @@ describe('useDisclosure', () => {
   });
 
   it('in controlled mode, notifies onOpenChange and resolves updater against the current prop', () => {
-    const onOpenChange = jest.fn();
-    const { rerender } = render(
-      <Harness open={false} onOpenChange={onOpenChange} />
-    );
+    const onOpenChange = vi.fn();
+    const { rerender } = render(<Harness open={false} onOpenChange={onOpenChange} />);
     act(() => {
       screen.getByText('toggle').click();
     });
@@ -91,5 +88,12 @@ describe('useDisclosure', () => {
     });
     // Should resolve against current prop (true) => false.
     expect(onOpenChange).toHaveBeenLastCalledWith(false);
+  });
+});
+
+describe('a11y (axe)', () => {
+  it('has no detectable axe violations in default render', async () => {
+    const { container } = render(<Harness defaultOpen />);
+    await expectNoA11yViolations(container);
   });
 });

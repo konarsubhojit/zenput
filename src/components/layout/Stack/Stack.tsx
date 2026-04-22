@@ -1,22 +1,13 @@
 import React, { forwardRef } from 'react';
 import { classNames } from '../../../utils';
 import { normalizeSpacingKey } from '../../../tokens';
-import type {
-  PolymorphicProps,
-  PolymorphicRef,
-} from '../../../types/polymorphic';
+import type { PolymorphicProps, PolymorphicRef } from '../../../types/polymorphic';
 import type { SpacingValue } from '../Box/Box';
 import styles from './Stack.module.css';
 
 export type StackDirection = 'row' | 'column';
 export type StackAlign = 'start' | 'center' | 'end' | 'stretch' | 'baseline';
-export type StackJustify =
-  | 'start'
-  | 'center'
-  | 'end'
-  | 'between'
-  | 'around'
-  | 'evenly';
+export type StackJustify = 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
 
 const alignMap: Record<StackAlign, React.CSSProperties['alignItems']> = {
   start: 'flex-start',

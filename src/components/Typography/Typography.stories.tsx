@@ -79,8 +79,7 @@ export const Links: Story = {
 export const InlineCodeAndKbd: Story = {
   render: () => (
     <Text as="p">
-      Press <Kbd>Ctrl</Kbd>+<Kbd>K</Kbd> to run the <Code>search()</Code>{' '}
-      command.
+      Press <Kbd>Ctrl</Kbd>+<Kbd>K</Kbd> to run the <Code>search()</Code> command.
     </Text>
   ),
 };
@@ -89,8 +88,8 @@ export const Truncate: Story = {
   render: () => (
     <div style={{ width: 240, border: '1px dashed #ccc', padding: 8 }}>
       <Text truncate>
-        This is a very long line of text that will be truncated with an ellipsis
-        when it overflows its container.
+        This is a very long line of text that will be truncated with an ellipsis when it overflows
+        its container.
       </Text>
     </div>
   ),

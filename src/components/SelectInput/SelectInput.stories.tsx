@@ -51,10 +51,30 @@ export const Variants: Story = {
 export const ValidationStates: Story = {
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      <SelectInput label="Default" options={COUNTRY_OPTIONS} validationState="default" helperText="Select a country" />
-      <SelectInput label="Error" options={COUNTRY_OPTIONS} validationState="error" errorMessage="Please select a country" />
-      <SelectInput label="Success" options={COUNTRY_OPTIONS} validationState="success" successMessage="Country selected!" />
-      <SelectInput label="Warning" options={COUNTRY_OPTIONS} validationState="warning" warningMessage="Check your selection" />
+      <SelectInput
+        label="Default"
+        options={COUNTRY_OPTIONS}
+        validationState="default"
+        helperText="Select a country"
+      />
+      <SelectInput
+        label="Error"
+        options={COUNTRY_OPTIONS}
+        validationState="error"
+        errorMessage="Please select a country"
+      />
+      <SelectInput
+        label="Success"
+        options={COUNTRY_OPTIONS}
+        validationState="success"
+        successMessage="Country selected!"
+      />
+      <SelectInput
+        label="Warning"
+        options={COUNTRY_OPTIONS}
+        validationState="warning"
+        warningMessage="Check your selection"
+      />
     </div>
   ),
 };
@@ -64,7 +84,12 @@ export const Disabled: Story = {
 };
 
 export const Required: Story = {
-  args: { label: 'Required', options: COUNTRY_OPTIONS, placeholder: 'Select a country', required: true },
+  args: {
+    label: 'Required',
+    options: COUNTRY_OPTIONS,
+    placeholder: 'Select a country',
+    required: true,
+  },
 };
 
 export const MultiSelect: Story = {

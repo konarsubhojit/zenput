@@ -2,7 +2,8 @@ import React from 'react';
 import { BaseInputProps } from '../../types';
 
 export interface NumberInputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size' | 'type' | 'onChange'>,
+  extends
+    Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size' | 'type' | 'onChange'>,
     BaseInputProps {
   /** Current value */
   value?: number;

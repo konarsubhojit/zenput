@@ -1,7 +1,9 @@
+import { vi } from 'vitest';
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 import { RangeInput } from './RangeInput';
+import { expectNoA11yViolations } from '../../test-utils/axe';
 
 describe('RangeInput', () => {
   it('renders without errors', () => {
@@ -51,7 +53,7 @@ describe('RangeInput', () => {
   });
 
   it('calls onChange when value changes', () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
     render(<RangeInput onChange={handleChange} defaultValue={50} min={0} max={100} />);
     const slider = screen.getByRole('slider');
     fireEvent.change(slider, { target: { value: '60' } });
@@ -62,5 +64,12 @@ describe('RangeInput', () => {
     const ref = React.createRef<HTMLInputElement>();
     render(<RangeInput ref={ref} />);
     expect(ref.current).toBeInstanceOf(HTMLInputElement);
+  });
+});
+
+describe('a11y (axe)', () => {
+  it('has no detectable axe violations in default render', async () => {
+    const { container } = render(<RangeInput label="Volume" />);
+    await expectNoA11yViolations(container);
   });
 });

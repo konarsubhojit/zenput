@@ -21,7 +21,12 @@ export const Default: Story = {
 };
 
 export const ShowClearButton: Story = {
-  args: { label: 'Search', placeholder: 'Search...', showClearButton: true, defaultValue: 'initial query' },
+  args: {
+    label: 'Search',
+    placeholder: 'Search...',
+    showClearButton: true,
+    defaultValue: 'initial query',
+  },
 };
 
 export const NoSearchIcon: Story = {

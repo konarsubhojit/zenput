@@ -1,10 +1,7 @@
 import React, { forwardRef } from 'react';
 import { classNames } from '../../../utils';
 import { normalizeSpacingKey } from '../../../tokens';
-import type {
-  PolymorphicProps,
-  PolymorphicRef,
-} from '../../../types/polymorphic';
+import type { PolymorphicProps, PolymorphicRef } from '../../../types/polymorphic';
 import styles from './Box.module.css';
 
 export type SpacingValue =
@@ -146,11 +143,7 @@ export const Box = forwardRef(function Box(
   return (
     <Component
       ref={ref}
-      className={classNames(
-        styles.box,
-        fullWidth ? styles.fullWidth : undefined,
-        className
-      )}
+      className={classNames(styles.box, fullWidth ? styles.fullWidth : undefined, className)}
       style={resolvedStyle}
       {...rest}
     >

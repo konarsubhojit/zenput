@@ -38,8 +38,18 @@ export const Horizontal: Story = {
 export const ValidationStates: Story = {
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <CheckboxGroup label="Default" options={FRUIT_OPTIONS} validationState="default" helperText="Select all that apply" />
-      <CheckboxGroup label="Error" options={FRUIT_OPTIONS} validationState="error" errorMessage="Please select at least one" />
+      <CheckboxGroup
+        label="Default"
+        options={FRUIT_OPTIONS}
+        validationState="default"
+        helperText="Select all that apply"
+      />
+      <CheckboxGroup
+        label="Error"
+        options={FRUIT_OPTIONS}
+        validationState="error"
+        errorMessage="Please select at least one"
+      />
     </div>
   ),
 };

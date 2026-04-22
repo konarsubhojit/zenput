@@ -1,8 +1,8 @@
 .wrapper {
   --input-primary-color: #3b82f6;
-  --input-error-color: #ef4444;
-  --input-success-color: #22c55e;
-  --input-warning-color: #f59e0b;
+  --input-error-color: #dc2626;
+  --input-success-color: #15803d;
+  --input-warning-color: #b45309;
   --input-border-color: #d1d5db;
   --input-bg-color: #ffffff;
   --input-text-color: #111827;
@@ -40,7 +40,9 @@
   border-radius: var(--input-border-radius);
   background-color: var(--input-bg-color);
   cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
   outline: none;
   flex-shrink: 0;
   margin: 0;

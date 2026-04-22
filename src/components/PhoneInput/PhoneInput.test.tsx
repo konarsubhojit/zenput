@@ -1,8 +1,10 @@
+import { vi } from 'vitest';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 import { PhoneInput } from './PhoneInput';
+import { expectNoA11yViolations } from '../../test-utils/axe';
 
 describe('PhoneInput', () => {
   it('renders without errors', () => {
@@ -37,7 +39,7 @@ describe('PhoneInput', () => {
   });
 
   it('calls onChange when phone number changes', async () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
     render(<PhoneInput onChange={handleChange} />);
     const input = document.querySelector('input[type="tel"]') as HTMLInputElement;
     await userEvent.type(input, '5551234567');
@@ -58,5 +60,12 @@ describe('PhoneInput', () => {
     const ref = React.createRef<HTMLInputElement>();
     render(<PhoneInput ref={ref} />);
     expect(ref.current).toBeInstanceOf(HTMLInputElement);
+  });
+});
+
+describe('a11y (axe)', () => {
+  it('has no detectable axe violations in default render', async () => {
+    const { container } = render(<PhoneInput label="Phone number" />);
+    await expectNoA11yViolations(container);
   });
 });

@@ -1,8 +1,8 @@
 .wrapper {
   --input-primary-color: #3b82f6;
-  --input-error-color: #ef4444;
-  --input-success-color: #22c55e;
-  --input-warning-color: #f59e0b;
+  --input-error-color: #dc2626;
+  --input-success-color: #15803d;
+  --input-warning-color: #b45309;
   --input-border-color: #d1d5db;
   --input-bg-color: #ffffff;
   --input-text-color: #111827;
@@ -16,7 +16,9 @@
   font-family: var(--input-font-family);
 }
 
-.fullWidth { width: 100%; }
+.fullWidth {
+  width: 100%;
+}
 
 .label {
   font-size: 0.875rem;
@@ -55,7 +57,9 @@
   font-family: var(--input-font-family);
   font-size: 0.875rem;
   cursor: pointer;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
   width: 100%;
   justify-content: center;
 }
@@ -77,8 +81,14 @@
   cursor: not-allowed;
 }
 
-.sm .fileButton { padding: 6px 12px; font-size: 0.75rem; }
-.lg .fileButton { padding: 10px 20px; font-size: 1rem; }
+.sm .fileButton {
+  padding: 6px 12px;
+  font-size: 0.75rem;
+}
+.lg .fileButton {
+  padding: 10px 20px;
+  font-size: 1rem;
+}
 
 /* Dropzone */
 .dropzone {
@@ -87,7 +97,9 @@
   padding: 24px 16px;
   text-align: center;
   cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
   background-color: var(--input-bg-color);
   color: var(--input-text-color);
   font-size: 0.875rem;
@@ -132,10 +144,22 @@
   gap: 4px;
 }
 
-.helperText { font-size: 0.75rem; color: #6b7280; }
-.errorText { font-size: 0.75rem; color: var(--input-error-color); }
-.successText { font-size: 0.75rem; color: var(--input-success-color); }
-.warningText { font-size: 0.75rem; color: var(--input-warning-color); }
+.helperText {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+.errorText {
+  font-size: 0.75rem;
+  color: var(--input-error-color);
+}
+.successText {
+  font-size: 0.75rem;
+  color: var(--input-success-color);
+}
+.warningText {
+  font-size: 0.75rem;
+  color: var(--input-warning-color);
+}
 
 /* ── Image preview ────────────────────────────────────── */
 
@@ -168,18 +192,23 @@
 
 .uploadProgressBar {
   height: 100%;
-  background-color: var(--input-primary-color);
+  background-color: #1d4ed8;
   border-radius: 2px;
   transition: width 0.2s ease;
 }
 
 @keyframes indeterminate {
-  0% { transform: translateX(-100%); width: 40%; }
-  100% { transform: translateX(350%); width: 40%; }
+  0% {
+    transform: translateX(-100%);
+    width: 40%;
+  }
+  100% {
+    transform: translateX(350%);
+    width: 40%;
+  }
 }
 
 .uploadProgressIndeterminate {
   width: 40% !important;
   animation: indeterminate 1.2s ease-in-out infinite;
 }
-

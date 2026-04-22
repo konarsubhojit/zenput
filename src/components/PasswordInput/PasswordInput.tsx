@@ -55,9 +55,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
     ref
   ) => {
     const [visible, setVisible] = useState(false);
-    const [internalValue, setInternalValue] = useState(
-      (defaultValue as string | undefined) ?? ''
-    );
+    const [internalValue, setInternalValue] = useState((defaultValue as string | undefined) ?? '');
 
     const { inputId, helperId, labelProps, inputAriaProps } = useFormField({
       id,
@@ -87,19 +85,19 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
       validationState === 'error'
         ? errorMessage
         : validationState === 'success'
-        ? successMessage
-        : validationState === 'warning'
-        ? warningMessage
-        : helperText;
+          ? successMessage
+          : validationState === 'warning'
+            ? warningMessage
+            : helperText;
 
     const messageClass =
       validationState === 'error'
         ? styles.errorText
         : validationState === 'success'
-        ? styles.successText
-        : validationState === 'warning'
-        ? styles.warningText
-        : styles.helperText;
+          ? styles.successText
+          : validationState === 'warning'
+            ? styles.warningText
+            : styles.helperText;
 
     return (
       <div
@@ -116,7 +114,11 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
         {label && (
           <label
             {...labelProps}
-            className={classNames(styles.label, required ? styles.required : undefined, labelClassName)}
+            className={classNames(
+              styles.label,
+              required ? styles.required : undefined,
+              labelClassName
+            )}
             style={labelStyle}
           >
             {label}
@@ -145,9 +147,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             aria-label={visible ? 'Hide password' : 'Show password'}
             tabIndex={-1}
           >
-            {visible
-              ? (hideIcon ?? <span>🙈</span>)
-              : (showIcon ?? <span>👁</span>)}
+            {visible ? (hideIcon ?? <span>🙈</span>) : (showIcon ?? <span>👁</span>)}
           </button>
         </div>
         {showStrengthIndicator && currentValue.length > 0 && (

@@ -1,8 +1,10 @@
+import { vi } from 'vitest';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 import { Toggle } from './Toggle';
+import { expectNoA11yViolations } from '../../test-utils/axe';
 
 describe('Toggle', () => {
   it('renders without errors', () => {
@@ -39,7 +41,7 @@ describe('Toggle', () => {
   });
 
   it('calls onChange when toggled', async () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
     render(<Toggle label="Toggle" onChange={handleChange} />);
     await userEvent.click(screen.getByRole('switch'));
     expect(handleChange).toHaveBeenCalled();
@@ -59,5 +61,12 @@ describe('Toggle', () => {
     const ref = React.createRef<HTMLInputElement>();
     render(<Toggle ref={ref} />);
     expect(ref.current).toBeInstanceOf(HTMLInputElement);
+  });
+});
+
+describe('a11y (axe)', () => {
+  it('has no detectable axe violations in default render', async () => {
+    const { container } = render(<Toggle label="Enable notifications" />);
+    await expectNoA11yViolations(container);
   });
 });

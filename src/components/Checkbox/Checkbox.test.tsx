@@ -1,8 +1,10 @@
+import { vi } from 'vitest';
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 import { Checkbox } from './Checkbox';
+import { expectNoA11yViolations } from '../../test-utils/axe';
 
 describe('Checkbox', () => {
   it('renders without errors', () => {
@@ -30,7 +32,7 @@ describe('Checkbox', () => {
   });
 
   it('calls onChange when clicked', async () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
     render(<Checkbox label="Option" onChange={handleChange} />);
     await userEvent.click(screen.getByRole('checkbox'));
     expect(handleChange).toHaveBeenCalled();
@@ -56,5 +58,12 @@ describe('Checkbox', () => {
     const ref = React.createRef<HTMLInputElement>();
     render(<Checkbox ref={ref} />);
     expect(ref.current).toBeInstanceOf(HTMLInputElement);
+  });
+});
+
+describe('a11y (axe)', () => {
+  it('has no detectable axe violations in default render', async () => {
+    const { container } = render(<Checkbox label="Accept terms" />);
+    await expectNoA11yViolations(container);
   });
 });

@@ -25,12 +25,54 @@ interface Employee {
 }
 
 const employees: Employee[] = [
-  { id: 1, name: 'Alice Johnson', department: 'Engineering', role: 'Senior Engineer', status: 'Active', salary: 120000 },
-  { id: 2, name: 'Bob Smith', department: 'Design', role: 'UX Designer', status: 'Active', salary: 95000 },
-  { id: 3, name: 'Carol White', department: 'Engineering', role: 'Junior Engineer', status: 'Inactive', salary: 75000 },
-  { id: 4, name: 'David Lee', department: 'Marketing', role: 'Marketing Manager', status: 'Active', salary: 105000 },
-  { id: 5, name: 'Eve Martinez', department: 'Design', role: 'UI Designer', status: 'Active', salary: 90000 },
-  { id: 6, name: 'Frank Brown', department: 'Engineering', role: 'Tech Lead', status: 'Active', salary: 140000 },
+  {
+    id: 1,
+    name: 'Alice Johnson',
+    department: 'Engineering',
+    role: 'Senior Engineer',
+    status: 'Active',
+    salary: 120000,
+  },
+  {
+    id: 2,
+    name: 'Bob Smith',
+    department: 'Design',
+    role: 'UX Designer',
+    status: 'Active',
+    salary: 95000,
+  },
+  {
+    id: 3,
+    name: 'Carol White',
+    department: 'Engineering',
+    role: 'Junior Engineer',
+    status: 'Inactive',
+    salary: 75000,
+  },
+  {
+    id: 4,
+    name: 'David Lee',
+    department: 'Marketing',
+    role: 'Marketing Manager',
+    status: 'Active',
+    salary: 105000,
+  },
+  {
+    id: 5,
+    name: 'Eve Martinez',
+    department: 'Design',
+    role: 'UI Designer',
+    status: 'Active',
+    salary: 90000,
+  },
+  {
+    id: 6,
+    name: 'Frank Brown',
+    department: 'Engineering',
+    role: 'Tech Lead',
+    status: 'Active',
+    salary: 140000,
+  },
 ];
 
 const basicColumns: DataTableColumn[] = [
@@ -59,13 +101,7 @@ export const WithFilterableColumns: Story = {
       { key: 'status', header: 'Status', filterable: true },
     ];
 
-    return (
-      <DataTable
-        columns={filterableColumns}
-        data={employees}
-        rowKey={(row) => row.id}
-      />
-    );
+    return <DataTable columns={filterableColumns} data={employees} rowKey={(row) => row.id} />;
   },
 };
 
@@ -134,7 +170,11 @@ export const WithRowClickAndExpand: Story = {
       expandedRowRender={(row) => (
         <div style={{ padding: '8px 0', fontSize: '0.875rem', color: '#374151' }}>
           <strong>{row.name}</strong> — {row.role} in {row.department}. Salary:{' '}
-          {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(row.salary)}
+          {new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            maximumFractionDigits: 0,
+          }).format(row.salary)}
         </div>
       )}
     />
@@ -158,7 +198,7 @@ export const WithBulkSelection: Story = {
             <button
               style={{
                 padding: '4px 12px',
-                background: '#ef4444',
+                background: '#dc2626',
                 color: '#fff',
                 border: 'none',
                 borderRadius: '4px',
@@ -183,38 +223,45 @@ export const WithCustomRenderers: Story = {
       { key: 'id', header: 'ID', width: '60px' },
       { key: 'name', header: 'Name' },
       { key: 'department', header: 'Department', filterable: true },
-      { key: 'status', header: 'Status', filterable: true, render: (value) => {
-        const isActive = value === 'Active';
-        return (
-          <span
-            style={{
-              display: 'inline-block',
-              padding: '2px 10px',
-              borderRadius: '12px',
-              fontSize: '0.75rem',
-              fontWeight: 600,
-              background: isActive ? '#d1fae5' : '#fee2e2',
-              color: isActive ? '#065f46' : '#991b1b',
-            }}
-          >
-            {String(value)}
+      {
+        key: 'status',
+        header: 'Status',
+        filterable: true,
+        render: (value) => {
+          const isActive = value === 'Active';
+          return (
+            <span
+              style={{
+                display: 'inline-block',
+                padding: '2px 10px',
+                borderRadius: '12px',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                background: isActive ? '#d1fae5' : '#fee2e2',
+                color: isActive ? '#065f46' : '#991b1b',
+              }}
+            >
+              {String(value)}
+            </span>
+          );
+        },
+      },
+      {
+        key: 'salary',
+        header: 'Salary',
+        render: (value) => (
+          <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+            {new Intl.NumberFormat('en-US', {
+              style: 'currency',
+              currency: 'USD',
+              maximumFractionDigits: 0,
+            }).format(Number(value))}
           </span>
-        );
-      }},
-      { key: 'salary', header: 'Salary', render: (value) => (
-        <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-          {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Number(value))}
-        </span>
-      )},
+        ),
+      },
     ];
 
-    return (
-      <DataTable
-        columns={columnsWithRender}
-        data={employees}
-        rowKey={(row) => row.id}
-      />
-    );
+    return <DataTable columns={columnsWithRender} data={employees} rowKey={(row) => row.id} />;
   },
 };
 

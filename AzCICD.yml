@@ -1,3 +1,44 @@
+# ═════════════════════════════════════════════════════════════════════════════
+# Zenput — Azure Pipeline (single self-hosted agent, sequential)
+#
+# This pipeline targets a single self-hosted Linux agent. All stages run in
+# sequence on the same machine, which means:
+#
+#   - Node, npm cache and Playwright browsers only need to be set up once.
+#   - Workspace state (node_modules, dist/, storybook-static/) is reused
+#     between steps — no artifact hand-off needed inside a single job.
+#
+# The pipeline still mirrors the GitHub Actions workflow
+# (.github/workflows/ci.yml) — both systems invoke the same npm scripts as a
+# single source of truth:
+#
+#     npm run lint && npm run type-check && npm run test:ci && npm run build
+#
+# ── Agent requirements ──────────────────────────────────────────────────────
+#   Pool:          "Default" (self-hosted). Adjust `pool.name` below if yours
+#                  is named differently.
+#   OS:            Linux (the demands filter can be edited for Windows/macOS).
+#   Pre-installed: git, Node 20.x (nvm is fine), npm 10+. Playwright browsers
+#                  are installed once into `~/.cache/ms-playwright`.
+#
+# ── Pipeline variables / service connections ────────────────────────────────
+#   SonarCloud service connection : "SonarCloud"
+#   SONAR_TOKEN   : optional — Sonar steps are gated behind
+#                   ne(variables['SONAR_TOKEN'], '')
+#   CODECOV_TOKEN : optional
+#   NPM_TOKEN     : required only by the "Publish" stage
+#   VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID : optional demo deploy
+#
+# ── Running the same steps locally ──────────────────────────────────────────
+#   npm ci
+#   npm run lint
+#   npm run type-check
+#   npm run test:ci
+#   npm run build
+#   npm run build-storybook
+#   npm run size
+# ═════════════════════════════════════════════════════════════════════════════
+
 trigger:
   branches:
     include:
@@ -9,201 +50,212 @@ pr:
     include:
       - '*'
 
+# Weekly "clean" run — guards against stale state on a long-lived self-hosted
+# agent. Regular CI runs skip the nuke (see `workspace.clean` below).
+schedules:
+  - cron: '0 6 * * 1'        # Mondays 06:00 UTC
+    displayName: Weekly clean rebuild
+    branches:
+      include: [master]
+    always: true
+
 variables:
-  # Node 24 — SonarCloud scanner requires Node 20+ and warns on older LTS
-  nodeVersion: '24'
-  # Point to the Java 17 you installed for SonarCloud
-  JAVA_HOME: /usr/lib/jvm/java-21-openjdk-arm64
-  VERCEL_ENV: 'production'
+  - name: NODE_VERSION
+    value: '20.x'
+  - name: npm_config_cache
+    value: $(Pipeline.Workspace)/.npm
+  - name: PLAYWRIGHT_BROWSERS_PATH
+    value: $(Agent.HomeDirectory)/.cache/ms-playwright
+  - name: CI
+    value: 'true'
+  - name: FORCE_COLOR
+    value: '1'
+
+pool:
+  name: Default              # self-hosted pool — rename if your pool differs
+  demands:
+    - Agent.OS -equals Linux # adjust for Windows/macOS self-hosted agents
 
 stages:
-  - stage: Build
-    displayName: 'Build & Test'
+  - stage: CI
+    displayName: 'CI (lint → test → build → size → a11y)'
     jobs:
-      - job: BuildAndTest
-        displayName: 'Build, Lint, Test & Scan'
-        pool:
-          name: default
-          demands:
-            - Agent.OS -equals Linux
+      # All CI runs in a single sequential job on the single self-hosted
+      # agent. Steps execute in order; later steps reuse node_modules and
+      # build outputs from earlier steps.
+      - job: CI
+        displayName: 'Lint, test, build, size, a11y (sequential)'
+        timeoutInMinutes: 60
         workspace:
-          clean: none   # self-hosted: preserve node_modules & incremental artifacts between runs
+          clean: outputs       # only wipe build outputs between runs
         steps:
           - checkout: self
+            clean: false       # keep node_modules/checkout between runs for speed
             fetchDepth: 0
 
-          # Use NVM instead of UseNode task for better ARM64 compatibility.
-          # Only install the Node version if it isn't already present on the self-hosted agent.
-          - script: |
-              export NVM_DIR="$HOME/.nvm"
-              [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-              if ! nvm use $(nodeVersion) >/dev/null 2>&1; then
-                echo "Node $(nodeVersion) not installed on agent; installing..."
-                nvm install $(nodeVersion)
-                nvm use $(nodeVersion)
-              fi
-              echo "Using Node $(node --version) / npm $(npm --version)"
-              echo "##vso[task.prependpath]$(dirname $(which node))"
-            displayName: 'Set up Node.js via NVM'
-
-          # Self-hosted agent retains node_modules between runs. Only re-install when the
-          # lockfile changed (or node_modules is missing). Falls back to `npm ci` for a
-          # clean, reproducible tree; uses offline cache for speed.
+          # ── Node: skip NodeTool if the correct major is already on PATH ──
           - script: |
               set -e
-              if [ -d node_modules ] && [ -f node_modules/.package-lock.json ] \
-                  && cmp -s package-lock.json node_modules/.package-lock.json; then
-                echo "Dependencies already match package-lock.json - skipping install."
-              else
-                echo "Installing root dependencies with npm ci..."
-                npm ci --prefer-offline --no-audit --no-fund
+              NEED_NODE_TASK=true
+              if command -v node >/dev/null 2>&1; then
+                CURRENT="$(node -v | sed -E 's/^v([0-9]+).*/\1/')"
+                WANTED="$(echo "$(NODE_VERSION)" | sed -E 's/^([0-9]+).*/\1/')"
+                if [ "$CURRENT" = "$WANTED" ]; then
+                  echo "Node $(node -v) already on PATH — skipping NodeTool."
+                  NEED_NODE_TASK=false
+                fi
               fi
-            displayName: 'Install dependencies'
+              echo "##vso[task.setvariable variable=needNodeTask]$NEED_NODE_TASK"
+            displayName: 'Detect pre-installed Node'
+
+          - task: NodeTool@0
+            displayName: 'Install Node $(NODE_VERSION) (only if missing)'
+            condition: eq(variables['needNodeTask'], 'true')
+            inputs:
+              versionSpec: $(NODE_VERSION)
+
+          - task: Cache@2
+            displayName: 'Cache ~/.npm'
+            inputs:
+              key: 'npm | "$(Agent.OS)" | package-lock.json'
+              restoreKeys: |
+                npm | "$(Agent.OS)"
+              path: $(npm_config_cache)
+
+          - script: npm ci --prefer-offline --no-audit --fund=false
+            displayName: 'Install dependencies (npm ci)'
+
+          # ── Lint & type-check ───────────────────────────────────────────
+          - script: npm run lint
+            displayName: 'Lint (ESLint flat config)'
 
           - script: npm run type-check
-            displayName: 'Type check'
+            displayName: 'Type-check (tsc --noEmit)'
 
-          - script: npm run lint
-            displayName: 'Lint'
-
-          - script: npm run test:coverage
-            displayName: 'Test with coverage'
-
-          - script: npm run build
-            displayName: 'Build'
-
-          - script: |
-              set -e
-              if [ -d node_modules ] && [ -f node_modules/.package-lock.json ] \
-                  && cmp -s package-lock.json node_modules/.package-lock.json; then
-                echo "Demo dependencies already match package-lock.json - skipping install."
-              else
-                echo "Installing demo dependencies with npm ci..."
-                npm ci --prefer-offline --no-audit --no-fund
-              fi
-            displayName: 'Install demo dependencies'
-            workingDirectory: demo
-
-          - script: npm run build
-            displayName: 'Build demo site'
-            workingDirectory: demo
-
-          - task: PublishPipelineArtifact@1
-            displayName: 'Publish demo site artifact'
-            inputs:
-              targetPath: 'demo/dist'
-              artifact: 'demo-site'
-
-          - task: SonarCloudPrepare@4
+          # ── Test (Vitest + coverage) ────────────────────────────────────
+          - task: SonarCloudPrepare@3
             displayName: 'SonarCloud Prepare'
+            condition: and(succeeded(), ne(variables['SONAR_TOKEN'], ''))
             inputs:
-              SonarCloud: 'SonarQube'
+              SonarCloud: 'SonarCloud'
               organization: 'konarsubhojit'
               scannerMode: 'CLI'
               configMode: 'file'
-            env:
-              JAVA_HOME: $(JAVA_HOME)
 
-          - task: SonarCloudAnalyze@4
+          - script: npm run test:ci
+            displayName: 'Test (Vitest + coverage)'
+
+          - task: PublishTestResults@2
+            displayName: 'Publish JUnit results'
+            condition: succeededOrFailed()
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: 'reports/junit.xml'
+              mergeTestResults: true
+              failTaskOnFailedTests: true
+
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish coverage/ (html + lcov)'
+            condition: succeededOrFailed()
+            inputs:
+              targetPath: 'coverage'
+              artifact: 'coverage'
+
+          - task: SonarCloudAnalyze@3
             displayName: 'SonarCloud Analyze'
-            env:
-              JAVA_HOME: $(JAVA_HOME)
+            condition: and(succeeded(), ne(variables['SONAR_TOKEN'], ''))
 
-          - task: SonarCloudPublish@4
+          - task: SonarCloudPublish@3
             displayName: 'SonarCloud Publish'
+            condition: and(succeeded(), ne(variables['SONAR_TOKEN'], ''))
+            inputs:
+              pollingTimeoutSec: '300'
 
-  - stage: DeployDemoToVercel
-    displayName: 'Deploy demo to Vercel'
-    dependsOn: Build
-    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-    jobs:
-      - job: DeployVercel
-        displayName: 'Deploy Vite demo'
-        pool:
-          name: default
-          demands:
-            - Agent.OS -equals Linux
-        steps:
-          - checkout: self
+          # ── Build (library + Storybook) ─────────────────────────────────
+          - script: npm run build
+            displayName: 'Build library (rollup)'
+
+          - script: npm run build-storybook
+            displayName: 'Build Storybook'
+
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish dist/'
+            inputs:
+              targetPath: 'dist'
+              artifact: 'dist'
+
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish storybook-static/'
+            inputs:
+              targetPath: 'storybook-static'
+              artifact: 'storybook-static'
+
+          # ── Bundle-size budget ──────────────────────────────────────────
+          - script: npx size-limit
+            displayName: 'Bundle size (size-limit)'
+
+          # ── Storybook a11y (axe via @storybook/test-runner) ─────────────
+          - task: Cache@2
+            displayName: 'Cache ms-playwright browsers'
+            inputs:
+              key: 'playwright | "$(Agent.OS)" | package-lock.json'
+              path: $(PLAYWRIGHT_BROWSERS_PATH)
 
           - script: |
-              export NVM_DIR="$HOME/.nvm"
-              [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-              if ! nvm use $(nodeVersion) >/dev/null 2>&1; then
-                echo "Node $(nodeVersion) not installed on agent; installing..."
-                nvm install $(nodeVersion)
-                nvm use $(nodeVersion)
+              set -e
+              # Install Playwright browsers only when missing. Reuse the same
+              # path as the Cache@2 task above so cache hits are honored.
+              if [ ! -d "$PLAYWRIGHT_BROWSERS_PATH" ] || \
+                 [ -z "$(ls -A "$PLAYWRIGHT_BROWSERS_PATH" 2>/dev/null)" ]; then
+                npx playwright install --with-deps chromium
+              else
+                echo "Playwright browsers already cached at $PLAYWRIGHT_BROWSERS_PATH — skipping install."
               fi
-              echo "##vso[task.prependpath]$(dirname $(which node))"
-            displayName: 'Set up Node.js via NVM'
+            displayName: 'Install Playwright chromium (if missing)'
 
-          - script: npm install -g vercel
-            displayName: 'Install Vercel CLI'
+          - script: |
+              set -e
+              npx http-server storybook-static -p 6006 -s &
+              SERVER_PID=$!
+              npx wait-on http://127.0.0.1:6006 --timeout 60000
+              npx test-storybook --url http://127.0.0.1:6006
+              kill "$SERVER_PID" || true
+            displayName: 'Storybook a11y (axe)'
+            continueOnError: true
 
-          - script: vercel pull --yes --environment=$(VERCEL_ENV) --token=$(VERCEL_TOKEN)
-            displayName: 'Pull Vercel project settings'
-            env:
-              VERCEL_ORG_ID: $(VERCEL_ORG_ID)
-              VERCEL_PROJECT_ID: $(VERCEL_PROJECT_ID)
-              VERCEL_TOKEN: $(VERCEL_TOKEN)
-
-          - script: vercel build --prod --token=$(VERCEL_TOKEN)
-            displayName: 'Build Vercel deployment'
-            env:
-              VERCEL_ORG_ID: $(VERCEL_ORG_ID)
-              VERCEL_PROJECT_ID: $(VERCEL_PROJECT_ID)
-              VERCEL_TOKEN: $(VERCEL_TOKEN)
-
-          - script: vercel deploy --prebuilt --prod --token=$(VERCEL_TOKEN)
-            displayName: 'Deploy to Vercel'
-            env:
-              VERCEL_ORG_ID: $(VERCEL_ORG_ID)
-              VERCEL_PROJECT_ID: $(VERCEL_PROJECT_ID)
-              VERCEL_TOKEN: $(VERCEL_TOKEN)
-
+  # ───────────────────────────────────────────────────────────────────────────
+  # Optional publish stage — retained from previous pipeline configuration.
+  # Runs only on pushes to release/** branches, and only after CI passes.
+  # ───────────────────────────────────────────────────────────────────────────
   - stage: Publish
     displayName: 'Publish to npm'
-    dependsOn: Build
+    dependsOn: CI
     condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))
     jobs:
       - deployment: PublishNpm
         displayName: 'Publish to npm registry'
-        pool:
-          name: default
         environment: 'npm-publish'
         strategy:
           runOnce:
             deploy:
               steps:
                 - checkout: self
-
-                - script: |
-                    export NVM_DIR="$HOME/.nvm"
-                    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-                    if ! nvm use $(nodeVersion) >/dev/null 2>&1; then
-                      echo "Node $(nodeVersion) not installed on agent; installing..."
-                      nvm install $(nodeVersion)
-                      nvm use $(nodeVersion)
-                    fi
-                    echo "##vso[task.prependpath]$(dirname $(which node))"
-                  displayName: 'Set up Node.js via NVM'
-
-                - script: |
-                    set -e
-                    if [ -d node_modules ] && [ -f node_modules/.package-lock.json ] \
-                        && cmp -s package-lock.json node_modules/.package-lock.json; then
-                      echo "Dependencies already match package-lock.json - skipping install."
-                    else
-                      npm ci --prefer-offline --no-audit --no-fund
-                    fi
-                  displayName: 'Install dependencies'
-
+                  clean: false
+                - task: NodeTool@0
+                  displayName: 'Install Node $(NODE_VERSION)'
+                  inputs:
+                    versionSpec: $(NODE_VERSION)
+                - task: Cache@2
+                  inputs:
+                    key: 'npm | "$(Agent.OS)" | package-lock.json'
+                    path: $(npm_config_cache)
+                - script: npm ci --prefer-offline --no-audit --fund=false
+                  displayName: 'npm ci'
                 - script: npm run build
                   displayName: 'Build'
-
                 - script: |
                     echo "//registry.npmjs.org/:_authToken=$(NPM_TOKEN)" > .npmrc
                     npm publish --access public --provenance
-                  displayName: 'Publish to npm'
+                  displayName: 'npm publish'
                   env:
                     NPM_TOKEN: $(NPM_TOKEN)
