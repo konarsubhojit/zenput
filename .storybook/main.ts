@@ -2,11 +2,7 @@ import type { StorybookConfig } from '@storybook/react-webpack5';
 
 const config: StorybookConfig = {
   stories: ['../src/**/*.stories.@(ts|tsx)'],
-  addons: [
-    '@storybook/addon-essentials',
-    '@storybook/addon-a11y',
-    '@storybook/addon-interactions',
-  ],
+  addons: ['@storybook/addon-a11y'],
   framework: {
     name: '@storybook/react-webpack5',
     options: {},
@@ -33,7 +29,10 @@ const config: StorybookConfig = {
           loader: require.resolve('babel-loader'),
           options: {
             presets: [
-              [require.resolve('@babel/preset-env'), { targets: { browsers: ['last 2 versions'] } }],
+              [
+                require.resolve('@babel/preset-env'),
+                { targets: { browsers: ['last 2 versions'] } },
+              ],
               [require.resolve('@babel/preset-react'), { runtime: 'automatic' }],
               require.resolve('@babel/preset-typescript'),
             ],
@@ -44,11 +43,7 @@ const config: StorybookConfig = {
     });
 
     config.resolve = config.resolve ?? {};
-    config.resolve.extensions = [
-      ...(config.resolve.extensions ?? []),
-      '.ts',
-      '.tsx',
-    ];
+    config.resolve.extensions = [...(config.resolve.extensions ?? []), '.ts', '.tsx'];
 
     return config;
   },
