@@ -96,19 +96,19 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
       validationState === 'error'
         ? errorMessage
         : validationState === 'success'
-        ? successMessage
-        : validationState === 'warning'
-        ? warningMessage
-        : helperText;
+          ? successMessage
+          : validationState === 'warning'
+            ? warningMessage
+            : helperText;
 
     const messageClass =
       validationState === 'error'
         ? styles.errorText
         : validationState === 'success'
-        ? styles.successText
-        : validationState === 'warning'
-        ? styles.warningText
-        : styles.helperText;
+          ? styles.successText
+          : validationState === 'warning'
+            ? styles.warningText
+            : styles.helperText;
 
     return (
       <div
@@ -124,17 +124,18 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
         {label && (
           <label
             {...labelProps}
-            className={classNames(styles.label, required ? styles.required : undefined, labelClassName)}
+            className={classNames(
+              styles.label,
+              required ? styles.required : undefined,
+              labelClassName
+            )}
             style={labelStyle}
           >
             {label}
           </label>
         )}
         <div
-          className={classNames(
-            styles.inputWrapper,
-            disabled ? styles.disabledWrapper : undefined
-          )}
+          className={classNames(styles.inputWrapper, disabled ? styles.disabledWrapper : undefined)}
         >
           <select
             className={styles.dialCodeSelect}

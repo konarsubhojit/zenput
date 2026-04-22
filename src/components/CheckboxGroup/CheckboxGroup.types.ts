@@ -6,23 +6,22 @@ export interface CheckboxOption {
   disabled?: boolean;
 }
 
-export interface CheckboxGroupProps
-  extends Pick<
-    BaseInputProps,
-    | 'size'
-    | 'validationState'
-    | 'label'
-    | 'helperText'
-    | 'errorMessage'
-    | 'required'
-    | 'disabled'
-    | 'wrapperClassName'
-    | 'wrapperStyle'
-    | 'labelClassName'
-    | 'labelStyle'
-    | 'helperTextClassName'
-    | 'helperTextStyle'
-  > {
+export interface CheckboxGroupProps extends Pick<
+  BaseInputProps,
+  | 'size'
+  | 'validationState'
+  | 'label'
+  | 'helperText'
+  | 'errorMessage'
+  | 'required'
+  | 'disabled'
+  | 'wrapperClassName'
+  | 'wrapperStyle'
+  | 'labelClassName'
+  | 'labelStyle'
+  | 'helperTextClassName'
+  | 'helperTextStyle'
+> {
   /** List of checkbox options */
   options: CheckboxOption[];
   /** Currently selected values (controlled) */

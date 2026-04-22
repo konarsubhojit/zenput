@@ -54,9 +54,11 @@ describe('Icon', () => {
 
 describe('a11y (axe)', () => {
   it('has no detectable axe violations in default render', async () => {
-    const { container } = render(<Icon label="Close">
+    const { container } = render(
+      <Icon label="Close">
         <path d="M0 0h24v24H0z" />
-      </Icon>);
+      </Icon>
+    );
     await expectNoA11yViolations(container);
   });
 });

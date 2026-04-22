@@ -9,8 +9,7 @@ export interface CurrencyOption {
   label: string;
 }
 
-export interface MoneyInputProps
-  extends Omit<BaseInputProps, 'prefixIcon' | 'suffixIcon'> {
+export interface MoneyInputProps extends Omit<BaseInputProps, 'prefixIcon' | 'suffixIcon'> {
   /** List of supported currencies */
   currencies: CurrencyOption[];
   /** Currently selected currency code (controlled) */

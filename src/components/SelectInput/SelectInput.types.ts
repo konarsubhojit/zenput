@@ -8,7 +8,11 @@ export interface SelectOption {
 }
 
 export interface SelectInputProps
-  extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'size' | 'value' | 'defaultValue' | 'onChange' | 'multiple'>,
+  extends
+    Omit<
+      React.SelectHTMLAttributes<HTMLSelectElement>,
+      'size' | 'value' | 'defaultValue' | 'onChange' | 'multiple'
+    >,
     BaseInputProps {
   /** List of options */
   options: SelectOption[];

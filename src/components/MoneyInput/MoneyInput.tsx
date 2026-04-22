@@ -46,7 +46,7 @@ export function MoneyInput({
 
   const [currentCurrency, setCurrentCurrency] = useControllable<string>({
     value: currency,
-    defaultValue: defaultCurrency ?? (currencies[0]?.code ?? ''),
+    defaultValue: defaultCurrency ?? currencies[0]?.code ?? '',
     onChange: onCurrencyChange,
   });
 
@@ -109,7 +109,11 @@ export function MoneyInput({
         <label
           id={labelId}
           htmlFor={amountId}
-          className={classNames(styles.label, required ? styles.required : undefined, labelClassName)}
+          className={classNames(
+            styles.label,
+            required ? styles.required : undefined,
+            labelClassName
+          )}
           style={labelStyle}
         >
           {label}
@@ -137,7 +141,8 @@ export function MoneyInput({
         >
           {currencies.map((opt) => (
             <option key={opt.code} value={opt.code}>
-              {opt.symbol} {opt.code}{opt.label ? ` - ${opt.label}` : ''}
+              {opt.symbol} {opt.code}
+              {opt.label ? ` - ${opt.label}` : ''}
             </option>
           ))}
         </select>

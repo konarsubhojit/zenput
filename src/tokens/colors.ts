@@ -191,7 +191,7 @@ export const lightSemantic: SemanticColors = {
 
   textPrimary: neutral['900'],
   textSecondary: neutral['600'],
-  textDisabled: '#9ca3af', // neutral-400: muted gray for disabled text; WHCM overrides apply when forced colors are active
+  textDisabled: '#6b7280', // neutral-500: muted gray for disabled text that still meets WCAG AA contrast; WHCM overrides apply when forced colors are active
   textInverse: '#ffffff',
 
   border: neutral['300'],

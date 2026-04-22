@@ -129,17 +129,17 @@ export const OTPInput = forwardRef<HTMLDivElement, OTPInputProps>(
       validationState === 'error'
         ? errorMessage
         : validationState === 'success'
-        ? undefined
-        : helperText;
+          ? undefined
+          : helperText;
 
     const messageClass =
       validationState === 'error'
         ? styles.errorText
         : validationState === 'success'
-        ? styles.successText
-        : validationState === 'warning'
-        ? styles.warningText
-        : styles.helperText;
+          ? styles.successText
+          : validationState === 'warning'
+            ? styles.warningText
+            : styles.helperText;
 
     return (
       <div
@@ -165,18 +165,18 @@ export const OTPInput = forwardRef<HTMLDivElement, OTPInputProps>(
             {label}
           </label>
         )}
-        <div
-          className={styles.inputsRow}
-          role="group"
-          aria-label={label ?? 'One-time password'}
-        >
+        <div className={styles.inputsRow} role="group" aria-label={label ?? 'One-time password'}>
           {digits.map((digit, index) => (
             <React.Fragment key={index}>
               {index === length / 2 && length > 4 && (
-                <span className={styles.separator} aria-hidden="true">—</span>
+                <span className={styles.separator} aria-hidden="true">
+                  —
+                </span>
               )}
               <input
-                ref={(el) => { inputRefs.current[index] = el; }}
+                ref={(el) => {
+                  inputRefs.current[index] = el;
+                }}
                 id={index === 0 ? `${groupId}-0` : undefined}
                 type={mask ? 'password' : 'text'}
                 inputMode={inputType === 'numeric' ? 'numeric' : 'text'}
@@ -188,10 +188,7 @@ export const OTPInput = forwardRef<HTMLDivElement, OTPInputProps>(
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 onPaste={handlePaste}
                 onFocus={(e) => e.target.select()}
-                className={classNames(
-                  styles.digitInput,
-                  digit ? styles.digitFilled : undefined
-                )}
+                className={classNames(styles.digitInput, digit ? styles.digitFilled : undefined)}
                 aria-label={`Digit ${index + 1} of ${length}`}
                 autoComplete={index === 0 ? 'one-time-code' : 'off'}
               />

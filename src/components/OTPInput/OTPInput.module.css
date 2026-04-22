@@ -1,8 +1,8 @@
 .wrapper {
   --input-primary-color: #3b82f6;
   --input-error-color: #dc2626;
-  --input-success-color: #22c55e;
-  --input-warning-color: #f59e0b;
+  --input-success-color: #16a34a;
+  --input-warning-color: #b45309;
   --input-border-color: #d1d5db;
   --input-bg-color: #ffffff;
   --input-text-color: #111827;
@@ -52,14 +52,24 @@
   border: 2px solid var(--input-border-color);
   border-radius: var(--input-border-radius);
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
   caret-color: transparent;
   cursor: default;
   box-sizing: border-box;
 }
 
-.sm .digitInput { width: 32px; height: 38px; font-size: 1rem; }
-.lg .digitInput { width: 52px; height: 60px; font-size: 1.5rem; }
+.sm .digitInput {
+  width: 32px;
+  height: 38px;
+  font-size: 1rem;
+}
+.lg .digitInput {
+  width: 52px;
+  height: 60px;
+  font-size: 1.5rem;
+}
 
 .digitInput:hover:not(:disabled) {
   border-color: var(--input-primary-color);
@@ -96,7 +106,19 @@
   box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.3);
 }
 
-.helperText { font-size: 0.75rem; color: #6b7280; }
-.errorText { font-size: 0.75rem; color: var(--input-error-color); }
-.successText { font-size: 0.75rem; color: var(--input-success-color); }
-.warningText { font-size: 0.75rem; color: var(--input-warning-color); }
+.helperText {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+.errorText {
+  font-size: 0.75rem;
+  color: var(--input-error-color);
+}
+.successText {
+  font-size: 0.75rem;
+  color: var(--input-success-color);
+}
+.warningText {
+  font-size: 0.75rem;
+  color: var(--input-warning-color);
+}

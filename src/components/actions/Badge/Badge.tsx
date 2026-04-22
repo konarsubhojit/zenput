@@ -2,13 +2,7 @@ import React, { forwardRef } from 'react';
 import { classNames } from '../../../utils';
 import styles from './Badge.module.css';
 
-export type BadgeTone =
-  | 'neutral'
-  | 'brand'
-  | 'success'
-  | 'warning'
-  | 'danger'
-  | 'info';
+export type BadgeTone = 'neutral' | 'brand' | 'success' | 'warning' | 'danger' | 'info';
 export type BadgeVariant = 'solid' | 'subtle' | 'outline';
 export type BadgeSize = 'sm' | 'md' | 'lg';
 

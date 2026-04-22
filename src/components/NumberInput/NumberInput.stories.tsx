@@ -21,7 +21,7 @@ export const Default: Story = {
 };
 
 export const WithStep: Story = {
-  args: { label: 'Price', defaultValue: 10.00, step: 0.01, min: 0, helperText: 'Step by 0.01' },
+  args: { label: 'Price', defaultValue: 10.0, step: 0.01, min: 0, helperText: 'Step by 0.01' },
 };
 
 export const HideControls: Story = {
@@ -45,8 +45,18 @@ export const ValidationStates: Story = {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       <NumberInput label="Default" validationState="default" helperText="Enter a number" />
       <NumberInput label="Error" validationState="error" errorMessage="Value out of range" />
-      <NumberInput label="Success" validationState="success" successMessage="Valid number" defaultValue={42} />
-      <NumberInput label="Warning" validationState="warning" warningMessage="Unusual value" defaultValue={999} />
+      <NumberInput
+        label="Success"
+        validationState="success"
+        successMessage="Valid number"
+        defaultValue={42}
+      />
+      <NumberInput
+        label="Warning"
+        validationState="warning"
+        warningMessage="Unusual value"
+        defaultValue={999}
+      />
     </div>
   ),
 };

@@ -70,19 +70,19 @@ export const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
       validationState === 'error'
         ? errorMessage
         : validationState === 'success'
-        ? successMessage
-        : validationState === 'warning'
-        ? warningMessage
-        : helperText;
+          ? successMessage
+          : validationState === 'warning'
+            ? warningMessage
+            : helperText;
 
     const messageClass =
       validationState === 'error'
         ? styles.errorText
         : validationState === 'success'
-        ? styles.successText
-        : validationState === 'warning'
-        ? styles.warningText
-        : styles.helperText;
+          ? styles.successText
+          : validationState === 'warning'
+            ? styles.warningText
+            : styles.helperText;
 
     return (
       <div
@@ -98,7 +98,11 @@ export const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
         {label && (
           <label
             {...labelProps}
-            className={classNames(styles.label, required ? styles.required : undefined, labelClassName)}
+            className={classNames(
+              styles.label,
+              required ? styles.required : undefined,
+              labelClassName
+            )}
             style={labelStyle}
           >
             {label}
@@ -106,10 +110,7 @@ export const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
         )}
         <div className={styles.colorRow}>
           <div
-            className={classNames(
-              styles.colorSwatch,
-              disabled ? styles.disabledSwatch : undefined
-            )}
+            className={classNames(styles.colorSwatch, disabled ? styles.disabledSwatch : undefined)}
             style={{ backgroundColor: currentColor }}
           >
             <input
@@ -126,9 +127,7 @@ export const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
               style={inputStyle}
             />
           </div>
-          {showHexValue && (
-            <span className={styles.hexValue}>{currentColor.toUpperCase()}</span>
-          )}
+          {showHexValue && <span className={styles.hexValue}>{currentColor.toUpperCase()}</span>}
         </div>
         {activeMessage && (
           <span

@@ -35,9 +35,7 @@ describe('Box', () => {
     // React sets the CSS properties on style; JSDOM may drop invalid
     // values, but we can at least assert that padding is not a stray
     // non-token value.
-    expect(el.style.padding === '' || el.style.padding.includes('--zp-space')).toBe(
-      true
-    );
+    expect(el.style.padding === '' || el.style.padding.includes('--zp-space')).toBe(true);
   });
 
   it('maps radius/shadow to token vars', () => {

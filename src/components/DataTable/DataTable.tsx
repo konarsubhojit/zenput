@@ -64,7 +64,9 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
   const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});
 
   /** Current sort state: { key, direction } */
-  const [sortState, setSortState] = useState<{ key: string; direction: SortDirection } | null>(null);
+  const [sortState, setSortState] = useState<{ key: string; direction: SortDirection } | null>(
+    null
+  );
 
   /** Set of expanded row keys */
   const [expandedKeys, setExpandedKeys] = useState<Set<string | number>>(new Set());
@@ -93,12 +95,9 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
   );
 
   /** Toggle the filter dropdown for a column */
-  const toggleFilterDropdown = useCallback(
-    (key: string) => {
-      setOpenFilterKey((prev) => (prev === key ? null : key));
-    },
-    []
-  );
+  const toggleFilterDropdown = useCallback((key: string) => {
+    setOpenFilterKey((prev) => (prev === key ? null : key));
+  }, []);
 
   /** Toggle a single checkbox value inside a column's filter */
   const toggleFilterValue = useCallback((columnKey: string, value: string) => {
@@ -193,7 +192,14 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
       : new Set<string | number>([...activeSelected, ...allKeys]);
     if (!isControlledSelection) setInternalSelected(next);
     onSelectionChange?.(next);
-  }, [filteredData, getRowKey, isAllSelected, activeSelected, isControlledSelection, onSelectionChange]);
+  }, [
+    filteredData,
+    getRowKey,
+    isAllSelected,
+    activeSelected,
+    isControlledSelection,
+    onSelectionChange,
+  ]);
 
   const handleSelectRow = useCallback(
     (key: string | number) => {
@@ -219,23 +225,14 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
 
   // ── Skeleton rows ──────────────────────────────────────────────────────────
 
-  const skeletonRows = useMemo(
-    () => Array.from({ length: skeletonRowCount }),
-    [skeletonRowCount]
-  );
+  const skeletonRows = useMemo(() => Array.from({ length: skeletonRowCount }), [skeletonRowCount]);
 
   return (
-    <div
-      ref={wrapperRef}
-      className={classNames(styles.wrapper, className)}
-      style={style}
-    >
+    <div ref={wrapperRef} className={classNames(styles.wrapper, className)} style={style}>
       {/* Bulk actions bar */}
       {selectable && activeSelected.size > 0 && bulkActions && (
         <div className={styles.bulkActionsBar}>
-          <span className={styles.bulkActionsCount}>
-            {activeSelected.size} selected
-          </span>
+          <span className={styles.bulkActionsCount}>{activeSelected.size} selected</span>
           <div className={styles.bulkActionsSlot}>{bulkActions}</div>
         </div>
       )}
@@ -276,17 +273,16 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
                       {col.sortable ? (
                         <button
                           type="button"
-                          className={classNames(styles.sortButton, isSorted ? styles.sortButtonActive : undefined)}
+                          className={classNames(
+                            styles.sortButton,
+                            isSorted ? styles.sortButtonActive : undefined
+                          )}
                           onClick={() => handleSortClick(col.key)}
                           aria-label={`Sort by ${col.header}${isSorted ? `, currently ${sortDir}` : ''}`}
                         >
                           <span className={styles.headerText}>{col.header}</span>
                           <span className={styles.sortIcon} aria-hidden="true">
-                            {isSorted
-                              ? sortDir === 'asc'
-                                ? '▲'
-                                : '▼'
-                              : '⇅'}
+                            {isSorted ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
                           </span>
                         </button>
                       ) : (
@@ -330,10 +326,7 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
                                     const checkboxId = `dt-filter-${col.key}-${valIndex}`;
                                     return (
                                       <li key={val} className={styles.filterItem}>
-                                        <label
-                                          htmlFor={checkboxId}
-                                          className={styles.filterLabel}
-                                        >
+                                        <label htmlFor={checkboxId} className={styles.filterLabel}>
                                           <input
                                             id={checkboxId}
                                             type="checkbox"
@@ -387,10 +380,7 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
               ))
             ) : filteredData.length === 0 ? (
               <tr>
-                <td
-                  colSpan={colSpan}
-                  className={styles.emptyCell}
-                >
+                <td colSpan={colSpan} className={styles.emptyCell}>
                   {emptyMessage}
                 </td>
               </tr>
@@ -425,9 +415,7 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
                       )}
                       {columns.map((col) => (
                         <td key={col.key} className={styles.td}>
-                          {col.render
-                            ? col.render(row[col.key], row)
-                            : String(row[col.key] ?? '')}
+                          {col.render ? col.render(row[col.key], row) : String(row[col.key] ?? '')}
                         </td>
                       ))}
                     </tr>

@@ -154,7 +154,9 @@ describe('DataTable', () => {
     expect(screen.getByRole('dialog', { name: 'Filter options for Role' })).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Filter by Status' }));
-    expect(screen.queryByRole('dialog', { name: 'Filter options for Role' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('dialog', { name: 'Filter options for Role' })
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('dialog', { name: 'Filter options for Status' })).toBeInTheDocument();
   });
 
@@ -165,7 +167,9 @@ describe('DataTable', () => {
     expect(screen.getByRole('dialog', { name: 'Filter options for Role' })).toBeInTheDocument();
 
     await userEvent.click(filterBtn);
-    expect(screen.queryByRole('dialog', { name: 'Filter options for Role' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('dialog', { name: 'Filter options for Role' })
+    ).not.toBeInTheDocument();
   });
 
   it('uses custom cell renderer when render prop is provided', () => {
@@ -206,13 +210,7 @@ describe('DataTable', () => {
   });
 
   it('uses rowKey prop for stable row keys', () => {
-    render(
-      <DataTable
-        columns={columns}
-        data={data}
-        rowKey={(row) => row.id}
-      />
-    );
+    render(<DataTable columns={columns} data={data} rowKey={(row) => row.id} />);
     expect(screen.getByText('Alice')).toBeInTheDocument();
   });
 
@@ -265,7 +263,9 @@ describe('DataTable', () => {
 
   it('calls onRowClick when a row is clicked', async () => {
     const handleRowClick = vi.fn();
-    render(<DataTable columns={columns} data={data} onRowClick={handleRowClick} rowKey={(r) => r.id} />);
+    render(
+      <DataTable columns={columns} data={data} onRowClick={handleRowClick} rowKey={(r) => r.id} />
+    );
     await userEvent.click(screen.getByText('Alice'));
     expect(handleRowClick).toHaveBeenCalledWith(data[0]);
   });

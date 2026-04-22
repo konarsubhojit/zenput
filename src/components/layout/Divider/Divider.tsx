@@ -19,14 +19,7 @@ export interface DividerProps extends React.HTMLAttributes<HTMLDivElement> {
  * inline label with divider lines on either side.
  */
 export const Divider = forwardRef<HTMLDivElement, DividerProps>(function Divider(
-  {
-    orientation = 'horizontal',
-    strong,
-    label,
-    className,
-    role = 'separator',
-    ...rest
-  },
+  { orientation = 'horizontal', strong, label, className, role = 'separator', ...rest },
   ref
 ) {
   if (label && orientation === 'horizontal') {

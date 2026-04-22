@@ -1,21 +1,11 @@
 import React, { forwardRef } from 'react';
 import { classNames } from '../../utils';
-import type {
-  PolymorphicProps,
-  PolymorphicRef,
-} from '../../types/polymorphic';
+import type { PolymorphicProps, PolymorphicRef } from '../../types/polymorphic';
 import styles from './Typography.module.css';
 import type { TextTone } from './Text';
 
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
-export type HeadingSize =
-  | 'md'
-  | 'lg'
-  | 'xl'
-  | '2xl'
-  | '3xl'
-  | '4xl'
-  | '5xl';
+export type HeadingSize = 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl';
 export type HeadingWeight = 'medium' | 'semibold' | 'bold';
 
 const defaultSizeByLevel: Record<HeadingLevel, HeadingSize> = {

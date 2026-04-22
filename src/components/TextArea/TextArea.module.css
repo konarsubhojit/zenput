@@ -1,12 +1,12 @@
 .wrapper {
   --input-primary-color: #3b82f6;
   --input-error-color: #dc2626;
-  --input-success-color: #22c55e;
-  --input-warning-color: #f59e0b;
+  --input-success-color: #16a34a;
+  --input-warning-color: #b45309;
   --input-border-color: #d1d5db;
   --input-bg-color: #ffffff;
   --input-text-color: #111827;
-  --input-placeholder-color: #9ca3af;
+  --input-placeholder-color: #6b7280;
   --input-border-radius: 6px;
   --input-font-family: inherit;
   --input-focus-ring-color: rgba(59, 130, 246, 0.5);
@@ -45,7 +45,9 @@
   color: var(--input-text-color);
   background-color: var(--input-bg-color);
   border-radius: var(--input-border-radius);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
   outline: none;
   box-sizing: border-box;
   resize: vertical;
@@ -186,7 +188,7 @@
 
 .charCount {
   font-size: 0.75rem;
-  color: #9ca3af;
+  color: #6b7280;
   white-space: nowrap;
   flex-shrink: 0;
 }

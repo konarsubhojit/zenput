@@ -43,10 +43,30 @@ export const Variants: Story = {
 export const ValidationStates: Story = {
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      <TextInput label="Default" placeholder="default" validationState="default" helperText="Helper text" />
-      <TextInput label="Error" placeholder="error" validationState="error" errorMessage="This field is required" />
-      <TextInput label="Success" placeholder="success" validationState="success" successMessage="Looks good!" />
-      <TextInput label="Warning" placeholder="warning" validationState="warning" warningMessage="Check this value" />
+      <TextInput
+        label="Default"
+        placeholder="default"
+        validationState="default"
+        helperText="Helper text"
+      />
+      <TextInput
+        label="Error"
+        placeholder="error"
+        validationState="error"
+        errorMessage="This field is required"
+      />
+      <TextInput
+        label="Success"
+        placeholder="success"
+        validationState="success"
+        successMessage="Looks good!"
+      />
+      <TextInput
+        label="Warning"
+        placeholder="warning"
+        validationState="warning"
+        warningMessage="Check this value"
+      />
     </div>
   ),
 };

@@ -68,13 +68,7 @@ describe('SelectInput', () => {
   // ── Multi-select ──────────────────────────────────────────────────────────
 
   it('renders chips for preselected values when multiple is true', () => {
-    render(
-      <SelectInput
-        options={OPTIONS}
-        multiple
-        selectedValues={['us', 'ca']}
-      />
-    );
+    render(<SelectInput options={OPTIONS} multiple selectedValues={['us', 'ca']} />);
     expect(screen.getByRole('button', { name: 'Remove United States' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Remove Canada' })).toBeInTheDocument();
   });

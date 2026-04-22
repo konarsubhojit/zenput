@@ -1,4 +1,11 @@
-import React, { forwardRef, useRef, useState, useCallback, useEffect, useImperativeHandle } from 'react';
+import React, {
+  forwardRef,
+  useRef,
+  useState,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+} from 'react';
 import { FileInputProps } from './FileInput.types';
 import { classNames, getValidationMessage, getValidationMessageClass } from '../../utils';
 import { useFormField } from '../../hooks';
@@ -125,9 +132,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
 
     const activeSrc = objectUrl ?? previewSrc;
     const clampedProgress =
-      uploadProgress !== undefined
-        ? Math.min(100, Math.max(0, uploadProgress))
-        : undefined;
+      uploadProgress !== undefined ? Math.min(100, Math.max(0, uploadProgress)) : undefined;
 
     return (
       <div
@@ -143,7 +148,11 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
         {label && (
           <label
             {...labelProps}
-            className={classNames(styles.label, required ? styles.required : undefined, labelClassName)}
+            className={classNames(
+              styles.label,
+              required ? styles.required : undefined,
+              labelClassName
+            )}
             style={labelStyle}
           >
             {label}
@@ -181,7 +190,10 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
                 internalRef.current?.click();
               }
             }}
-            onDragOver={(e) => { e.preventDefault(); if (!disabled) setIsDragActive(true); }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              if (!disabled) setIsDragActive(true);
+            }}
             onDragLeave={() => setIsDragActive(false)}
             onDrop={handleDrop}
           >
@@ -203,7 +215,11 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
           <div className={styles.imagePreview}>
             <img
               src={activeSrc}
-              alt={typeof label === 'string' && label.trim() ? `${label} preview` : 'Selected image preview'}
+              alt={
+                typeof label === 'string' && label.trim()
+                  ? `${label} preview`
+                  : 'Selected image preview'
+              }
               className={styles.previewImage}
             />
           </div>
@@ -221,13 +237,21 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
           <div
             className={styles.uploadProgress}
             role="progressbar"
+            aria-label="Upload progress"
             aria-valuenow={uploading ? undefined : clampedProgress}
             aria-valuemin={0}
             aria-valuemax={100}
           >
             <div
-              className={classNames(styles.uploadProgressBar, uploading ? styles.uploadProgressIndeterminate : undefined)}
-              style={clampedProgress !== undefined && !uploading ? { width: `${clampedProgress}%` } : undefined}
+              className={classNames(
+                styles.uploadProgressBar,
+                uploading ? styles.uploadProgressIndeterminate : undefined
+              )}
+              style={
+                clampedProgress !== undefined && !uploading
+                  ? { width: `${clampedProgress}%` }
+                  : undefined
+              }
             />
           </div>
         )}

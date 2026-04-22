@@ -21,7 +21,12 @@ export const Default: Story = {
 };
 
 export const WithRange: Story = {
-  args: { label: 'Business Hours', min: '09:00', max: '17:00', helperText: 'Between 9 AM and 5 PM' },
+  args: {
+    label: 'Business Hours',
+    min: '09:00',
+    max: '17:00',
+    helperText: 'Between 9 AM and 5 PM',
+  },
 };
 
 export const ValidationStates: Story = {

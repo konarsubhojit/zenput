@@ -20,10 +20,7 @@ function Harness({
       <button onClick={d.onOpen}>open</button>
       <button onClick={d.onClose}>close</button>
       <button onClick={d.onToggle}>toggle</button>
-      <button
-        onClick={() => d.setOpen((prev) => !prev)}
-        data-testid="updater"
-      >
+      <button onClick={() => d.setOpen((prev) => !prev)} data-testid="updater">
         updater
       </button>
     </div>
@@ -79,9 +76,7 @@ describe('useDisclosure', () => {
 
   it('in controlled mode, notifies onOpenChange and resolves updater against the current prop', () => {
     const onOpenChange = vi.fn();
-    const { rerender } = render(
-      <Harness open={false} onOpenChange={onOpenChange} />
-    );
+    const { rerender } = render(<Harness open={false} onOpenChange={onOpenChange} />);
     act(() => {
       screen.getByText('toggle').click();
     });

@@ -105,19 +105,19 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       validationState === 'error'
         ? errorMessage
         : validationState === 'success'
-        ? successMessage
-        : validationState === 'warning'
-        ? warningMessage
-        : helperText;
+          ? successMessage
+          : validationState === 'warning'
+            ? warningMessage
+            : helperText;
 
     const messageClass =
       validationState === 'error'
         ? styles.errorText
         : validationState === 'success'
-        ? styles.successText
-        : validationState === 'warning'
-        ? styles.warningText
-        : styles.helperText;
+          ? styles.successText
+          : validationState === 'warning'
+            ? styles.warningText
+            : styles.helperText;
 
     const showControls = !hideControls && !readOnly;
     const isAtMin = min !== undefined && (currentValue ?? 0) <= min;
@@ -128,8 +128,8 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       !isFocused && formatValue !== undefined && currentValue !== undefined
         ? formatValue(currentValue)
         : currentValue !== undefined
-        ? currentValue
-        : '';
+          ? currentValue
+          : '';
 
     return (
       <div
@@ -147,7 +147,11 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
         {label && (
           <label
             {...labelProps}
-            className={classNames(styles.label, required ? styles.required : undefined, labelClassName)}
+            className={classNames(
+              styles.label,
+              required ? styles.required : undefined,
+              labelClassName
+            )}
             style={labelStyle}
           >
             {label}
@@ -169,8 +173,14 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
             placeholder={placeholder}
             value={displayValue}
             onChange={handleChange}
-            onFocus={(e) => { setIsFocused(true); onFocus?.(e); }}
-            onBlur={(e) => { setIsFocused(false); onBlur?.(e); }}
+            onFocus={(e) => {
+              setIsFocused(true);
+              onFocus?.(e);
+            }}
+            onBlur={(e) => {
+              setIsFocused(false);
+              onBlur?.(e);
+            }}
             className={classNames(styles.input, inputClassName, className)}
             style={inputStyle}
           />

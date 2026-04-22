@@ -27,9 +27,24 @@ export const WithDefaultDialCode: Story = {
 export const ValidationStates: Story = {
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      <PhoneInput label="Default" placeholder="(555) 000-0000" validationState="default" helperText="International format" />
-      <PhoneInput label="Error" placeholder="(555) 000-0000" validationState="error" errorMessage="Invalid phone number" />
-      <PhoneInput label="Success" placeholder="(555) 000-0000" validationState="success" successMessage="Valid number!" />
+      <PhoneInput
+        label="Default"
+        placeholder="(555) 000-0000"
+        validationState="default"
+        helperText="International format"
+      />
+      <PhoneInput
+        label="Error"
+        placeholder="(555) 000-0000"
+        validationState="error"
+        errorMessage="Invalid phone number"
+      />
+      <PhoneInput
+        label="Success"
+        placeholder="(555) 000-0000"
+        validationState="success"
+        successMessage="Valid number!"
+      />
     </div>
   ),
 };

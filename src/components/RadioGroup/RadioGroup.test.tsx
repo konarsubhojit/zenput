@@ -56,7 +56,14 @@ describe('RadioGroup', () => {
   });
 
   it('renders error message', () => {
-    render(<RadioGroup name="plan" options={OPTIONS} validationState="error" errorMessage="Select a plan" />);
+    render(
+      <RadioGroup
+        name="plan"
+        options={OPTIONS}
+        validationState="error"
+        errorMessage="Select a plan"
+      />
+    );
     expect(screen.getByText('Select a plan')).toBeInTheDocument();
   });
 

@@ -57,19 +57,19 @@ export const SelectInput = forwardRef<HTMLSelectElement, SelectInputProps>(
       validationState === 'error'
         ? errorMessage
         : validationState === 'success'
-        ? successMessage
-        : validationState === 'warning'
-        ? warningMessage
-        : helperText;
+          ? successMessage
+          : validationState === 'warning'
+            ? warningMessage
+            : helperText;
 
     const messageClass =
       validationState === 'error'
         ? styles.errorText
         : validationState === 'success'
-        ? styles.successText
-        : validationState === 'warning'
-        ? styles.warningText
-        : styles.helperText;
+          ? styles.successText
+          : validationState === 'warning'
+            ? styles.warningText
+            : styles.helperText;
 
     // ── Multi-select state ───────────────────────────────────────────────────
 
@@ -81,9 +81,7 @@ export const SelectInput = forwardRef<HTMLSelectElement, SelectInputProps>(
       (e: React.ChangeEvent<HTMLSelectElement>) => {
         const picked = e.target.value;
         if (!picked) return;
-        const next = activeSelected.includes(picked)
-          ? activeSelected
-          : [...activeSelected, picked];
+        const next = activeSelected.includes(picked) ? activeSelected : [...activeSelected, picked];
         if (!isControlled) setInternalSelected(next);
         onSelectedValuesChange?.(next);
         onChange?.(e);
@@ -102,8 +100,7 @@ export const SelectInput = forwardRef<HTMLSelectElement, SelectInputProps>(
       [activeSelected, isControlled, onSelectedValuesChange]
     );
 
-    const getLabel = (value: string) =>
-      options.find((o) => o.value === value)?.label ?? value;
+    const getLabel = (value: string) => options.find((o) => o.value === value)?.label ?? value;
 
     // ── Render ────────────────────────────────────────────────────────────────
 
@@ -122,7 +119,11 @@ export const SelectInput = forwardRef<HTMLSelectElement, SelectInputProps>(
         {label && (
           <label
             {...labelProps}
-            className={classNames(styles.label, required ? styles.required : undefined, labelClassName)}
+            className={classNames(
+              styles.label,
+              required ? styles.required : undefined,
+              labelClassName
+            )}
             style={labelStyle}
           >
             {label}

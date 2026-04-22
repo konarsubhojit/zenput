@@ -79,11 +79,7 @@ describe('MoneyInput', () => {
 
   it('uses controlled currency value', () => {
     render(
-      <MoneyInput
-        currencies={CURRENCIES}
-        currency="EUR"
-        onCurrencyChange={() => undefined}
-      />
+      <MoneyInput currencies={CURRENCIES} currency="EUR" onCurrencyChange={() => undefined} />
     );
     expect(screen.getByRole('combobox', { name: 'Currency' })).toHaveValue('EUR');
   });

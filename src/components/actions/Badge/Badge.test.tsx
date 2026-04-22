@@ -55,9 +55,11 @@ describe('Badge', () => {
 
 describe('a11y (axe)', () => {
   it('has no detectable axe violations in default render', async () => {
-    const { container } = render(<Badge data-testid="b" tone="danger" variant="solid" size="lg">
+    const { container } = render(
+      <Badge data-testid="b" tone="danger" variant="solid" size="lg">
         x
-      </Badge>);
+      </Badge>
+    );
     await expectNoA11yViolations(container);
   });
 });

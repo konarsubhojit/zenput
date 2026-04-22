@@ -75,7 +75,9 @@ describe('AutoComplete', () => {
   });
 
   it('renders error message', () => {
-    render(<AutoComplete options={OPTIONS} validationState="error" errorMessage="Selection required" />);
+    render(
+      <AutoComplete options={OPTIONS} validationState="error" errorMessage="Selection required" />
+    );
     expect(screen.getByText('Selection required')).toBeInTheDocument();
   });
 

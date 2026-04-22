@@ -1,11 +1,5 @@
 import React, { createContext, useContext, useMemo, CSSProperties } from 'react';
-import {
-  buildCssVariables,
-  cssVar,
-  semanticByMode,
-  SemanticColors,
-  ThemeMode,
-} from '../tokens';
+import { buildCssVariables, cssVar, semanticByMode, SemanticColors, ThemeMode } from '../tokens';
 
 /**
  * Theme override shape.
@@ -126,14 +120,15 @@ interface ThemeProviderProps {
  * don't invalidate memoization on every render. */
 const EMPTY_THEME: Theme = Object.freeze({}) as Theme;
 
-export function ThemeProvider({ theme = EMPTY_THEME, as = 'div', children }: Readonly<ThemeProviderProps>): JSX.Element {
+export function ThemeProvider({
+  theme = EMPTY_THEME,
+  as = 'div',
+  children,
+}: Readonly<ThemeProviderProps>): JSX.Element {
   const { mode, semantic, cssVars } = useMemo(() => createTheme(theme), [theme]);
   const legacy = useMemo(() => legacyCssVars(theme), [theme]);
 
-  const mergedVars = useMemo(
-    () => ({ ...cssVars, ...legacy }),
-    [cssVars, legacy]
-  );
+  const mergedVars = useMemo(() => ({ ...cssVars, ...legacy }), [cssVars, legacy]);
 
   const contextValue = useMemo<ThemeContextValue>(
     () => ({ theme, mode, semantic, cssVars: mergedVars }),

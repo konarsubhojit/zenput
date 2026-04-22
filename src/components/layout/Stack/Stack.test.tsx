@@ -33,9 +33,7 @@ describe('Stack', () => {
         <span>a</span>
       </VStack>
     );
-    expect((screen.getByTestId('s') as HTMLElement).style.flexDirection).toBe(
-      'column'
-    );
+    expect((screen.getByTestId('s') as HTMLElement).style.flexDirection).toBe('column');
   });
 
   it('maps align and justify to flex values', () => {
@@ -52,10 +50,12 @@ describe('Stack', () => {
 
 describe('a11y (axe)', () => {
   it('has no detectable axe violations in default render', async () => {
-    const { container } = render(<Stack data-testid="s">
+    const { container } = render(
+      <Stack data-testid="s">
         <span>a</span>
         <span>b</span>
-      </Stack>);
+      </Stack>
+    );
     await expectNoA11yViolations(container);
   });
 });

@@ -89,10 +89,7 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
               <label
                 key={opt.value}
                 htmlFor={optId}
-                className={classNames(
-                  styles.radioRow,
-                  isDisabled ? styles.disabled : undefined
-                )}
+                className={classNames(styles.radioRow, isDisabled ? styles.disabled : undefined)}
               >
                 <input
                   id={optId}

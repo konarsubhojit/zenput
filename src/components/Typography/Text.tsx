@@ -1,21 +1,9 @@
 import React, { forwardRef } from 'react';
 import { classNames } from '../../utils';
-import type {
-  PolymorphicProps,
-  PolymorphicRef,
-} from '../../types/polymorphic';
+import type { PolymorphicProps, PolymorphicRef } from '../../types/polymorphic';
 import styles from './Typography.module.css';
 
-export type TextSize =
-  | 'xs'
-  | 'sm'
-  | 'md'
-  | 'lg'
-  | 'xl'
-  | '2xl'
-  | '3xl'
-  | '4xl'
-  | '5xl';
+export type TextSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl';
 export type TextWeight = 'regular' | 'medium' | 'semibold' | 'bold';
 export type TextTone =
   | 'neutral'

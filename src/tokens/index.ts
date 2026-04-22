@@ -22,13 +22,7 @@ import {
   highContrastSemantic,
   palette,
 } from './colors';
-import {
-  fontFamilies,
-  fontSizes,
-  fontWeights,
-  lineHeights,
-  letterSpacings,
-} from './typography';
+import { fontFamilies, fontSizes, fontWeights, lineHeights, letterSpacings } from './typography';
 import { spacing } from './spacing';
 import { radii } from './radii';
 import { shadows, borderWidths } from './shadows';
@@ -64,9 +58,7 @@ export function normalizeSpacingKey(key: string): string {
  * the static token categories. Output keys are already prefixed with
  * {@link CSS_VAR_PREFIX}.
  */
-export function buildCssVariables(
-  semantic: SemanticColors
-): Record<string, string> {
+export function buildCssVariables(semantic: SemanticColors): Record<string, string> {
   const vars: Record<string, string> = {};
 
   // Palette (useful for custom brand colors).

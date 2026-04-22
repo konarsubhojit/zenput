@@ -38,8 +38,20 @@ export const Horizontal: Story = {
 export const ValidationStates: Story = {
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <RadioGroup label="Default" name="r1" options={GENDER_OPTIONS} validationState="default" helperText="Select one" />
-      <RadioGroup label="Error" name="r2" options={GENDER_OPTIONS} validationState="error" errorMessage="Please select an option" />
+      <RadioGroup
+        label="Default"
+        name="r1"
+        options={GENDER_OPTIONS}
+        validationState="default"
+        helperText="Select one"
+      />
+      <RadioGroup
+        label="Error"
+        name="r2"
+        options={GENDER_OPTIONS}
+        validationState="error"
+        errorMessage="Please select an option"
+      />
     </div>
   ),
 };

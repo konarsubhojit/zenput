@@ -55,7 +55,9 @@ describe('CheckboxGroup', () => {
   });
 
   it('renders error message', () => {
-    render(<CheckboxGroup options={OPTIONS} validationState="error" errorMessage="Select at least one" />);
+    render(
+      <CheckboxGroup options={OPTIONS} validationState="error" errorMessage="Select at least one" />
+    );
     expect(screen.getByText('Select at least one')).toBeInTheDocument();
   });
 

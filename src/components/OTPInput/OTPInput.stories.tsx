@@ -26,7 +26,12 @@ export const FourDigit: Story = {
 };
 
 export const Alphanumeric: Story = {
-  args: { label: 'Access Code', length: 8, inputType: 'alphanumeric', helperText: 'Enter the 8-character code' },
+  args: {
+    label: 'Access Code',
+    length: 8,
+    inputType: 'alphanumeric',
+    helperText: 'Enter the 8-character code',
+  },
 };
 
 export const Masked: Story = {
@@ -36,8 +41,18 @@ export const Masked: Story = {
 export const ValidationStates: Story = {
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <OTPInput label="Default" length={6} validationState="default" helperText="Enter the code sent to your email" />
-      <OTPInput label="Error" length={6} validationState="error" errorMessage="Invalid code, please try again" />
+      <OTPInput
+        label="Default"
+        length={6}
+        validationState="default"
+        helperText="Enter the code sent to your email"
+      />
+      <OTPInput
+        label="Error"
+        length={6}
+        validationState="error"
+        errorMessage="Invalid code, please try again"
+      />
       <OTPInput label="Success" length={6} validationState="success" helperText="Code verified!" />
     </div>
   ),

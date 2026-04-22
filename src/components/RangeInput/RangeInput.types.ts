@@ -2,8 +2,7 @@ import React from 'react';
 import { BaseInputProps } from '../../types';
 
 export interface RangeInputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size' | 'type'>,
-    BaseInputProps {
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size' | 'type'>, BaseInputProps {
   /** Minimum value */
   min?: number;
   /** Maximum value */

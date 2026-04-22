@@ -59,17 +59,12 @@ describe('Button', () => {
       </Button>
     );
     // aria-label takes precedence while loading.
-    expect(
-      screen.getByRole('button', { name: 'Guardando…' })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Guardando…' })).toBeInTheDocument();
   });
 
   it('renders icons on both sides', () => {
     render(
-      <Button
-        leftIcon={<span data-testid="l">L</span>}
-        rightIcon={<span data-testid="r">R</span>}
-      >
+      <Button leftIcon={<span data-testid="l">L</span>} rightIcon={<span data-testid="r">R</span>}>
         Label
       </Button>
     );
@@ -94,9 +89,11 @@ describe('Button', () => {
 
 describe('a11y (axe)', () => {
   it('has no detectable axe violations in default render', async () => {
-    const { container } = render(<Button iconOnly aria-label="close">
+    const { container } = render(
+      <Button iconOnly aria-label="close">
         <span>×</span>
-      </Button>);
+      </Button>
+    );
     await expectNoA11yViolations(container);
   });
 });
