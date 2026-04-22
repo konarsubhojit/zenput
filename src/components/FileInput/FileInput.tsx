@@ -108,7 +108,27 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
         setIsDragActive(false);
         if (disabled || !internalRef.current) return;
         const dt = e.dataTransfer;
-        const { files } = dt;
+        const dropped = dt.files;
+        // Respect the `multiple` prop: in single-file mode, collapse to just the first file.
+        let files: FileList | null = dropped;
+        if (dropped && dropped.length > 1 && !multiple) {
+          if (typeof DataTransfer !== 'undefined') {
+            const single = new DataTransfer();
+            single.items.add(dropped[0]);
+            files = single.files;
+          } else {
+            // Fallback: FileList-like object containing only the first file.
+            const first = dropped[0];
+            files = {
+              0: first,
+              length: 1,
+              item: (index: number) => (index === 0 ? first : null),
+              [Symbol.iterator]: function* () {
+                yield first;
+              },
+            } as unknown as FileList;
+          }
+        }
         if (files && showFileNames) {
           setFileNames(Array.from(files).map((f) => f.name));
         }
@@ -117,7 +137,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
         const changeEvent = { target: { files } } as React.ChangeEvent<HTMLInputElement>;
         onChange?.(changeEvent);
       },
-      [disabled, onChange, showFileNames, updatePreviewFromFiles]
+      [disabled, multiple, onChange, showFileNames, updatePreviewFromFiles]
     );
 
     const activeMessage = getValidationMessage(
@@ -189,8 +209,8 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
             onDragLeave={() => setIsDragActive(false)}
             onDrop={handleDrop}
           >
-            <div>📁 {buttonLabel}</div>
-            <p className={styles.dropzoneHint}>or drag and drop files here</p>
+            <span>📁 {buttonLabel}</span>
+            <span className={styles.dropzoneHint}>or drag and drop files here</span>
           </button>
         ) : (
           <button

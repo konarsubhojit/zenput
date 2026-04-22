@@ -41,6 +41,7 @@
     "@rollup/plugin-typescript": "^12.3.0",
     "@size-limit/preset-small-lib": "^12.1.0",
     "@storybook/addon-a11y": "^10.3.5",
+    "@storybook/addon-docs": "^10.3.5",
     "@storybook/react": "^10.3.5",
     "@storybook/react-webpack5": "^10.3.5",
     "@storybook/test-runner": "^0.24.3",

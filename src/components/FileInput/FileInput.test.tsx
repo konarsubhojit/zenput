@@ -87,6 +87,13 @@ describe('FileInput', () => {
     expect(screen.getByRole('progressbar')).toHaveAttribute('value', '100');
   });
 
+  it('renders a determinate 0% progress bar when uploadProgress is 0', () => {
+    render(<FileInput uploadProgress={0} />);
+    const progressbar = screen.getByRole('progressbar');
+    expect(progressbar).toBeInTheDocument();
+    expect(progressbar).toHaveAttribute('value', '0');
+  });
+
   describe('file selection', () => {
     const originalCreate = URL.createObjectURL;
     const originalRevoke = URL.revokeObjectURL;
