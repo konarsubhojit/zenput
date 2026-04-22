@@ -71,20 +71,20 @@ describe('FileInput', () => {
   it('renders progress bar when uploadProgress is provided', () => {
     render(<FileInput uploadProgress={50} />);
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
-    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '50');
+    expect(screen.getByRole('progressbar')).toHaveAttribute('value', '50');
   });
 
   it('renders progress bar when uploading is true', () => {
     render(<FileInput uploading />);
     const progressbar = screen.getByRole('progressbar');
     expect(progressbar).toBeInTheDocument();
-    // Indeterminate — aria-valuenow should not be set
-    expect(progressbar).not.toHaveAttribute('aria-valuenow');
+    // Indeterminate — value should not be set
+    expect(progressbar).not.toHaveAttribute('value');
   });
 
   it('clamps uploadProgress to 0–100', () => {
     render(<FileInput uploadProgress={120} />);
-    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '100');
+    expect(screen.getByRole('progressbar')).toHaveAttribute('value', '100');
   });
 
   describe('file selection', () => {
@@ -158,27 +158,30 @@ describe('FileInput', () => {
       expect(clickSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('activates the file input via Enter key on the dropzone', () => {
+    it('activates the file input via Enter key on the dropzone', async () => {
       render(<FileInput dropzone />);
       const input = document.querySelector('input[type="file"]') as HTMLInputElement;
       const clickSpy = vi.spyOn(input, 'click');
-      fireEvent.keyDown(screen.getByRole('button'), { key: 'Enter' });
+      screen.getByRole('button').focus();
+      await userEvent.keyboard('{Enter}');
       expect(clickSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('activates the file input via Space key on the dropzone', () => {
+    it('activates the file input via Space key on the dropzone', async () => {
       render(<FileInput dropzone />);
       const input = document.querySelector('input[type="file"]') as HTMLInputElement;
       const clickSpy = vi.spyOn(input, 'click');
-      fireEvent.keyDown(screen.getByRole('button'), { key: ' ' });
+      screen.getByRole('button').focus();
+      await userEvent.keyboard(' ');
       expect(clickSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('ignores keyboard activation when disabled', () => {
+    it('ignores keyboard activation when disabled', async () => {
       render(<FileInput dropzone disabled />);
       const input = document.querySelector('input[type="file"]') as HTMLInputElement;
       const clickSpy = vi.spyOn(input, 'click');
-      fireEvent.keyDown(screen.getByRole('button'), { key: 'Enter' });
+      screen.getByRole('button').focus();
+      await userEvent.keyboard('{Enter}');
       expect(clickSpy).not.toHaveBeenCalled();
     });
 
