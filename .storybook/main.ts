@@ -63,6 +63,14 @@ const config: StorybookConfig = {
           options: {
             modules: {
               localIdentName: '[name]__[local]--[hash:base64:5]',
+              // css-loader v7 changed defaults to `namedExport: true` and
+              // `exportLocalsConvention: 'camelCaseOnly'`, which breaks the
+              // `import styles from './Foo.module.css'` + `styles.helperText`
+              // pattern used by components in this repo (locals end up as
+              // named exports rather than on the default export). Restore the
+              // legacy behavior so default-import access keeps working.
+              namedExport: false,
+              exportLocalsConvention: 'as-is',
             },
           },
         },
