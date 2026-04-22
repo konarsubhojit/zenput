@@ -1,28 +1,33 @@
 # ═════════════════════════════════════════════════════════════════════════════
-# Zenput — Azure Pipeline (self-hosted agent)
+# Zenput — Azure Pipeline (single self-hosted agent, sequential)
 #
-# Mirrors the GitHub Actions workflow (.github/workflows/ci.yml). Both systems
-# invoke the same npm scripts so there is a single source of truth:
+# This pipeline targets a single self-hosted Linux agent. All stages run in
+# sequence on the same machine, which means:
+#
+#   - Node, npm cache and Playwright browsers only need to be set up once.
+#   - Workspace state (node_modules, dist/, storybook-static/) is reused
+#     between steps — no artifact hand-off needed inside a single job.
+#
+# The pipeline still mirrors the GitHub Actions workflow
+# (.github/workflows/ci.yml) — both systems invoke the same npm scripts as a
+# single source of truth:
 #
 #     npm run lint && npm run type-check && npm run test:ci && npm run build
 #
 # ── Agent requirements ──────────────────────────────────────────────────────
 #   Pool:          "Default" (self-hosted). Adjust `pool.name` below if yours
-#                  is named differently (e.g. "default", "zenput-linux").
+#                  is named differently.
 #   OS:            Linux (the demands filter can be edited for Windows/macOS).
-#   Pre-installed: git, Node 20.x (via nvm is fine), npm 10+.
-#                  Playwright browsers will be installed once into the agent
-#                  cache (`~/.cache/ms-playwright`) on the A11y job.
+#   Pre-installed: git, Node 20.x (nvm is fine), npm 10+. Playwright browsers
+#                  are installed once into `~/.cache/ms-playwright`.
 #
 # ── Pipeline variables / service connections ────────────────────────────────
-#   SonarCloud service connection : "SonarCloud"  (tasks: SonarCloudPrepare@3,
-#                                   SonarCloudAnalyze@3, SonarCloudPublish@3)
-#   SONAR_TOKEN                   : secret variable (optional — Sonar steps
-#                                   are gated behind ne(SONAR_TOKEN, ''))
-#   CODECOV_TOKEN                 : optional; only required for private repos
-#   NPM_TOKEN                     : required only by the "Publish" stage
-#   VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID
-#                                 : used by the optional demo deploy stage
+#   SonarCloud service connection : "SonarCloud"
+#   SONAR_TOKEN   : optional — Sonar steps are gated behind
+#                   ne(variables['SONAR_TOKEN'], '')
+#   CODECOV_TOKEN : optional
+#   NPM_TOKEN     : required only by the "Publish" stage
+#   VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID : optional demo deploy
 #
 # ── Running the same steps locally ──────────────────────────────────────────
 #   npm ci
@@ -59,9 +64,8 @@ variables:
     value: '20.x'
   - name: npm_config_cache
     value: $(Pipeline.Workspace)/.npm
-  # On a self-hosted agent we persist installs across runs in a stable location.
-  - name: PERSISTENT_CACHE_ROOT
-    value: $(Agent.HomeDirectory)/_zenput_cache
+  - name: PLAYWRIGHT_BROWSERS_PATH
+    value: $(Agent.HomeDirectory)/.cache/ms-playwright
   - name: CI
     value: 'true'
   - name: FORCE_COLOR
@@ -74,27 +78,22 @@ pool:
 
 stages:
   - stage: CI
-    displayName: 'CI (lint, test, build, size, a11y)'
+    displayName: 'CI (lint → test → build → size → a11y)'
     jobs:
-
-      # ──────────────────────────────────────────────────────────────────────
-      # Install — warms the npm cache. On self-hosted, the cache is re-used
-      # across runs so this job is usually a few-second no-op after the first
-      # run. `node_modules` itself is NOT published as an artifact (it would
-      # be slower than a cache hit on the same machine); other jobs re-install
-      # using the warmed cache via `npm ci --prefer-offline`.
-      # ──────────────────────────────────────────────────────────────────────
-      - job: Install
-        displayName: 'Install dependencies'
+      # All CI runs in a single sequential job on the single self-hosted
+      # agent. Steps execute in order; later steps reuse node_modules and
+      # build outputs from earlier steps.
+      - job: CI
+        displayName: 'Lint, test, build, size, a11y (sequential)'
+        timeoutInMinutes: 60
         workspace:
           clean: outputs       # only wipe build outputs between runs
         steps:
           - checkout: self
-            clean: false       # self-hosted: keep checkout to maximize cache hits
+            clean: false       # keep node_modules/checkout between runs for speed
             fetchDepth: 0
 
-          # Skip NodeTool download if the correct Node is already on PATH
-          # (common on self-hosted agents managed via nvm).
+          # ── Node: skip NodeTool if the correct major is already on PATH ──
           - script: |
               set -e
               NEED_NODE_TASK=true
@@ -124,50 +123,16 @@ stages:
               path: $(npm_config_cache)
 
           - script: npm ci --prefer-offline --no-audit --fund=false
-            displayName: 'npm ci'
+            displayName: 'Install dependencies (npm ci)'
 
-      # ──────────────────────────────────────────────────────────────────────
-      # Lint & Type-check — runs both in parallel as sibling steps inside one
-      # job (cheap; reuses the warmed cache).
-      # ──────────────────────────────────────────────────────────────────────
-      - job: LintAndTypecheck
-        displayName: 'Lint & Type-check'
-        dependsOn: Install
-        workspace:
-          clean: outputs
-        steps:
-          - checkout: self
-            clean: false
-          - task: Cache@2
-            inputs:
-              key: 'npm | "$(Agent.OS)" | package-lock.json'
-              path: $(npm_config_cache)
-          - script: npm ci --prefer-offline --no-audit --fund=false
-            displayName: 'npm ci (cache warm)'
+          # ── Lint & type-check ───────────────────────────────────────────
           - script: npm run lint
-            displayName: 'ESLint (flat config)'
+            displayName: 'Lint (ESLint flat config)'
+
           - script: npm run type-check
-            displayName: 'tsc --noEmit'
+            displayName: 'Type-check (tsc --noEmit)'
 
-      # ──────────────────────────────────────────────────────────────────────
-      # Test — Vitest with coverage, publishes JUnit + Cobertura to Azure, and
-      # runs SonarCloud analysis when SONAR_TOKEN is configured.
-      # ──────────────────────────────────────────────────────────────────────
-      - job: Test
-        displayName: 'Test (Vitest + coverage)'
-        dependsOn: Install
-        workspace:
-          clean: outputs
-        steps:
-          - checkout: self
-            clean: false
-          - task: Cache@2
-            inputs:
-              key: 'npm | "$(Agent.OS)" | package-lock.json'
-              path: $(npm_config_cache)
-          - script: npm ci --prefer-offline --no-audit --fund=false
-            displayName: 'npm ci (cache warm)'
-
+          # ── Test (Vitest + coverage) ────────────────────────────────────
           - task: SonarCloudPrepare@3
             displayName: 'SonarCloud Prepare'
             condition: and(succeeded(), ne(variables['SONAR_TOKEN'], ''))
@@ -178,7 +143,7 @@ stages:
               configMode: 'file'
 
           - script: npm run test:ci
-            displayName: 'npm run test:ci'
+            displayName: 'Test (Vitest + coverage)'
 
           - task: PublishTestResults@2
             displayName: 'Publish JUnit results'
@@ -206,26 +171,10 @@ stages:
             inputs:
               pollingTimeoutSec: '300'
 
-      # ──────────────────────────────────────────────────────────────────────
-      # Build — library + Storybook static site. Publishes both as pipeline
-      # artifacts so the Size and A11y jobs can consume them.
-      # ──────────────────────────────────────────────────────────────────────
-      - job: Build
-        displayName: 'Build library + Storybook'
-        dependsOn: Install
-        workspace:
-          clean: outputs
-        steps:
-          - checkout: self
-            clean: false
-          - task: Cache@2
-            inputs:
-              key: 'npm | "$(Agent.OS)" | package-lock.json'
-              path: $(npm_config_cache)
-          - script: npm ci --prefer-offline --no-audit --fund=false
-            displayName: 'npm ci (cache warm)'
+          # ── Build (library + Storybook) ─────────────────────────────────
           - script: npm run build
             displayName: 'Build library (rollup)'
+
           - script: npm run build-storybook
             displayName: 'Build Storybook'
 
@@ -234,76 +183,36 @@ stages:
             inputs:
               targetPath: 'dist'
               artifact: 'dist'
+
           - task: PublishPipelineArtifact@1
             displayName: 'Publish storybook-static/'
             inputs:
               targetPath: 'storybook-static'
               artifact: 'storybook-static'
 
-      # ──────────────────────────────────────────────────────────────────────
-      # Size — bundle-size budget via size-limit. Runs against the freshly
-      # built `dist/`. Fails the job on regression.
-      # ──────────────────────────────────────────────────────────────────────
-      - job: Size
-        displayName: 'Bundle size (size-limit)'
-        dependsOn: Build
-        workspace:
-          clean: outputs
-        steps:
-          - checkout: self
-            clean: false
-          - task: Cache@2
-            inputs:
-              key: 'npm | "$(Agent.OS)" | package-lock.json'
-              path: $(npm_config_cache)
-          - script: npm ci --prefer-offline --no-audit --fund=false
-            displayName: 'npm ci (cache warm)'
-          - task: DownloadPipelineArtifact@2
-            displayName: 'Download dist/'
-            inputs:
-              artifact: dist
-              path: dist
+          # ── Bundle-size budget ──────────────────────────────────────────
           - script: npx size-limit
-            displayName: 'size-limit'
+            displayName: 'Bundle size (size-limit)'
 
-      # ──────────────────────────────────────────────────────────────────────
-      # A11y — serve the built Storybook and run @storybook/test-runner with
-      # axe-playwright. Playwright browsers are cached across runs.
-      # ──────────────────────────────────────────────────────────────────────
-      - job: A11y
-        displayName: 'Storybook a11y (axe)'
-        dependsOn: Build
-        workspace:
-          clean: outputs
-        steps:
-          - checkout: self
-            clean: false
+          # ── Storybook a11y (axe via @storybook/test-runner) ─────────────
           - task: Cache@2
-            inputs:
-              key: 'npm | "$(Agent.OS)" | package-lock.json'
-              path: $(npm_config_cache)
-          - task: Cache@2
-            displayName: 'Cache ~/.cache/ms-playwright'
+            displayName: 'Cache ms-playwright browsers'
             inputs:
               key: 'playwright | "$(Agent.OS)" | package-lock.json'
-              path: $(HOME)/.cache/ms-playwright
-          - script: npm ci --prefer-offline --no-audit --fund=false
-            displayName: 'npm ci (cache warm)'
-          - task: DownloadPipelineArtifact@2
-            displayName: 'Download storybook-static/'
-            inputs:
-              artifact: storybook-static
-              path: storybook-static
+              path: $(PLAYWRIGHT_BROWSERS_PATH)
+
           - script: |
               set -e
-              # Install Playwright browsers only when missing.
-              if [ ! -d "$HOME/.cache/ms-playwright" ] || \
-                 [ -z "$(ls -A "$HOME/.cache/ms-playwright" 2>/dev/null)" ]; then
+              # Install Playwright browsers only when missing. Reuse the same
+              # path as the Cache@2 task above so cache hits are honored.
+              if [ ! -d "$PLAYWRIGHT_BROWSERS_PATH" ] || \
+                 [ -z "$(ls -A "$PLAYWRIGHT_BROWSERS_PATH" 2>/dev/null)" ]; then
                 npx playwright install --with-deps chromium
               else
-                echo "Playwright browsers already cached — skipping install."
+                echo "Playwright browsers already cached at $PLAYWRIGHT_BROWSERS_PATH — skipping install."
               fi
             displayName: 'Install Playwright chromium (if missing)'
+
           - script: |
               set -e
               npx http-server storybook-static -p 6006 -s &
@@ -311,11 +220,11 @@ stages:
               npx wait-on http://127.0.0.1:6006 --timeout 60000
               npx test-storybook --url http://127.0.0.1:6006
               kill "$SERVER_PID" || true
-            displayName: 'Run @storybook/test-runner (axe)'
+            displayName: 'Storybook a11y (axe)'
 
   # ───────────────────────────────────────────────────────────────────────────
   # Optional publish stage — retained from previous pipeline configuration.
-  # Runs only on pushes to release/** branches.
+  # Runs only on pushes to release/** branches, and only after CI passes.
   # ───────────────────────────────────────────────────────────────────────────
   - stage: Publish
     displayName: 'Publish to npm'
@@ -331,6 +240,10 @@ stages:
               steps:
                 - checkout: self
                   clean: false
+                - task: NodeTool@0
+                  displayName: 'Install Node $(NODE_VERSION)'
+                  inputs:
+                    versionSpec: $(NODE_VERSION)
                 - task: Cache@2
                   inputs:
                     key: 'npm | "$(Agent.OS)" | package-lock.json'

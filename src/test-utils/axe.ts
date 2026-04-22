@@ -15,6 +15,5 @@ export async function expectNoA11yViolations(
   options?: AxeCore.RunOptions
 ): Promise<void> {
   const results = await axe(container, options);
-  // Use the vitest-axe matcher registered in vitest.setup.ts.
-  (expect(results) as unknown as { toHaveNoViolations(): void }).toHaveNoViolations();
+  expect(results).toHaveNoViolations();
 }

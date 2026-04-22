@@ -21,7 +21,6 @@ export default tseslint.config(
       '*.config.cjs',
       '*.config.mjs',
       '.size-limit.cjs',
-      '.storybook/**',
     ],
   },
   js.configs.recommended,
@@ -48,21 +47,35 @@ export default tseslint.config(
       react: { version: 'detect' },
     },
     rules: {
-      // Preserved from legacy config
-      'react/react-in-jsx-scope': 'off',
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-unused-vars': [
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
       ],
-      // React recommended (subset — full preset via plugin object spread below)
+      // React recommended (spread first so the overrides below win)
       ...reactPlugin.configs.recommended.rules,
       ...reactHooksPlugin.configs.recommended.rules,
       // jsx-a11y recommended ruleset
       ...jsxA11yPlugin.configs.recommended.rules,
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
+    },
+  },
+  {
+    // Storybook config/stories: relax rules that aren't meaningful for docs.
+    files: ['.storybook/**/*.{ts,tsx}', 'src/**/*.stories.{ts,tsx}', 'src/stories/**/*.{ts,tsx}'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
+      'jsx-a11y/no-autofocus': 'off',
+      'react/no-unescaped-entities': 'off',
     },
   },
   {

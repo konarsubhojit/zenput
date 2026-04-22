@@ -264,7 +264,7 @@ npm test
 npm run test:watch
 npm run test:ui
 
-# Run tests with coverage (90% lines / 85% branches threshold)
+# Run tests with coverage (85% lines/statements/functions, 80% branches)
 npm run test:coverage
 
 # Build the library (Rollup → dist/)
@@ -303,12 +303,13 @@ npm run size
 
 ### Azure self-hosted prerequisites
 
-The Azure Pipeline (`AzCICD.yml`) targets a self-hosted Linux agent pool
-named `Default`. The agent needs `git`, Node 20.x (ideally managed via `nvm`),
-and npm 10+ pre-installed. Playwright browsers are cached under
-`~/.cache/ms-playwright` and installed only when missing. SonarCloud analysis
-is gated on a `SONAR_TOKEN` pipeline variable and a service connection named
-`SonarCloud`.
+The Azure Pipeline (`AzCICD.yml`) targets a single self-hosted Linux agent in
+the pool `Default` and runs all CI steps sequentially on that one machine
+(lint → type-check → test → build → size → Storybook a11y). The agent needs
+`git`, Node 20.x (ideally managed via `nvm`), and npm 10+ pre-installed.
+Playwright browsers are cached under `~/.cache/ms-playwright` and installed
+only when missing. SonarCloud analysis is gated on a `SONAR_TOKEN` pipeline
+variable and a service connection named `SonarCloud`.
 
 ## License
 
