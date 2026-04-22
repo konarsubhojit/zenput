@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom/vitest';
 import { FileInput } from './FileInput';
 import { expectNoA11yViolations } from '../../test-utils/axe';
@@ -84,6 +85,135 @@ describe('FileInput', () => {
   it('clamps uploadProgress to 0–100', () => {
     render(<FileInput uploadProgress={120} />);
     expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '100');
+  });
+
+  describe('file selection', () => {
+    const originalCreate = URL.createObjectURL;
+    const originalRevoke = URL.revokeObjectURL;
+
+    beforeEach(() => {
+      URL.createObjectURL = vi.fn(() => 'blob:mock-url');
+      URL.revokeObjectURL = vi.fn();
+    });
+
+    afterEach(() => {
+      URL.createObjectURL = originalCreate;
+      URL.revokeObjectURL = originalRevoke;
+    });
+
+    it('calls onChange and lists selected file names', async () => {
+      const onChange = vi.fn();
+      render(<FileInput onChange={onChange} />);
+      const file = new File(['hello'], 'hello.txt', { type: 'text/plain' });
+      const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+      await userEvent.upload(input, file);
+      expect(onChange).toHaveBeenCalledTimes(1);
+      expect(screen.getByText(/hello\.txt/)).toBeInTheDocument();
+    });
+
+    it('does not list file names when showFileNames is false', async () => {
+      render(<FileInput showFileNames={false} />);
+      const file = new File(['x'], 'secret.txt', { type: 'text/plain' });
+      const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+      await userEvent.upload(input, file);
+      expect(screen.queryByText(/secret\.txt/)).not.toBeInTheDocument();
+    });
+
+    it('creates an object URL preview for image files', async () => {
+      render(<FileInput />);
+      const file = new File(['img'], 'pic.png', { type: 'image/png' });
+      const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+      await userEvent.upload(input, file);
+      expect(URL.createObjectURL).toHaveBeenCalledWith(file);
+      const img = screen.getByRole('img', { name: 'Selected image preview' });
+      expect(img).toHaveAttribute('src', 'blob:mock-url');
+    });
+
+    it('revokes the object URL on unmount', async () => {
+      const { unmount } = render(<FileInput />);
+      const file = new File(['img'], 'pic.png', { type: 'image/png' });
+      const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+      await userEvent.upload(input, file);
+      unmount();
+      expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:mock-url');
+    });
+  });
+
+  describe('dropzone interactions', () => {
+    const originalCreate = URL.createObjectURL;
+
+    beforeEach(() => {
+      URL.createObjectURL = vi.fn(() => 'blob:drop-url');
+    });
+
+    afterEach(() => {
+      URL.createObjectURL = originalCreate;
+    });
+
+    it('activates the file input when the button is clicked', () => {
+      render(<FileInput />);
+      const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+      const clickSpy = vi.spyOn(input, 'click');
+      fireEvent.click(screen.getByRole('button'));
+      expect(clickSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('activates the file input via Enter key on the dropzone', () => {
+      render(<FileInput dropzone />);
+      const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+      const clickSpy = vi.spyOn(input, 'click');
+      fireEvent.keyDown(screen.getByRole('button'), { key: 'Enter' });
+      expect(clickSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('activates the file input via Space key on the dropzone', () => {
+      render(<FileInput dropzone />);
+      const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+      const clickSpy = vi.spyOn(input, 'click');
+      fireEvent.keyDown(screen.getByRole('button'), { key: ' ' });
+      expect(clickSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('ignores keyboard activation when disabled', () => {
+      render(<FileInput dropzone disabled />);
+      const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+      const clickSpy = vi.spyOn(input, 'click');
+      fireEvent.keyDown(screen.getByRole('button'), { key: 'Enter' });
+      expect(clickSpy).not.toHaveBeenCalled();
+    });
+
+    it('handles drag over / drag leave and drop with files', () => {
+      const onChange = vi.fn();
+      render(<FileInput dropzone onChange={onChange} />);
+      const dropzone = screen.getByRole('button');
+      const file = new File(['img'], 'drop.png', { type: 'image/png' });
+      const fileList = {
+        0: file,
+        length: 1,
+        item: (i: number) => (i === 0 ? file : null),
+      } as unknown as FileList;
+
+      fireEvent.dragOver(dropzone, { dataTransfer: { files: fileList } });
+      fireEvent.dragLeave(dropzone);
+      fireEvent.drop(dropzone, { dataTransfer: { files: fileList } });
+
+      expect(onChange).toHaveBeenCalledTimes(1);
+      expect(screen.getByText(/drop\.png/)).toBeInTheDocument();
+      expect(URL.createObjectURL).toHaveBeenCalledWith(file);
+    });
+
+    it('ignores drop events when disabled', () => {
+      const onChange = vi.fn();
+      render(<FileInput dropzone disabled onChange={onChange} />);
+      const file = new File(['x'], 'nope.txt', { type: 'text/plain' });
+      const fileList = {
+        0: file,
+        length: 1,
+        item: (i: number) => (i === 0 ? file : null),
+      } as unknown as FileList;
+      fireEvent.drop(screen.getByRole('button'), { dataTransfer: { files: fileList } });
+      expect(onChange).not.toHaveBeenCalled();
+    });
   });
 });
 

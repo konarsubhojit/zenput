@@ -103,7 +103,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
     );
 
     const handleDrop = useCallback(
-      (e: React.DragEvent<HTMLDivElement>) => {
+      (e: React.DragEvent<HTMLButtonElement>) => {
         e.preventDefault();
         setIsDragActive(false);
         if (disabled || !internalRef.current) return;
@@ -131,8 +131,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
     const messageClass = getValidationMessageClass(validationState, styles);
 
     const activeSrc = objectUrl ?? previewSrc;
-    const clampedProgress =
-      uploadProgress !== undefined ? Math.min(100, Math.max(0, uploadProgress)) : undefined;
+    const clampedProgress = uploadProgress && Math.min(100, Math.max(0, uploadProgress));
 
     return (
       <div
@@ -173,23 +172,16 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
           style={inputStyle}
         />
         {dropzone ? (
-          <div
-            role="button"
-            tabIndex={disabled ? -1 : 0}
+          <button
+            type="button"
             aria-label={buttonLabel}
-            aria-disabled={disabled}
+            disabled={disabled}
             className={classNames(
               styles.dropzone,
               isDragActive ? styles.dropzoneActive : undefined,
               disabled ? styles.dropzoneDisabled : undefined
             )}
             onClick={() => !disabled && internalRef.current?.click()}
-            onKeyDown={(e) => {
-              if (!disabled && (e.key === 'Enter' || e.key === ' ')) {
-                e.preventDefault();
-                internalRef.current?.click();
-              }
-            }}
             onDragOver={(e) => {
               e.preventDefault();
               if (!disabled) setIsDragActive(true);
@@ -199,7 +191,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
           >
             <div>📁 {buttonLabel}</div>
             <p className={styles.dropzoneHint}>or drag and drop files here</p>
-          </div>
+          </button>
         ) : (
           <button
             type="button"
@@ -234,26 +226,15 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
           </div>
         )}
         {(uploading || clampedProgress !== undefined) && (
-          <div
-            className={styles.uploadProgress}
-            role="progressbar"
+          <progress
+            className={classNames(
+              styles.uploadProgress,
+              uploading ? styles.uploadProgressIndeterminate : undefined
+            )}
             aria-label="Upload progress"
-            aria-valuenow={uploading ? undefined : clampedProgress}
-            aria-valuemin={0}
-            aria-valuemax={100}
-          >
-            <div
-              className={classNames(
-                styles.uploadProgressBar,
-                uploading ? styles.uploadProgressIndeterminate : undefined
-              )}
-              style={
-                clampedProgress !== undefined && !uploading
-                  ? { width: `${clampedProgress}%` }
-                  : undefined
-              }
-            />
-          </div>
+            max={100}
+            value={uploading ? undefined : clampedProgress}
+          />
         )}
         {activeMessage && (
           <span
