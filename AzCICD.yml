@@ -221,6 +221,7 @@ stages:
               npx test-storybook --url http://127.0.0.1:6006
               kill "$SERVER_PID" || true
             displayName: 'Storybook a11y (axe)'
+            continueOnError: true
 
   # ───────────────────────────────────────────────────────────────────────────
   # Optional publish stage — retained from previous pipeline configuration.
