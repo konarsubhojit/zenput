@@ -32,7 +32,7 @@ const config: StorybookConfig = {
     // component styles expose their class mappings at runtime.
     const cssModuleTest = /\.module\.css$/;
     const matchesPlainCss = (test: unknown): test is RegExp =>
-      test instanceof RegExp && test.test('foo.css') && !test.test('foo.module.css');
+      test instanceof RegExp && test.test('foo.css');
 
     const excludeCssModulesFromRule = (rule: unknown): void => {
       if (!rule || typeof rule !== 'object') return;

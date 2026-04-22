@@ -112,11 +112,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
         // Respect the `multiple` prop: in single-file mode, collapse to just the first file.
         let files: FileList | null = dropped;
         if (dropped && dropped.length > 1 && !multiple) {
-          if (typeof DataTransfer !== 'undefined') {
-            const single = new DataTransfer();
-            single.items.add(dropped[0]);
-            files = single.files;
-          } else {
+          if (typeof DataTransfer === 'undefined') {
             // Fallback: FileList-like object containing only the first file.
             const first = dropped[0];
             files = {
@@ -127,14 +123,22 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
                 yield first;
               },
             } as unknown as FileList;
+          } else {
+            const single = new DataTransfer();
+            single.items.add(dropped[0]);
+            files = single.files;
           }
         }
         if (files && showFileNames) {
           setFileNames(Array.from(files).map((f) => f.name));
         }
         updatePreviewFromFiles(files);
-        // Create synthetic change event
-        const changeEvent = { target: { files } } as React.ChangeEvent<HTMLInputElement>;
+        // Create a lightweight synthetic change event.
+        // Only `target.files` / `currentTarget.files` are guaranteed.
+        const changeEvent = {
+          target: { files } as Partial<HTMLInputElement>,
+          currentTarget: { files } as Partial<HTMLInputElement>,
+        } as React.ChangeEvent<HTMLInputElement>;
         onChange?.(changeEvent);
       },
       [disabled, multiple, onChange, showFileNames, updatePreviewFromFiles]
