@@ -400,6 +400,10 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
                         isSelected ? styles.trSelected : undefined
                       )}
                       onClick={isClickable ? () => handleRowClick(row, key) : undefined}
+                      // `aria-expanded` is only valid on roles that support
+                      // it (e.g. `button`); when a row is expandable, mark
+                      // the row as a button so the attribute is conformant.
+                      role={expandedRowRender ? 'button' : undefined}
                       aria-expanded={expandedRowRender ? isExpanded : undefined}
                     >
                       {selectable && (
