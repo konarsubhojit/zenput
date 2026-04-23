@@ -27,7 +27,8 @@
 #                   ne(variables['SONAR_TOKEN'], '')
 #   CODECOV_TOKEN : optional
 #   NPM_TOKEN     : required only by the "Publish" stage
-#   VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID : optional demo deploy
+#   VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID : required by the
+#                   "DeployDemoToVercel" stage (demo site)
 #
 # ── Running the same steps locally ──────────────────────────────────────────
 #   npm ci
@@ -70,6 +71,8 @@ variables:
     value: 'true'
   - name: FORCE_COLOR
     value: '1'
+  - name: VERCEL_ENV
+    value: 'production'
 
 pool:
   name: Default              # self-hosted pool — rename if your pool differs
@@ -222,6 +225,57 @@ stages:
               kill "$SERVER_PID" || true
             displayName: 'Storybook a11y (axe)'
             continueOnError: true
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Deploy the demo site (demo/) to Vercel.
+  # Runs only on master pushes (never on PRs) and only after CI passes.
+  # Requires VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID pipeline secrets.
+  # ───────────────────────────────────────────────────────────────────────────
+  - stage: DeployDemoToVercel
+    displayName: 'Deploy demo to Vercel'
+    dependsOn: CI
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/main')))
+    jobs:
+      - job: DeployVercel
+        displayName: 'Deploy Vite demo'
+        steps:
+          - checkout: self
+            clean: false
+
+          - task: NodeTool@0
+            displayName: 'Install Node $(NODE_VERSION)'
+            inputs:
+              versionSpec: $(NODE_VERSION)
+
+          - task: Cache@2
+            displayName: 'Cache ~/.npm'
+            inputs:
+              key: 'npm | "$(Agent.OS)" | package-lock.json'
+              path: $(npm_config_cache)
+
+          - script: npm install -g vercel@39.3.0
+            displayName: 'Install Vercel CLI'
+
+          - script: vercel pull --yes --environment=$(VERCEL_ENV)
+            displayName: 'Pull Vercel project settings'
+            env:
+              VERCEL_ORG_ID: $(VERCEL_ORG_ID)
+              VERCEL_PROJECT_ID: $(VERCEL_PROJECT_ID)
+              VERCEL_TOKEN: $(VERCEL_TOKEN)
+
+          - script: vercel build --prod
+            displayName: 'Build Vercel deployment'
+            env:
+              VERCEL_ORG_ID: $(VERCEL_ORG_ID)
+              VERCEL_PROJECT_ID: $(VERCEL_PROJECT_ID)
+              VERCEL_TOKEN: $(VERCEL_TOKEN)
+
+          - script: vercel deploy --prebuilt --prod
+            displayName: 'Deploy to Vercel'
+            env:
+              VERCEL_ORG_ID: $(VERCEL_ORG_ID)
+              VERCEL_PROJECT_ID: $(VERCEL_PROJECT_ID)
+              VERCEL_TOKEN: $(VERCEL_TOKEN)
 
   # ───────────────────────────────────────────────────────────────────────────
   # Optional publish stage — retained from previous pipeline configuration.
