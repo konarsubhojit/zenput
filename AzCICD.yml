@@ -27,7 +27,6 @@
 #                   ne(variables['SONAR_TOKEN'], '')
 #   CODECOV_TOKEN : optional
 #   NPM_TOKEN     : required only by the "Publish" stage
-#   VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID : optional demo deploy
 #
 # ── Running the same steps locally ──────────────────────────────────────────
 #   npm ci
