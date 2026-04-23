@@ -234,7 +234,7 @@ stages:
   - stage: DeployDemoToVercel
     displayName: 'Deploy demo to Vercel'
     dependsOn: CI
-    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/main')))
     jobs:
       - job: DeployVercel
         displayName: 'Deploy Vite demo'
@@ -253,24 +253,24 @@ stages:
               key: 'npm | "$(Agent.OS)" | package-lock.json'
               path: $(npm_config_cache)
 
-          - script: npm install -g vercel
+          - script: npm install -g vercel@39.3.0
             displayName: 'Install Vercel CLI'
 
-          - script: vercel pull --yes --environment=$(VERCEL_ENV) --token=$(VERCEL_TOKEN)
+          - script: vercel pull --yes --environment=$(VERCEL_ENV)
             displayName: 'Pull Vercel project settings'
             env:
               VERCEL_ORG_ID: $(VERCEL_ORG_ID)
               VERCEL_PROJECT_ID: $(VERCEL_PROJECT_ID)
               VERCEL_TOKEN: $(VERCEL_TOKEN)
 
-          - script: vercel build --prod --token=$(VERCEL_TOKEN)
+          - script: vercel build --prod
             displayName: 'Build Vercel deployment'
             env:
               VERCEL_ORG_ID: $(VERCEL_ORG_ID)
               VERCEL_PROJECT_ID: $(VERCEL_PROJECT_ID)
               VERCEL_TOKEN: $(VERCEL_TOKEN)
 
-          - script: vercel deploy --prebuilt --prod --token=$(VERCEL_TOKEN)
+          - script: vercel deploy --prebuilt --prod
             displayName: 'Deploy to Vercel'
             env:
               VERCEL_ORG_ID: $(VERCEL_ORG_ID)
