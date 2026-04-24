@@ -619,7 +619,7 @@ describe('DataTable – column visibility', () => {
       />
     );
     await userEvent.click(screen.getByRole('button', { name: /toggle column visibility/i }));
-    const dropdown = screen.getByRole('listbox', { name: /columns/i });
+    const dropdown = screen.getByRole('group', { name: /columns/i });
     // Uncheck "Role" column
     await userEvent.click(within(dropdown).getByLabelText('Role'));
     expect(handleChange).toHaveBeenCalledWith(['role']);

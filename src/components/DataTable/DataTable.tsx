@@ -1,7 +1,8 @@
-import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo, useId } from 'react';
 import {
   DataTableProps,
   DataTableRecord,
+  DataTableDensity,
   DataTableSortState,
   SortDirection,
 } from './DataTable.types';
@@ -42,7 +43,7 @@ function buildPageItems(current: number, total: number, windowSize = 2): (number
 }
 
 /** Density CSS class map */
-const DENSITY_CLASS: Record<string, string> = {
+const DENSITY_CLASS: Partial<Record<DataTableDensity, string>> = {
   compact: styles.densityCompact,
   comfortable: styles.densityComfortable,
 };
@@ -116,6 +117,17 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
 
   /** The live announce message for screen readers */
   const [announceMsg, setAnnounceMsg] = useState('');
+
+  /**
+   * Per-instance ID prefix so multiple DataTables on the same page don't
+   * collide on label/input associations or checkbox `id`s.
+   */
+  const instanceId = useId();
+  const globalSearchId = `${instanceId}-global-search`;
+  const sanitizeId = useCallback(
+    (key: string) => `${instanceId}-col-toggle-${key.replace(/[^a-zA-Z0-9_-]/g, '_')}`,
+    [instanceId]
+  );
 
   // ── Derive active (controlled vs uncontrolled) state ──────────────────────
 
@@ -218,9 +230,15 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
       if (controlledSortState === undefined) setInternalSortState(nextState);
       onSort?.(key, nextDirection);
       onSortChange?.(nextState);
-      setAnnounceMsg(`Sorted by ${key} ${nextDirection === 'asc' ? 'ascending' : 'descending'}`);
+      const col = columns.find((c) => c.key === key);
+      const label = col?.header ?? key;
+      // Clear first so screen readers re-announce identical repeated messages.
+      setAnnounceMsg('');
+      setAnnounceMsg(
+        `Sorted by ${label} ${nextDirection === 'asc' ? 'ascending' : 'descending'}`
+      );
     },
-    [activeSortState, controlledSortState, onSort, onSortChange]
+    [activeSortState, controlledSortState, onSort, onSortChange, columns]
   );
 
   /** Derive the row key for a given row + index */
@@ -348,8 +366,9 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
 
   const showBuiltinGlobalSearch =
     onGlobalFilterChange !== undefined || controlledGlobalFilter !== undefined;
-  const showColumnToggle =
-    onColumnVisibilityChange !== undefined || controlledHiddenColumns !== undefined;
+  // Only render the column-toggle UI when a change handler is supplied, otherwise
+  // clicking checkboxes would be a no-op with `hiddenColumns` alone.
+  const showColumnToggle = onColumnVisibilityChange !== undefined;
   const showExportBtn = onExportCSV !== undefined;
   const showToolbarRow =
     toolbar !== undefined || showBuiltinGlobalSearch || showColumnToggle || showExportBtn;
@@ -376,11 +395,11 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
           <div className={styles.toolbarBuiltin}>
             {showBuiltinGlobalSearch && (
               <div className={styles.globalSearchWrapper}>
-                <label htmlFor="dt-global-search" className={styles.srOnly}>
+                <label htmlFor={globalSearchId} className={styles.srOnly}>
                   Search
                 </label>
                 <input
-                  id="dt-global-search"
+                  id={globalSearchId}
                   type="search"
                   className={styles.globalSearch}
                   placeholder="Search…"
@@ -399,7 +418,7 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
                     columnToggleOpen ? styles.toolbarButtonActive : undefined
                   )}
                   aria-expanded={columnToggleOpen}
-                  aria-haspopup="listbox"
+                  aria-haspopup="true"
                   aria-label="Toggle column visibility"
                   onClick={() => {
                     setColumnToggleOpen((v) => !v);
@@ -409,12 +428,20 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
                   Columns
                 </button>
                 {columnToggleOpen && (
-                  <div className={styles.columnToggleDropdown} role="listbox" aria-label="Columns">
+                  <div
+                    className={styles.columnToggleDropdown}
+                    role="group"
+                    aria-label="Columns"
+                  >
                     {columns.map((col) => {
                       const isVisible = !activeHiddenColumns.includes(col.key);
-                      const checkId = `dt-col-toggle-${col.key}`;
+                      const checkId = sanitizeId(col.key);
                       return (
-                        <label key={col.key} htmlFor={checkId} className={styles.columnToggleItem}>
+                        <label
+                          key={col.key}
+                          htmlFor={checkId}
+                          className={styles.columnToggleItem}
+                        >
                           <input
                             id={checkId}
                             type="checkbox"
@@ -453,7 +480,7 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
       )}
 
       <div className={styles.tableContainer}>
-        <table className={styles.table} role="grid">
+        <table className={styles.table}>
           <thead className={classNames(stickyHeader ? styles.stickyHeader : undefined)}>
             <tr>
               {selectable && (
