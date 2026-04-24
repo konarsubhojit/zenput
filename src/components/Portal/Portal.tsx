@@ -1,5 +1,5 @@
 import React, { useSyncExternalStore } from 'react';
-import ReactDOM from 'react-dom';
+import { createPortal } from 'react-dom';
 
 export interface PortalProps {
   children: React.ReactNode;
@@ -59,12 +59,15 @@ export function Portal({ children, container, disabled = false }: PortalProps): 
     return null;
   }
 
-  const target =
-    container == null
-      ? getSharedHost()
-      : typeof container === 'function'
-        ? (container() ?? getSharedHost())
-        : container;
+  if (container == null) {
+    return createPortal(children, getSharedHost());
+  }
 
-  return ReactDOM.createPortal(children, target);
+  if (typeof container === 'function') {
+    const resolved = container();
+    if (resolved == null) return null;
+    return createPortal(children, resolved);
+  }
+
+  return createPortal(children, container);
 }

@@ -88,7 +88,7 @@ export function buildCssVariables(semantic: SemanticColors): Record<string, stri
   assignTokens(vars, 'shadow', shadows);
   assignTokens(vars, 'duration', durations);
   assignTokens(vars, 'easing', easings);
-  assignTokens(vars, 'z', zIndex);
+  assignTokens(vars, 'z', zIndex, kebab);
   assignTokens(vars, 'breakpoint', breakpoints);
   assignTokens(vars, 'elevation', elevation);
 

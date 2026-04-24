@@ -16,14 +16,15 @@ export type ShadowToken = keyof typeof shadows;
 /**
  * Numeric elevation scale (0–5).
  * Maps to `--zp-elevation-<n>` CSS custom properties.
+ * References the named `shadows` tokens to avoid duplicating string literals.
  */
 export const elevation = {
-  0: 'none',
-  1: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-  2: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)',
-  3: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)',
-  4: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)',
-  5: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+  0: shadows.none,
+  1: shadows.xs,
+  2: shadows.sm,
+  3: shadows.md,
+  4: shadows.lg,
+  5: shadows.xl,
 } as const;
 
 export type ElevationToken = keyof typeof elevation;

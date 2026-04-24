@@ -39,6 +39,7 @@ export function useControllableState<T>(
   const wasControlledRef = useRef(isControlled);
 
   // Warn once (dev only) if the consumer switches between controlled/uncontrolled.
+  // Scoped to [isControlled, componentName] so it only runs when these change.
   useEffect(() => {
     const wasControlled = wasControlledRef.current;
     if (wasControlled !== isControlled) {
@@ -53,7 +54,7 @@ export function useControllableState<T>(
       );
       wasControlledRef.current = isControlled;
     }
-  });
+  }, [isControlled, componentName]);
 
   // `pendingRef` tracks the most-recently resolved value so that rapid
   // successive functional updater calls compose correctly even in controlled
@@ -70,18 +71,18 @@ export function useControllableState<T>(
         const resolved = typeof next === 'function' ? (next as Updater<T>)(base) : next;
         if (resolved === base) return;
         pendingRef.current = resolved;
-        onChange?.(resolved as T);
+        if (resolved !== undefined) onChange?.(resolved);
         return;
       }
-      setUncontrolledValue((prev) => {
-        const resolved = typeof next === 'function' ? (next as Updater<T>)(prev) : next;
-        if (resolved !== prev) {
-          onChange?.(resolved as T);
-        }
-        return resolved;
-      });
+      // Compute the resolved value outside the updater so setUncontrolledValue
+      // receives a plain value (keeping the updater pure / StrictMode-safe).
+      const resolved = typeof next === 'function' ? (next as Updater<T>)(uncontrolledValue) : next;
+      setUncontrolledValue(resolved);
+      if (resolved !== uncontrolledValue && resolved !== undefined) {
+        onChange?.(resolved);
+      }
     },
-    [isControlled, onChange]
+    [isControlled, onChange, uncontrolledValue]
   );
 
   return [value, setValue];

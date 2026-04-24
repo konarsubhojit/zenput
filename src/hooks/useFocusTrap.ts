@@ -10,10 +10,12 @@ export interface UseFocusTrapOptions {
   /** If provided, restore focus to this element when the trap deactivates. Defaults to the element that had focus when the trap activated. */
   returnFocusRef?: React.RefObject<HTMLElement | null>;
   /**
-   * When `true` (default), clicking outside the container does not break the
-   * trap — if focus moves outside we re-focus the first tabbable element.
-   * When `false`, focus is allowed to leave the container on outside clicks,
-   * but Tab cycling is still enforced.
+   * When `true` (default), clicking outside the container **deactivates** the
+   * focus trap — focus is allowed to move wherever the user clicks and is not
+   * pulled back. Tab cycling within the container is still enforced.
+   *
+   * When `false`, clicking outside does **not** deactivate the trap — if focus
+   * moves outside the container it is pulled back to the first tabbable element.
    */
   clickOutsideDeactivates?: boolean;
 }
@@ -33,15 +35,18 @@ const TABBABLE_SELECTOR = [
   '[contenteditable="true"]',
 ].join(', ');
 
-/** Returns all tabbable elements within `container` that are currently visible. */
+/** Returns all tabbable elements within `container` that are currently visible
+ *  and connected to the document. An element must satisfy all of:
+ *  - connected to the DOM (`isConnected`)
+ *  - not hidden via `display: none` (checked via computed style)
+ *  - not hidden via `visibility: hidden`
+ */
 function getTabbable(container: HTMLElement): HTMLElement[] {
-  return Array.from(container.querySelectorAll<HTMLElement>(TABBABLE_SELECTOR)).filter(
-    (el) =>
-      // Element is visible if it has an offsetParent (not `display: none` or detached)
-      // OR if its computed visibility is not 'hidden'.
-      el.offsetParent !== null ||
-      window.getComputedStyle(el).visibility !== 'hidden'
-  );
+  return Array.from(container.querySelectorAll<HTMLElement>(TABBABLE_SELECTOR)).filter((el) => {
+    if (!el.isConnected) return false;
+    const style = window.getComputedStyle(el);
+    return style.display !== 'none' && style.visibility !== 'hidden';
+  });
 }
 
 /**
@@ -86,11 +91,14 @@ export function useFocusTrap({
       tabbable[0] ??
       null;
 
+    // Track whether we added tabindex so we can clean it up on deactivation.
+    const addedTabindex = !container.hasAttribute('tabindex');
+
     if (initialTarget) {
       initialTarget.focus();
     } else {
       // No tabbable children — focus the container itself.
-      if (!container.hasAttribute('tabindex')) {
+      if (addedTabindex) {
         container.setAttribute('tabindex', '-1');
       }
       container.focus();
@@ -101,7 +109,20 @@ export function useFocusTrap({
       if (e.key !== 'Tab') return;
 
       const currentTabbable = getTabbable(container!);
-      if (currentTabbable.length <= 1) return;
+
+      if (currentTabbable.length === 0) {
+        // No tabbable children: prevent Tab from escaping and keep container focused.
+        e.preventDefault();
+        container!.focus();
+        return;
+      }
+
+      if (currentTabbable.length === 1) {
+        // Single tabbable: prevent Tab from leaving while keeping it focused.
+        e.preventDefault();
+        currentTabbable[0].focus();
+        return;
+      }
 
       const first = currentTabbable[0];
       const last = currentTabbable[currentTabbable.length - 1];
@@ -124,6 +145,9 @@ export function useFocusTrap({
     // Reads clickOutsideDeactivatesRef so it always uses the latest value
     // without needing to re-register the listener.
     function handleFocusIn(e: FocusEvent): void {
+      // When clickOutsideDeactivates is true, outside clicks are allowed to
+      // move focus freely (trap deactivates for clicks). When false, keep focus
+      // inside the container.
       if (clickOutsideDeactivatesRef.current) return;
       const target = e.target as Node | null;
       if (container && !container.contains(target)) {
@@ -142,6 +166,11 @@ export function useFocusTrap({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('focusin', handleFocusIn);
+
+      // Restore any tabindex mutation made when the container had no tabbable children.
+      if (addedTabindex) {
+        container.removeAttribute('tabindex');
+      }
 
       // Restore focus when the trap deactivates.
       const toRestore = returnTarget ?? savedFocusRef.current;

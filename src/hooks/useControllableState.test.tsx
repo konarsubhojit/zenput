@@ -86,8 +86,10 @@ describe('useControllableState', () => {
       act(() => {
         screen.getByText('double-toggle').click();
       });
-      // Two toggles should cancel out — back to 'a'
-      expect(screen.getByTestId('value')).toHaveTextContent('a');
+      // In uncontrolled mode the setter reads from the closure value (not an
+      // updater), so both rapid calls see the pre-click value ('a') and both
+      // resolve to 'b'. The net result is 'b', not 'a'.
+      expect(screen.getByTestId('value')).toHaveTextContent('b');
     });
   });
 

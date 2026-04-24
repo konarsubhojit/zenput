@@ -246,7 +246,7 @@ The following CSS custom properties are emitted by `ThemeProvider` and available
 | `--zp-z-overlay` | `1300` | Generic overlays |
 | `--zp-z-modal` | `1400` | Modal dialogs |
 | `--zp-z-popover` | `1500` | Popovers |
-| `--zp-z-skipNav` | `1600` | Skip-navigation links |
+| `--zp-z-skip-nav` | `1600` | Skip-navigation links |
 | `--zp-z-toast` | `1700` | Toast notifications |
 | `--zp-z-tooltip` | `1800` | Tooltips |
 
