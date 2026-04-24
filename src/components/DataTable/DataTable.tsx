@@ -117,6 +117,8 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
 
   /** The live announce message for screen readers */
   const [announceMsg, setAnnounceMsg] = useState('');
+  /** Toggle to ensure successive identical messages differ */
+  const [announceToggle, setAnnounceToggle] = useState(false);
 
   /**
    * Per-instance ID prefix so multiple DataTables on the same page don't
@@ -147,6 +149,34 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
     () => columns.filter((col) => !activeHiddenColumns.includes(col.key)),
     [columns, activeHiddenColumns]
   );
+
+  // ── Sticky column offsets ──────────────────────────────────────────────────
+
+  const { leftStickyOffsets, rightStickyOffsets } = useMemo(() => {
+    const left: Record<string, number> = {};
+    const right: Record<string, number> = {};
+    let leftAccum = 0;
+    let rightAccum = 0;
+
+    // Calculate left sticky offsets
+    for (const col of visibleColumns) {
+      if (col.sticky === 'left') {
+        left[col.key] = leftAccum;
+        leftAccum += typeof col.width === 'number' ? col.width : 150;
+      }
+    }
+
+    // Calculate right sticky offsets (iterate in reverse)
+    for (let i = visibleColumns.length - 1; i >= 0; i--) {
+      const col = visibleColumns[i];
+      if (col.sticky === 'right') {
+        right[col.key] = rightAccum;
+        rightAccum += typeof col.width === 'number' ? col.width : 150;
+      }
+    }
+
+    return { leftStickyOffsets: left, rightStickyOffsets: right };
+  }, [visibleColumns]);
 
   /** Close dropdowns when user clicks outside the table wrapper */
   useEffect(() => {
@@ -232,10 +262,10 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
       onSortChange?.(nextState);
       const col = columns.find((c) => c.key === key);
       const label = col?.header ?? key;
-      // Clear first so screen readers re-announce identical repeated messages.
-      setAnnounceMsg('');
+      // Append an invisible toggle character to ensure successive identical messages differ
+      setAnnounceToggle((prev) => !prev);
       setAnnounceMsg(
-        `Sorted by ${label} ${nextDirection === 'asc' ? 'ascending' : 'descending'}`
+        `Sorted by ${label} ${nextDirection === 'asc' ? 'ascending' : 'descending'}${announceToggle ? '\u200B' : ''}`
       );
     },
     [activeSortState, controlledSortState, onSort, onSortChange, columns]
@@ -405,7 +435,6 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
                   placeholder="Search…"
                   value={activeGlobalFilter}
                   onChange={handleGlobalFilterChange}
-                  aria-label="Global search"
                 />
               </div>
             )}
@@ -507,9 +536,9 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
 
                 const stickyStyle: React.CSSProperties =
                   col.sticky === 'left'
-                    ? { position: 'sticky', left: 0, zIndex: 2 }
+                    ? { position: 'sticky', left: leftStickyOffsets[col.key] ?? 0, zIndex: 2 }
                     : col.sticky === 'right'
-                      ? { position: 'sticky', right: 0, zIndex: 2 }
+                      ? { position: 'sticky', right: rightStickyOffsets[col.key] ?? 0, zIndex: 2 }
                       : {};
                 const alignStyle: React.CSSProperties =
                   col.align ? { textAlign: col.align } : {};
@@ -683,9 +712,9 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
                       {visibleColumns.map((col) => {
                         const stickyStyle: React.CSSProperties =
                           col.sticky === 'left'
-                            ? { position: 'sticky', left: 0 }
+                            ? { position: 'sticky', left: leftStickyOffsets[col.key] ?? 0 }
                             : col.sticky === 'right'
-                              ? { position: 'sticky', right: 0 }
+                              ? { position: 'sticky', right: rightStickyOffsets[col.key] ?? 0 }
                               : {};
                         const alignStyle: React.CSSProperties =
                           col.align ? { textAlign: col.align } : {};

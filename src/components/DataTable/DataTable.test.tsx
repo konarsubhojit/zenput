@@ -628,13 +628,17 @@ describe('DataTable – column visibility', () => {
 
 describe('DataTable – density', () => {
   it('renders without errors in compact density', () => {
-    render(<DataTable columns={columns} data={data} density="compact" />);
+    const { container } = render(<DataTable columns={columns} data={data} density="compact" />);
     expect(screen.getByText('Alice')).toBeInTheDocument();
+    const wrapper = container.firstChild as HTMLElement;
+    expect(wrapper.classList.contains('densityCompact')).toBe(true);
   });
 
   it('renders without errors in comfortable density', () => {
-    render(<DataTable columns={columns} data={data} density="comfortable" />);
+    const { container } = render(<DataTable columns={columns} data={data} density="comfortable" />);
     expect(screen.getByText('Alice')).toBeInTheDocument();
+    const wrapper = container.firstChild as HTMLElement;
+    expect(wrapper.classList.contains('densityComfortable')).toBe(true);
   });
 });
 
