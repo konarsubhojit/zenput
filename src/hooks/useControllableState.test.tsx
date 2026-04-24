@@ -82,12 +82,16 @@ describe('useControllableState', () => {
     });
 
     it('functional updater composes correctly under rapid calls', () => {
-      render(<Harness defaultValue="a" />);
+      const onChange = vi.fn();
+      render(<Harness defaultValue="a" onChange={onChange} />);
       act(() => {
         screen.getByText('double-toggle').click();
       });
       // Two rapid toggles: a→b (pendingRef='b'), b→a (pendingRef='a').
       // Each call composes over pendingRef so they cancel out — back to 'a'.
+      expect(onChange).toHaveBeenCalledTimes(2);
+      expect(onChange).toHaveBeenNthCalledWith(1, 'b');
+      expect(onChange).toHaveBeenNthCalledWith(2, 'a');
       expect(screen.getByTestId('value')).toHaveTextContent('a');
     });
   });
