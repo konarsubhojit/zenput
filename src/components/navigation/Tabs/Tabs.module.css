@@ -71,6 +71,7 @@
 
 .vertical .tab {
   /* Active indicator line sits at right */
+  justify-content: flex-start;
   border-right: 2px solid transparent;
   margin-right: -2px;
   text-align: left;

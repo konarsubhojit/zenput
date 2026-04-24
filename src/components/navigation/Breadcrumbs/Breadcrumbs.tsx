@@ -23,12 +23,16 @@ export function Breadcrumbs({
         {items.map((item, index) => {
           const isCurrent = index === items.length - 1;
           const LinkEl: React.ElementType = item.as ?? 'a';
+          // Render as a link when the item is not current and either an `href`
+          // is provided or a custom link component is supplied via `as`
+          // (e.g. a router `<Link>` that uses a prop other than `href`).
+          const renderAsLink = !isCurrent && (item.href !== undefined || item.as !== undefined);
 
           return (
             <li key={item.id ?? item.href ?? index} className={styles.item}>
-              {item.href && !isCurrent ? (
+              {renderAsLink ? (
                 <LinkEl
-                  href={item.href}
+                  {...(item.href !== undefined ? { href: item.href } : {})}
                   className={styles.link}
                   {...item.linkProps}
                 >

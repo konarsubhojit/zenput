@@ -188,6 +188,7 @@ export function AccordionTrigger({
   return (
     <h3 className={styles.accordionHeading}>
       <button
+        {...rest}
         id={triggerId}
         type="button"
         aria-expanded={isOpen}
@@ -200,7 +201,6 @@ export function AccordionTrigger({
           disabled ? styles.triggerDisabled : undefined,
           className
         )}
-        {...rest}
       >
         <span className={styles.triggerLabel}>{children}</span>
         <span className={styles.chevron} aria-hidden="true" />
@@ -215,8 +215,9 @@ AccordionTrigger.displayName = 'AccordionTrigger';
 // ---------------------------------------------------------------------------
 
 /**
- * Content region for an `<AccordionItem>`. Visually hidden when closed
- * but kept in the DOM to preserve focus and scrollable state.
+ * Content region for an `<AccordionItem>`. When the item is closed, the
+ * `hidden` attribute is applied so the content is removed from the
+ * accessibility tree and not rendered (via `display: none`).
  */
 export function AccordionContent({
   children,

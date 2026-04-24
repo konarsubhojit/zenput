@@ -118,6 +118,11 @@ export function TabList({ children, className, ...rest }: TabListProps): React.R
         return btn ? !btn.disabled : true;
       });
 
+      // Nothing to navigate to if the tablist has no enabled tabs.
+      if (enabledValues.length === 0) {
+        return;
+      }
+
       const currentIdx = enabledValues.indexOf(selected);
       let nextIdx: number | null = null;
 
@@ -155,12 +160,12 @@ export function TabList({ children, className, ...rest }: TabListProps): React.R
     // individual tabs handle focus via roving tabIndex (0 for selected, -1 for others).
     // eslint-disable-next-line jsx-a11y/interactive-supports-focus
     <div
+      {...rest}
       ref={listRef}
       role="tablist"
       aria-orientation={orientation}
       className={classNames(styles.tabList, className)}
       onKeyDown={handleKeyDown}
-      {...rest}
     >
       {children}
     </div>
@@ -187,6 +192,7 @@ export function Tab({ value, disabled, children, className, ...rest }: TabProps)
 
   return (
     <button
+      {...rest}
       role="tab"
       type="button"
       id={`${baseId}-tab-${value}`}
@@ -202,7 +208,6 @@ export function Tab({ value, disabled, children, className, ...rest }: TabProps)
         disabled ? styles.tabDisabled : undefined,
         className
       )}
-      {...rest}
     >
       {children}
     </button>
