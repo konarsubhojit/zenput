@@ -25,7 +25,7 @@ export function Breadcrumbs({
           const LinkEl: React.ElementType = item.as ?? 'a';
 
           return (
-            <li key={index} className={styles.item}>
+            <li key={item.id ?? item.href ?? index} className={styles.item}>
               {item.href && !isCurrent ? (
                 <LinkEl
                   href={item.href}

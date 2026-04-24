@@ -151,6 +151,8 @@ export function TabList({ children, className, ...rest }: TabListProps): React.R
   );
 
     return (
+    // The tablist element itself does not need to be focusable per WAI-ARIA:
+    // individual tabs handle focus via roving tabIndex (0 for selected, -1 for others).
     // eslint-disable-next-line jsx-a11y/interactive-supports-focus
     <div
       ref={listRef}

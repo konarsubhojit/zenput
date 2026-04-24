@@ -1,6 +1,11 @@
 import React from 'react';
 
 export interface BreadcrumbItem {
+  /**
+   * Optional stable key. If omitted, the item's `href` is used; falls back
+   * to position index. Provide an explicit `id` if items can be reordered.
+   */
+  id?: string;
   /** Display label for this breadcrumb step. */
   label: React.ReactNode;
   /** URL for the breadcrumb link. Omit to render plain text (typically the current page). */
