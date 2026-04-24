@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import React from 'react';
-import { ThemeProvider } from './ThemeProvider';
+import { ThemeProvider } from '../context';
 import { extendTheme } from '../utils/extendTheme';
 import { Button } from '../components/actions/Button';
 import { TextInput } from '../components/TextInput';
