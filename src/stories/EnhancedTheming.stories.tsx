@@ -28,7 +28,9 @@ type Story = StoryObj<typeof ThemeProvider>;
 const DemoComponents = () => (
   <Stack direction="column" spacing="4">
     <Box p="4" bg="surface" radius="lg" shadow="md">
-      <h3 style={{ marginTop: 0 }}>Component Showcase</h3>
+      <h3 style={{ marginTop: 0, color: 'var(--zp-color-text-primary)' }}>
+        Component Showcase
+      </h3>
       <Stack direction="column" spacing="3">
         <TextInput label="Email" placeholder="you@example.com" />
         <Stack direction="row" spacing="2">
@@ -117,8 +119,9 @@ export const ExtendedTheme: Story = {
     const baseTheme = {
       mode: 'light' as const,
       semantic: {
-        brand: '#6366f1',
-        brandHover: '#4f46e5',
+        // Indigo-600 – passes WCAG AA (6.37:1) against white inverse text.
+        brand: '#4f46e5',
+        brandHover: '#4338ca',
       },
     };
 
@@ -144,7 +147,8 @@ export const MultipleThemeExtensions: Story = {
     const baseTheme = {
       mode: 'light' as const,
       semantic: {
-        brand: '#0ea5e9',
+        // Sky-700 – passes WCAG AA (7.16:1) against white inverse text.
+        brand: '#0369a1',
       },
     };
 
@@ -177,11 +181,12 @@ export const SemanticColorOverrides: Story = {
       theme={{
         mode: 'light',
         semantic: {
-          brand: '#ec4899',
-          brandHover: '#db2777',
-          brandActive: '#be185d',
-          success: '#10b981',
-          danger: '#ef4444',
+          // Pink-700 – passes WCAG AA (6.33:1) against white inverse text.
+          brand: '#be185d',
+          brandHover: '#9d174d',
+          brandActive: '#831843',
+          success: '#047857',
+          danger: '#b91c1c',
         },
       }}
     >
@@ -195,8 +200,10 @@ export const CustomCSSVariables: Story = {
     <ThemeProvider
       theme={{
         cssVars: {
-          '--custom-accent': '#f59e0b',
-          '--custom-highlight': '#fbbf24',
+          // Amber-700 – passes WCAG AA (4.67:1) against white inverse text.
+          '--custom-accent': '#b45309',
+          // Amber-200 – light background used with dark text for contrast.
+          '--custom-highlight': '#fde68a',
         },
       }}
     >

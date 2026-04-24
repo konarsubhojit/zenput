@@ -49,10 +49,13 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
   // Merge theme.components overrides on top of the defaults so the Component
   // Tokens panel reflects the resolved values exposed by ThemeProvider.
   const resolvedComponentTokens = useMemo(() => {
+    const overridesByName = themeComponents as Record<
+      string,
+      Record<string, string | number> | undefined
+    >;
     const merged: Record<string, Record<string, string | number>> = {};
     for (const [name, tokens] of Object.entries(defaultComponentTokens)) {
-      const overrides = (themeComponents as Record<string, Record<string, string | number> | undefined>)[name];
-      merged[name] = { ...tokens, ...(overrides || {}) };
+      merged[name] = { ...tokens, ...(overridesByName[name] || {}) };
     }
     return merged;
   }, [themeComponents]);
