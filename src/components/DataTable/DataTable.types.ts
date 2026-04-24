@@ -75,7 +75,8 @@ export interface DataTableProps<T extends DataTableRecord = DataTableRecord> {
   /**
    * Called when a sortable column header is clicked.
    * Receives the column key and the new sort direction.
-   * @deprecated Prefer `onSortChange` for controlled sort state.
+   * Both `onSort` and `onSortChange` fire on every click; prefer `onSortChange`
+   * when you also want to drive the sort indicator via `sortState`.
    */
   onSort?: (key: string, direction: SortDirection) => void;
   /**
