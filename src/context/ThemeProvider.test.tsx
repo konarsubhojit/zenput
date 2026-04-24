@@ -187,7 +187,7 @@ describe('useTheme', () => {
 
   it('exposes semantic colors merged with mode defaults', () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <ThemeProvider theme={{ mode: 'light', semantic: { brand: '#custom' } as never }}>
+      <ThemeProvider theme={{ mode: 'light', semantic: { brand: '#custom' } }}>
         {children}
       </ThemeProvider>
     );
@@ -212,7 +212,7 @@ describe('createTheme', () => {
   it('merges semantic overrides on top of mode defaults', () => {
     const { semantic } = createTheme({
       mode: 'light',
-      semantic: { brand: '#override' } as never,
+      semantic: { brand: '#override' },
     });
     expect(semantic.brand).toBe('#override');
   });

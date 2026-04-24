@@ -205,7 +205,7 @@ export const CustomCSSVariables: Story = {
           p="4"
           style={{
             backgroundColor: 'var(--custom-accent)',
-            color: 'white',
+            color: 'var(--zp-color-text-inverse)',
             borderRadius: 'var(--zp-radius-lg)',
           }}
         >

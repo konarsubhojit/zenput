@@ -53,10 +53,21 @@
   background: var(--zp-color-surface-raised);
 }
 
+.categoryButton:focus-visible {
+  outline: 2px solid var(--zp-color-focus-ring);
+  outline-offset: 2px;
+  background: var(--zp-color-surface-raised);
+}
+
 .categoryButton.active {
   background: var(--zp-color-brand);
   color: var(--zp-color-text-inverse);
   font-weight: var(--zp-font-weight-semibold);
+}
+
+.categoryButton.active:focus-visible {
+  outline: 2px solid var(--zp-color-focus-ring);
+  outline-offset: 2px;
 }
 
 .content {

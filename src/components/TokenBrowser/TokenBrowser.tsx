@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTheme } from '../../context/ThemeProvider';
 import { palette } from '../../tokens/colors';
 import {
@@ -44,7 +44,18 @@ interface TokenBrowserProps {
  */
 export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) {
   const [category, setCategory] = useState<TokenCategory>(defaultCategory);
-  const { semantic, mode, density, cssVars } = useTheme();
+  const { semantic, mode, density, cssVars, components: themeComponents } = useTheme();
+
+  // Merge theme.components overrides on top of the defaults so the Component
+  // Tokens panel reflects the resolved values exposed by ThemeProvider.
+  const resolvedComponentTokens = useMemo(() => {
+    const merged: Record<string, Record<string, string | number>> = {};
+    for (const [name, tokens] of Object.entries(defaultComponentTokens)) {
+      const overrides = (themeComponents as Record<string, Record<string, string | number> | undefined>)[name];
+      merged[name] = { ...tokens, ...(overrides || {}) };
+    }
+    return merged;
+  }, [themeComponents]);
 
   const categories: Array<{ id: TokenCategory; label: string }> = [
     { id: 'colors', label: 'Semantic Colors' },
@@ -294,7 +305,7 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
       case 'components':
         return (
           <div>
-            {Object.entries(defaultComponentTokens).map(([componentName, tokens]) => (
+            {Object.entries(resolvedComponentTokens).map(([componentName, tokens]) => (
               <div key={componentName} className={styles.section}>
                 <h3 className={styles.sectionTitle}>{componentName}</h3>
                 <div className={styles.tokenGrid}>

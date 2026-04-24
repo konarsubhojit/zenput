@@ -376,10 +376,15 @@ Add arbitrary CSS custom properties:
 
 Explore all available design tokens interactively:
 
-```tsx
-import { TokenBrowser } from 'zenput';
+`TokenBrowser` uses the `--zp-*` CSS variables emitted by `ThemeProvider`, so
+render it inside a provider:
 
-<TokenBrowser defaultCategory="colors" />
+```tsx
+import { ThemeProvider, TokenBrowser } from 'zenput';
+
+<ThemeProvider>
+  <TokenBrowser defaultCategory="colors" />
+</ThemeProvider>
 ```
 
 ### Design Token Reference

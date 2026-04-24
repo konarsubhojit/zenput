@@ -130,6 +130,16 @@ describe('TokenBrowser', () => {
     expect(screen.getByText('dataTable')).toBeInTheDocument();
   });
 
+  it('reflects theme.components overrides in the Component Tokens panel', () => {
+    render(
+      <ThemeProvider theme={{ components: { button: { borderRadius: '9999px' } } }}>
+        <TokenBrowser defaultCategory="components" />
+      </ThemeProvider>
+    );
+    // The overridden value should appear in the rendered token list.
+    expect(screen.getByText('9999px')).toBeInTheDocument();
+  });
+
   it('reflects theme mode in the header info', () => {
     render(
       <ThemeProvider theme={{ mode: 'dark' }}>

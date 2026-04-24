@@ -27,14 +27,14 @@ describe('extendTheme', () => {
       semantic: {
         brand: '#0000ff',
         brandHover: '#0000cc',
-      } as never,
+      },
     };
 
     const override: Partial<Theme> = {
       semantic: {
         brand: '#ff0000',
         danger: '#cc0000',
-      } as never,
+      },
     };
 
     const result = extendTheme(base, override);
@@ -122,13 +122,13 @@ describe('extendTheme', () => {
     // so values contributed by intermediate overrides were dropped when
     // a later override also provided `semantic`.
     const base: Theme = {
-      semantic: { brand: '#base' } as never,
+      semantic: { brand: '#base' },
     };
     const preset1: Partial<Theme> = {
-      semantic: { brandHover: '#preset1-hover' } as never,
+      semantic: { brandHover: '#preset1-hover' },
     };
     const preset2: Partial<Theme> = {
-      semantic: { danger: '#preset2-danger' } as never,
+      semantic: { danger: '#preset2-danger' },
     };
 
     const result = extendTheme(base, preset1, preset2);
@@ -201,7 +201,7 @@ describe('createThemePreset', () => {
       mode: 'highContrast',
       semantic: {
         focusRing: '#ffff00',
-      } as never,
+      },
     });
 
     expect(preset.mode).toBe('highContrast');
@@ -218,7 +218,7 @@ describe('createThemePreset', () => {
       mode: 'highContrast',
       semantic: {
         focusRing: '#ffff00',
-      } as never,
+      },
     });
 
     const result = extendTheme(base, highContrastPreset);
