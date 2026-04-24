@@ -75,15 +75,18 @@ export function useControllableState<T>(
         if (resolved !== undefined) onChange?.(resolved);
         return;
       }
-      // Compute the resolved value outside the updater so setUncontrolledValue
-      // receives a plain value (keeping the updater pure / StrictMode-safe).
-      const resolved = typeof next === 'function' ? (next as Updater<T>)(uncontrolledValue) : next;
+      // Use pendingRef.current (not closure-captured uncontrolledValue) so that
+      // rapid successive functional updater calls compose correctly — each call
+      // sees the result of the previous one, not stale render-time state.
+      const base = pendingRef.current;
+      const resolved = typeof next === 'function' ? (next as Updater<T>)(base) : next;
+      if (resolved === base) return;
+      pendingRef.current = resolved;
       setUncontrolledValue(resolved);
-      if (resolved !== uncontrolledValue && resolved !== undefined) {
-        onChange?.(resolved);
-      }
+      // Do not fire onChange with undefined — undefined is not a valid T value.
+      if (resolved !== undefined) onChange?.(resolved);
     },
-    [isControlled, onChange, uncontrolledValue]
+    [isControlled, onChange]
   );
 
   return [value, setValue];

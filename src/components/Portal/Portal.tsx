@@ -21,7 +21,7 @@ let sharedHost: HTMLDivElement | null = null;
 function getSharedHost(): HTMLDivElement {
   if (!sharedHost || !document.body.contains(sharedHost)) {
     sharedHost = document.createElement('div');
-    sharedHost.setAttribute('data-zenput-portal', '');
+    sharedHost.dataset.zenputPortal = '';
     // No styles applied deliberately: CSS custom properties (--zp-*) resolve
     // through the React tree parent via createPortal, not the DOM parent.
     document.body.appendChild(sharedHost);
