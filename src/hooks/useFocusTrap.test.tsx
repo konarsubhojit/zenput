@@ -185,28 +185,35 @@ describe('useFocusTrap', () => {
   });
 
   it('does not remove a pre-existing tabindex when trap deactivates', () => {
-    // If the container already had a tabindex before the trap activated,
-    // the hook must not remove it on cleanup.
-    const { rerender } = render(
-      <Harness active>
-        {/* tabindex set externally via a wrapper — simulate via a directly-focused div */}
-        <span>content</span>
-      </Harness>
-    );
-    const container = screen.getByTestId('trap-container');
-    // Manually give the container a tabindex BEFORE the trap activates
-    // by placing it there before render. We approximate this by checking
-    // cleanup only removes what the hook added.
-    // The trap added tabindex=-1 (no prior attribute), cleanup should remove it.
-    expect(container.getAttribute('tabindex')).toBe('-1');
-    act(() => {
-      rerender(
-        <Harness active={false}>
-          <span>content</span>
-        </Harness>
+    // Render inactive first so no tabindex is added by the hook.
+    function Container({ active }: { active: boolean }) {
+      const containerRef = React.useRef<HTMLDivElement>(null);
+      useFocusTrap({ active, containerRef });
+      return (
+        <div ref={containerRef} data-testid="pre-tab-container">
+          <button data-testid="inner-btn">Button</button>
+        </div>
       );
+    }
+
+    const { rerender } = render(<Container active={false} />);
+    const container = screen.getByTestId('pre-tab-container');
+
+    // Simulate a pre-existing tabindex added by consumer code (not the hook).
+    container.setAttribute('tabindex', '0');
+    expect(container.getAttribute('tabindex')).toBe('0');
+
+    // Activate the trap — hook sees a pre-existing tabindex so it doesn't add one.
+    act(() => {
+      rerender(<Container active />);
     });
-    expect(container.getAttribute('tabindex')).toBeNull();
+    expect(container.getAttribute('tabindex')).toBe('0');
+
+    // Deactivate — hook must NOT remove the attribute it did not add.
+    act(() => {
+      rerender(<Container active={false} />);
+    });
+    expect(container.getAttribute('tabindex')).toBe('0');
   });
 
   it('prevents Tab from escaping when there is only one tabbable element', () => {

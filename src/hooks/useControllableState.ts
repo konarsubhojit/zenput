@@ -71,6 +71,7 @@ export function useControllableState<T>(
         const resolved = typeof next === 'function' ? (next as Updater<T>)(base) : next;
         if (resolved === base) return;
         pendingRef.current = resolved;
+        // Do not fire onChange with undefined — undefined is not a valid T value.
         if (resolved !== undefined) onChange?.(resolved);
         return;
       }
