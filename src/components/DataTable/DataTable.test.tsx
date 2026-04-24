@@ -631,14 +631,15 @@ describe('DataTable – density', () => {
     const { container } = render(<DataTable columns={columns} data={data} density="compact" />);
     expect(screen.getByText('Alice')).toBeInTheDocument();
     const wrapper = container.firstChild as HTMLElement;
-    expect(wrapper.classList.contains('densityCompact')).toBe(true);
+    // CSS-modules hash class names, so match by prefix instead of literal class.
+    expect(Array.from(wrapper.classList).some((c) => c.includes('densityCompact'))).toBe(true);
   });
 
   it('renders without errors in comfortable density', () => {
     const { container } = render(<DataTable columns={columns} data={data} density="comfortable" />);
     expect(screen.getByText('Alice')).toBeInTheDocument();
     const wrapper = container.firstChild as HTMLElement;
-    expect(wrapper.classList.contains('densityComfortable')).toBe(true);
+    expect(Array.from(wrapper.classList).some((c) => c.includes('densityComfortable'))).toBe(true);
   });
 });
 

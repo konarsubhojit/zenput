@@ -42,8 +42,8 @@ function buildPageItems(current: number, total: number, windowSize = 2): (number
   return items;
 }
 
-/** Density CSS class map */
-const DENSITY_CLASS: Partial<Record<DataTableDensity, string>> = {
+/** Density CSS class map (only non-default densities have a class). */
+const DENSITY_CLASS: Record<Exclude<DataTableDensity, 'default'>, string> = {
   compact: styles.densityCompact,
   comfortable: styles.densityComfortable,
 };
@@ -117,8 +117,12 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
 
   /** The live announce message for screen readers */
   const [announceMsg, setAnnounceMsg] = useState('');
-  /** Toggle to ensure successive identical messages differ */
-  const [announceToggle, setAnnounceToggle] = useState(false);
+  /**
+   * Monotonic counter used to append an invisible zero-width-space to repeated
+   * announcement messages, so screen readers re-announce identical sort
+   * messages instead of suppressing them as duplicates.
+   */
+  const announceCounterRef = useRef(0);
 
   /**
    * Per-instance ID prefix so multiple DataTables on the same page don't
@@ -126,9 +130,19 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
    */
   const instanceId = useId();
   const globalSearchId = `${instanceId}-global-search`;
-  const sanitizeId = useCallback(
-    (key: string) => `${instanceId}-col-toggle-${key.replace(/[^a-zA-Z0-9_-]/g, '_')}`,
-    [instanceId]
+  /** Sanitize a user-supplied key so it's safe to embed in an HTML `id`. */
+  const sanitizeIdPart = useCallback(
+    (part: string) => part.replace(/[^a-zA-Z0-9_-]/g, '_'),
+    []
+  );
+  const columnToggleId = useCallback(
+    (key: string) => `${instanceId}-col-toggle-${sanitizeIdPart(key)}`,
+    [instanceId, sanitizeIdPart]
+  );
+  const filterCheckboxId = useCallback(
+    (key: string, index: number) =>
+      `${instanceId}-dt-filter-${sanitizeIdPart(key)}-${index}`,
+    [instanceId, sanitizeIdPart]
   );
 
   // ── Derive active (controlled vs uncontrolled) state ──────────────────────
@@ -262,10 +276,14 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
       onSortChange?.(nextState);
       const col = columns.find((c) => c.key === key);
       const label = col?.header ?? key;
-      // Append an invisible toggle character to ensure successive identical messages differ
-      setAnnounceToggle((prev) => !prev);
+      // Append an invisible zero-width space whose count toggles every click so
+      // successive identical sort messages always differ and screen readers
+      // re-announce them.
+      announceCounterRef.current = (announceCounterRef.current + 1) % 2;
       setAnnounceMsg(
-        `Sorted by ${label} ${nextDirection === 'asc' ? 'ascending' : 'descending'}${announceToggle ? '\u200B' : ''}`
+        `Sorted by ${label} ${nextDirection === 'asc' ? 'ascending' : 'descending'}${
+          announceCounterRef.current ? '\u200B' : ''
+        }`
       );
     },
     [activeSortState, controlledSortState, onSort, onSortChange, columns]
@@ -426,7 +444,7 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
             {showBuiltinGlobalSearch && (
               <div className={styles.globalSearchWrapper}>
                 <label htmlFor={globalSearchId} className={styles.srOnly}>
-                  Search
+                  Global search
                 </label>
                 <input
                   id={globalSearchId}
@@ -464,7 +482,7 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
                   >
                     {columns.map((col) => {
                       const isVisible = !activeHiddenColumns.includes(col.key);
-                      const checkId = sanitizeId(col.key);
+                      const checkId = columnToggleId(col.key);
                       return (
                         <label
                           key={col.key}
@@ -508,7 +526,16 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
         </div>
       )}
 
-      <div className={styles.tableContainer}>
+      <div
+        className={styles.tableContainer}
+        // Make the scrollable region keyboard-accessible (axe rule:
+        // scrollable-region-focusable) so users who rely on the keyboard
+        // can scroll the table in Safari and other browsers.
+        role="region"
+        aria-label="Data table"
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+        tabIndex={0}
+      >
         <table className={styles.table}>
           <thead className={classNames(stickyHeader ? styles.stickyHeader : undefined)}>
             <tr>
@@ -615,7 +642,7 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
                                 ) : (
                                   uniqueValues.map((val, valIndex) => {
                                     const checked = selectedValues.includes(val);
-                                    const checkboxId = `dt-filter-${col.key}-${valIndex}`;
+                                    const checkboxId = filterCheckboxId(col.key, valIndex);
                                     return (
                                       <li key={val} className={styles.filterItem}>
                                         <label htmlFor={checkboxId} className={styles.filterLabel}>

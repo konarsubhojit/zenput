@@ -374,7 +374,13 @@ export const ComfortableDensity: Story = {
 
 export const WithStickyHeader: Story = {
   render: () => (
-    <div style={{ height: 200, overflow: 'auto' }}>
+    <div
+      style={{ height: 200, overflow: 'auto' }}
+      role="region"
+      aria-label="Sticky header demo scroll area"
+      // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+      tabIndex={0}
+    >
       <DataTable
         columns={basicColumns}
         data={employees}
@@ -395,7 +401,13 @@ export const WithStickyColumn: Story = {
       { key: 'salary', header: 'Salary', width: '200px' },
     ];
     return (
-      <div style={{ width: 500, overflow: 'auto' }}>
+      <div
+        style={{ width: 500, overflow: 'auto' }}
+        role="region"
+        aria-label="Sticky column demo scroll area"
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+        tabIndex={0}
+      >
         <DataTable columns={stickyColumns} data={employees} rowKey={(row) => row.id} />
       </div>
     );
