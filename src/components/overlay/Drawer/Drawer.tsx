@@ -1,0 +1,344 @@
+import React, {
+  createContext,
+  forwardRef,
+  useCallback,
+  useContext,
+  useId,
+  useMemo,
+  useRef,
+} from 'react';
+import { classNames } from '../../../utils';
+import { useDisclosure } from '../../../hooks/useDisclosure';
+import { useFocusTrap } from '../../../hooks/useFocusTrap';
+import { Portal } from '../../Portal';
+import { useEscapeKey } from '../internal/useEscapeKey';
+import { useClickOutside } from '../internal/useClickOutside';
+import styles from './Drawer.module.css';
+
+export type DrawerSide = 'left' | 'right' | 'top' | 'bottom';
+export type DrawerSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
+
+interface DrawerContextValue {
+  open: boolean;
+  setOpen: (next: boolean) => void;
+  triggerRef: React.RefObject<HTMLElement | null>;
+  setTriggerNode: (node: HTMLElement | null) => void;
+  contentId: string;
+  titleId: string;
+  descriptionId: string;
+  registerTitle: (mounted: boolean) => void;
+  hasTitle: boolean;
+  registerDescription: (mounted: boolean) => void;
+  hasDescription: boolean;
+}
+
+const DrawerContext = createContext<DrawerContextValue | null>(null);
+
+function useDrawerContext(component: string): DrawerContextValue {
+  const ctx = useContext(DrawerContext);
+  if (!ctx) {
+    throw new Error(`<${component}> must be used inside <Drawer>.`);
+  }
+  return ctx;
+}
+
+interface DrawerBehavior {
+  closeOnOverlayClick: boolean;
+  closeOnEscape: boolean;
+}
+const DrawerBehaviorContext = createContext<DrawerBehavior>({
+  closeOnOverlayClick: true,
+  closeOnEscape: true,
+});
+
+export interface DrawerProps {
+  open?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  closeOnOverlayClick?: boolean;
+  closeOnEscape?: boolean;
+  children: React.ReactNode;
+}
+
+/** Root Drawer container. Similar to Dialog but rendered off-canvas. */
+export function Drawer({
+  open: controlledOpen,
+  defaultOpen,
+  onOpenChange,
+  closeOnOverlayClick = true,
+  closeOnEscape = true,
+  children,
+}: DrawerProps): React.ReactElement {
+  const { open, setOpen } = useDisclosure({
+    open: controlledOpen,
+    defaultOpen,
+    onOpenChange,
+  });
+
+  const triggerRef = useRef<HTMLElement | null>(null);
+  const contentId = useId();
+  const titleId = useId();
+  const descriptionId = useId();
+  const [hasTitle, setHasTitle] = React.useState(false);
+  const [hasDescription, setHasDescription] = React.useState(false);
+
+  const setOpenBool = useCallback((next: boolean) => setOpen(next), [setOpen]);
+  const setTriggerNode = useCallback((node: HTMLElement | null) => {
+    triggerRef.current = node;
+  }, []);
+  const registerTitle = useCallback((m: boolean) => setHasTitle(m), []);
+  const registerDescription = useCallback((m: boolean) => setHasDescription(m), []);
+
+  const value = useMemo<DrawerContextValue>(
+    () => ({
+      open,
+      setOpen: setOpenBool,
+      triggerRef,
+      setTriggerNode,
+      contentId,
+      titleId,
+      descriptionId,
+      registerTitle,
+      hasTitle,
+      registerDescription,
+      hasDescription,
+    }),
+    [
+      open,
+      setOpenBool,
+      setTriggerNode,
+      contentId,
+      titleId,
+      descriptionId,
+      registerTitle,
+      hasTitle,
+      registerDescription,
+      hasDescription,
+    ]
+  );
+
+  const behavior = useMemo(
+    () => ({ closeOnOverlayClick, closeOnEscape }),
+    [closeOnOverlayClick, closeOnEscape]
+  );
+
+  return (
+    <DrawerContext.Provider value={value}>
+      <DrawerBehaviorContext.Provider value={behavior}>{children}</DrawerBehaviorContext.Provider>
+    </DrawerContext.Provider>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// DrawerTrigger
+// ---------------------------------------------------------------------------
+
+export interface DrawerTriggerProps
+  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'aria-haspopup' | 'aria-expanded'> {
+  children: React.ReactNode;
+}
+
+export const DrawerTrigger = forwardRef<HTMLButtonElement, DrawerTriggerProps>(
+  function DrawerTrigger({ onClick, type = 'button', ...rest }, forwardedRef) {
+    const ctx = useDrawerContext('DrawerTrigger');
+    const { setTriggerNode, setOpen, open, contentId } = ctx;
+    const mergedRef = useCallback(
+      (node: HTMLButtonElement | null) => {
+        setTriggerNode(node);
+        if (typeof forwardedRef === 'function') forwardedRef(node);
+        else if (forwardedRef) forwardedRef.current = node;
+      },
+      [setTriggerNode, forwardedRef]
+    );
+    const handleClick = useCallback(
+      (e: React.MouseEvent<HTMLButtonElement>) => {
+        onClick?.(e);
+        if (!e.defaultPrevented) setOpen(true);
+      },
+      [setOpen, onClick]
+    );
+    return (
+      <button
+        ref={mergedRef}
+        type={type}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-controls={open ? contentId : undefined}
+        onClick={handleClick}
+        {...rest}
+      />
+    );
+  }
+);
+
+// ---------------------------------------------------------------------------
+// DrawerContent
+// ---------------------------------------------------------------------------
+
+export interface DrawerContentProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** Edge the drawer slides in from. Default: `'right'`. */
+  side?: DrawerSide;
+  /** Drawer size. Default: `'md'`. */
+  size?: DrawerSize;
+  overlayClassName?: string;
+  'aria-label'?: string;
+  children: React.ReactNode;
+}
+
+export const DrawerContent = forwardRef<HTMLDivElement, DrawerContentProps>(function DrawerContent(
+  { side = 'right', size = 'md', className, overlayClassName, children, ...rest },
+  forwardedRef
+) {
+  const ctx = useDrawerContext('DrawerContent');
+  const behavior = useContext(DrawerBehaviorContext);
+  const contentRef = useRef<HTMLDivElement | null>(null);
+
+  const mergedRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      contentRef.current = node;
+      if (typeof forwardedRef === 'function') forwardedRef(node);
+      else if (forwardedRef) forwardedRef.current = node;
+    },
+    [forwardedRef]
+  );
+
+  useFocusTrap({
+    active: ctx.open,
+    containerRef: contentRef,
+    returnFocusRef: ctx.triggerRef,
+    clickOutsideDeactivates: false,
+  });
+
+  const handleEscape = useCallback(() => {
+    if (behavior.closeOnEscape) ctx.setOpen(false);
+  }, [behavior.closeOnEscape, ctx]);
+  useEscapeKey(ctx.open, handleEscape);
+
+  const handleOutside = useCallback(() => {
+    if (behavior.closeOnOverlayClick) ctx.setOpen(false);
+  }, [behavior.closeOnOverlayClick, ctx]);
+  useClickOutside(ctx.open, [contentRef], handleOutside);
+
+  if (!ctx.open) return null;
+
+  return (
+    <Portal>
+      <div
+        className={classNames(styles.overlay, overlayClassName)}
+        data-zp-drawer-overlay=""
+        data-side={side}
+      >
+        <div
+          ref={mergedRef}
+          role="dialog"
+          aria-modal="true"
+          id={ctx.contentId}
+          aria-labelledby={ctx.hasTitle ? ctx.titleId : undefined}
+          aria-describedby={ctx.hasDescription ? ctx.descriptionId : undefined}
+          tabIndex={-1}
+          data-side={side}
+          className={classNames(
+            styles.content,
+            styles[`side-${side}`],
+            styles[`size-${size}`],
+            className
+          )}
+          {...rest}
+        >
+          {children}
+        </div>
+      </div>
+    </Portal>
+  );
+});
+
+// ---------------------------------------------------------------------------
+// Sub-parts (mirror Dialog)
+// ---------------------------------------------------------------------------
+
+export type DrawerSectionProps = React.HTMLAttributes<HTMLDivElement>;
+
+export const DrawerHeader = forwardRef<HTMLDivElement, DrawerSectionProps>(function DrawerHeader(
+  { className, ...rest },
+  ref
+) {
+  return <div ref={ref} className={classNames(styles.header, className)} {...rest} />;
+});
+
+export const DrawerBody = forwardRef<HTMLDivElement, DrawerSectionProps>(function DrawerBody(
+  { className, ...rest },
+  ref
+) {
+  return <div ref={ref} className={classNames(styles.body, className)} {...rest} />;
+});
+
+export const DrawerFooter = forwardRef<HTMLDivElement, DrawerSectionProps>(function DrawerFooter(
+  { className, ...rest },
+  ref
+) {
+  return <div ref={ref} className={classNames(styles.footer, className)} {...rest} />;
+});
+
+export interface DrawerTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
+  as?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+}
+
+export const DrawerTitle = forwardRef<HTMLHeadingElement, DrawerTitleProps>(function DrawerTitle(
+  { as: Tag = 'h2', className, ...rest },
+  ref
+) {
+  const ctx = useDrawerContext('DrawerTitle');
+  const { registerTitle, titleId } = ctx;
+  React.useEffect(() => {
+    registerTitle(true);
+    return () => registerTitle(false);
+  }, [registerTitle]);
+  return (
+    <Tag ref={ref} id={titleId} className={classNames(styles.title, className)} {...rest} />
+  );
+});
+
+export type DrawerDescriptionProps = React.HTMLAttributes<HTMLParagraphElement>;
+
+export const DrawerDescription = forwardRef<HTMLParagraphElement, DrawerDescriptionProps>(
+  function DrawerDescription({ className, ...rest }, ref) {
+    const ctx = useDrawerContext('DrawerDescription');
+    const { registerDescription, descriptionId } = ctx;
+    React.useEffect(() => {
+      registerDescription(true);
+      return () => registerDescription(false);
+    }, [registerDescription]);
+    return (
+      <p
+        ref={ref}
+        id={descriptionId}
+        className={classNames(styles.description, className)}
+        {...rest}
+      />
+    );
+  }
+);
+
+export interface DrawerCloseProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  children?: React.ReactNode;
+}
+
+export const DrawerClose = forwardRef<HTMLButtonElement, DrawerCloseProps>(function DrawerClose(
+  { onClick, type = 'button', children, ...rest },
+  ref
+) {
+  const ctx = useDrawerContext('DrawerClose');
+  const { setOpen } = ctx;
+  const handleClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      onClick?.(e);
+      if (!e.defaultPrevented) setOpen(false);
+    },
+    [setOpen, onClick]
+  );
+  return (
+    <button ref={ref} type={type} onClick={handleClick} {...rest}>
+      {children}
+    </button>
+  );
+});

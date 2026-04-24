@@ -26,3 +26,4 @@ export * from './actions';
 
 // Overlay primitives
 export * from './Portal';
+export * from './overlay';
