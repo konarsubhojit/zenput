@@ -12,6 +12,9 @@ export interface UseControllableStateOptions<T> {
   componentName?: string;
 }
 
+/** Narrowed type for functional updaters passed to `setValue`. */
+type Updater<T> = (prev: T | undefined) => T | undefined;
+
 /**
  * Manages a piece of state that can be either controlled or uncontrolled.
  *
@@ -64,14 +67,14 @@ export function useControllableState<T>(
     (next: T | ((prev: T | undefined) => T | undefined)) => {
       if (isControlled) {
         const base = pendingRef.current;
-        const resolved = typeof next === 'function' ? (next as (prev: T | undefined) => T | undefined)(base) : next;
+        const resolved = typeof next === 'function' ? (next as Updater<T>)(base) : next;
         if (resolved === base) return;
         pendingRef.current = resolved;
         onChange?.(resolved as T);
         return;
       }
       setUncontrolledValue((prev) => {
-        const resolved = typeof next === 'function' ? (next as (prev: T | undefined) => T | undefined)(prev) : next;
+        const resolved = typeof next === 'function' ? (next as Updater<T>)(prev) : next;
         if (resolved !== prev) {
           onChange?.(resolved as T);
         }

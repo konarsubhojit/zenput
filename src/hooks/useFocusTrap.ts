@@ -62,6 +62,13 @@ export function useFocusTrap({
   // Store the element that was focused before the trap activated.
   const savedFocusRef = useRef<Element | null>(null);
 
+  // Keep a ref for clickOutsideDeactivates so the focusin handler always reads
+  // the latest value without needing to re-attach event listeners on each change.
+  const clickOutsideDeactivatesRef = useRef(clickOutsideDeactivates);
+  useEffect(() => {
+    clickOutsideDeactivatesRef.current = clickOutsideDeactivates;
+  });
+
   useEffect(() => {
     // SSR safety — don't touch document until effect runs.
     if (!active) return;
@@ -114,8 +121,10 @@ export function useFocusTrap({
     }
 
     // 4. Focusin handler: if focus escapes the container, pull it back.
+    // Reads clickOutsideDeactivatesRef so it always uses the latest value
+    // without needing to re-register the listener.
     function handleFocusIn(e: FocusEvent): void {
-      if (clickOutsideDeactivates) return;
+      if (clickOutsideDeactivatesRef.current) return;
       const target = e.target as Node | null;
       if (container && !container.contains(target)) {
         const currentTabbable = getTabbable(container);
@@ -127,7 +136,8 @@ export function useFocusTrap({
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('focusin', handleFocusIn);
 
-    // On deactivation/unmount: remove listeners, restore focus to the saved element.
+    // Capture the return target now (inside the effect) to avoid stale-ref
+    // lint warnings; the ref's identity is stable so this is safe.
     const returnTarget = returnFocusRef?.current ?? null;
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
@@ -143,6 +153,12 @@ export function useFocusTrap({
         toRestore.focus();
       }
     };
+    // Refs (containerRef, initialFocusRef, returnFocusRef) are intentionally
+    // excluded from deps: their object identities are stable across renders
+    // and their .current values are read inside the effect body. The trap
+    // re-activates only when `active` flips so focus lifecycle stays clean.
+    // clickOutsideDeactivates is handled via a ref so live value is always
+    // available without re-attaching listeners.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active]);
 }
