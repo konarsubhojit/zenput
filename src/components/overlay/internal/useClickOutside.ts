@@ -4,9 +4,8 @@ import { useEffect, type RefObject } from 'react';
  * Invokes `onOutside` when a `mousedown`/`touchstart` happens outside
  * any of the provided refs. Used to implement click-outside-to-close.
  *
- * Listeners are attached at the capture phase of the document so they
- * run before any React handlers on the page, but they skip the event
- * if the event target is contained by any of the refs.
+ * Listeners are attached to the document in the bubble phase; events
+ * targeting a node contained by any of the refs are ignored.
  */
 export function useClickOutside(
   active: boolean,
