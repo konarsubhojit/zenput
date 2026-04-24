@@ -117,6 +117,57 @@ describe('extendTheme', () => {
     expect(result.density).toBe('compact');
   });
 
+  it('should layer deep-merged semantic overrides across multiple presets', () => {
+    // Regression: earlier implementation always merged against `base`,
+    // so values contributed by intermediate overrides were dropped when
+    // a later override also provided `semantic`.
+    const base: Theme = {
+      semantic: { brand: '#base' } as never,
+    };
+    const preset1: Partial<Theme> = {
+      semantic: { brandHover: '#preset1-hover' } as never,
+    };
+    const preset2: Partial<Theme> = {
+      semantic: { danger: '#preset2-danger' } as never,
+    };
+
+    const result = extendTheme(base, preset1, preset2);
+
+    expect(result.semantic?.brand).toBe('#base');
+    expect(result.semantic?.brandHover).toBe('#preset1-hover');
+    expect(result.semantic?.danger).toBe('#preset2-danger');
+  });
+
+  it('should layer deep-merged component tokens across multiple presets', () => {
+    const base: Theme = {
+      components: { button: { borderRadius: '4px' } },
+    };
+    const preset1: Partial<Theme> = {
+      components: { button: { paddingSm: '8px' } },
+    };
+    const preset2: Partial<Theme> = {
+      components: { input: { borderRadius: '6px' } },
+    };
+
+    const result = extendTheme(base, preset1, preset2);
+
+    expect(result.components?.button?.borderRadius).toBe('4px');
+    expect(result.components?.button?.paddingSm).toBe('8px');
+    expect(result.components?.input?.borderRadius).toBe('6px');
+  });
+
+  it('should layer cssVars across multiple presets', () => {
+    const base: Theme = { cssVars: { '--a': '1' } };
+    const preset1: Partial<Theme> = { cssVars: { '--b': '2' } };
+    const preset2: Partial<Theme> = { cssVars: { '--c': '3', '--a': 'overridden' } };
+
+    const result = extendTheme(base, preset1, preset2);
+
+    expect(result.cssVars?.['--a']).toBe('overridden');
+    expect(result.cssVars?.['--b']).toBe('2');
+    expect(result.cssVars?.['--c']).toBe('3');
+  });
+
   it('should handle empty base theme', () => {
     const base: Theme = {};
     const override: Partial<Theme> = {

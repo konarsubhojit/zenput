@@ -81,32 +81,39 @@ export function extendTheme(base: Theme, ...overrides: Array<Partial<Theme>>): T
   let result: Theme = { ...base };
 
   for (const override of overrides) {
+    // Capture prior accumulated values before spreading so deep-merge
+    // layers correctly across multiple overrides (later overrides extend
+    // earlier ones rather than only the original `base`).
+    const prevSemantic = result.semantic;
+    const prevComponents = result.components;
+    const prevCssVars = result.cssVars;
+
     // Merge top-level properties
     result = {
       ...result,
       ...override,
     };
 
-    // Deep merge semantic colors if both base and override define them
-    if (base.semantic || override.semantic) {
+    // Deep merge semantic colors if either side defines them
+    if (prevSemantic || override.semantic) {
       result.semantic = deepMerge(
-        (base.semantic || {}) as Record<string, unknown>,
+        (prevSemantic || {}) as Record<string, unknown>,
         (override.semantic || {}) as Record<string, unknown>
       ) as unknown as SemanticColors;
     }
 
-    // Deep merge component tokens if both base and override define them
-    if (base.components || override.components) {
+    // Deep merge component tokens if either side defines them
+    if (prevComponents || override.components) {
       result.components = deepMerge(
-        (base.components || {}) as Record<string, unknown>,
+        (prevComponents || {}) as Record<string, unknown>,
         (override.components || {}) as Record<string, unknown>
       ) as unknown as ComponentTokensMap;
     }
 
     // Merge CSS vars (shallow merge is fine for custom properties)
-    if (base.cssVars || override.cssVars) {
+    if (prevCssVars || override.cssVars) {
       result.cssVars = {
-        ...base.cssVars,
+        ...prevCssVars,
         ...override.cssVars,
       };
     }

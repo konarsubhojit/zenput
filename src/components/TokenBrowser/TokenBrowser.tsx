@@ -326,6 +326,8 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
           {categories.map((cat) => (
             <button
               key={cat.id}
+              type="button"
+              aria-pressed={category === cat.id}
               className={`${styles.categoryButton} ${category === cat.id ? styles.active : ''}`}
               onClick={() => setCategory(cat.id)}
             >

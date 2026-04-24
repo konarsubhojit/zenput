@@ -39,19 +39,19 @@ describe('TokenBrowser', () => {
   it('defaults to the "colors" (Semantic Colors) category', () => {
     renderWithTheme(<TokenBrowser />);
     const btn = screen.getByRole('button', { name: 'Semantic Colors' });
-    expect(btn.className).toMatch(/active/);
+    expect(btn).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('supports a custom defaultCategory via prop', () => {
     renderWithTheme(<TokenBrowser defaultCategory="spacing" />);
     const btn = screen.getByRole('button', { name: 'Spacing' });
-    expect(btn.className).toMatch(/active/);
+    expect(btn).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('switches category when a nav button is clicked', () => {
     renderWithTheme(<TokenBrowser />);
     fireEvent.click(screen.getByRole('button', { name: 'Typography' }));
-    expect(screen.getByRole('button', { name: 'Typography' }).className).toMatch(/active/);
+    expect(screen.getByRole('button', { name: 'Typography' })).toHaveAttribute('aria-pressed', 'true');
     // Typography section headers should appear
     expect(screen.getByText('Font Families')).toBeInTheDocument();
     expect(screen.getByText('Font Sizes')).toBeInTheDocument();
@@ -64,18 +64,18 @@ describe('TokenBrowser', () => {
     renderWithTheme(<TokenBrowser defaultCategory="palette" />);
     // palette has named ramps like "neutral", "blue", etc.
     // just verify some content is rendered
-    expect(screen.getByRole('button', { name: 'Color Palette' }).className).toMatch(/active/);
+    expect(screen.getByRole('button', { name: 'Color Palette' })).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('renders the Spacing category', () => {
     renderWithTheme(<TokenBrowser defaultCategory="spacing" />);
     // spacing token items should be rendered
-    expect(screen.getByRole('button', { name: 'Spacing' }).className).toMatch(/active/);
+    expect(screen.getByRole('button', { name: 'Spacing' })).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('renders the Border Radius category', () => {
     renderWithTheme(<TokenBrowser defaultCategory="radii" />);
-    expect(screen.getByRole('button', { name: 'Border Radius' }).className).toMatch(/active/);
+    expect(screen.getByRole('button', { name: 'Border Radius' })).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('renders the Shadows & Elevation category', () => {
@@ -93,12 +93,12 @@ describe('TokenBrowser', () => {
 
   it('renders the Z-Index category', () => {
     renderWithTheme(<TokenBrowser defaultCategory="zIndex" />);
-    expect(screen.getByRole('button', { name: 'Z-Index' }).className).toMatch(/active/);
+    expect(screen.getByRole('button', { name: 'Z-Index' })).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('renders the Breakpoints category', () => {
     renderWithTheme(<TokenBrowser defaultCategory="breakpoints" />);
-    expect(screen.getByRole('button', { name: 'Breakpoints' }).className).toMatch(/active/);
+    expect(screen.getByRole('button', { name: 'Breakpoints' })).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('renders the Density category with scale sections', () => {
