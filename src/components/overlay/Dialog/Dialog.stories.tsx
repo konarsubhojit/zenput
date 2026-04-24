@@ -75,8 +75,9 @@ export const Controlled: Story = {
       const [open, setOpen] = useState(false);
       return (
         <div style={{ display: 'flex', gap: 8 }}>
-          <Button onClick={() => setOpen(true)}>External open</Button>
+          <Button onClick={() => setOpen((v) => !v)}>External toggle</Button>
           <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger>Open from trigger</DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Controlled</DialogTitle>

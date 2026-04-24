@@ -7,7 +7,9 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
+  DrawerDescription,
   DrawerBody,
+  DrawerFooter,
   DrawerClose,
 } from './Drawer';
 
@@ -22,11 +24,14 @@ function BasicDrawer({ side }: { side?: 'left' | 'right' | 'top' | 'bottom' }) {
       <DrawerContent side={side}>
         <DrawerHeader>
           <DrawerTitle>Drawer title</DrawerTitle>
+          <DrawerDescription>Drawer description</DrawerDescription>
         </DrawerHeader>
         <DrawerBody>
           <button data-testid="inner">Inner</button>
         </DrawerBody>
-        <DrawerClose>Close</DrawerClose>
+        <DrawerFooter>
+          <DrawerClose>Close</DrawerClose>
+        </DrawerFooter>
       </DrawerContent>
     </Drawer>
   );
@@ -42,12 +47,26 @@ describe('Drawer', () => {
     expect(dialog).toHaveAttribute('aria-modal', 'true');
   });
 
-  it('applies the requested side via data-side', () => {
-    render(<BasicDrawer side="left" />);
+  it('wires aria-labelledby and aria-describedby from title/description', () => {
+    render(<BasicDrawer />);
     act(() => {
       screen.getByRole('button', { name: 'Open drawer' }).click();
     });
-    expect(screen.getByRole('dialog')).toHaveAttribute('data-side', 'left');
+    const dialog = screen.getByRole('dialog');
+    const labelId = dialog.getAttribute('aria-labelledby');
+    const descId = dialog.getAttribute('aria-describedby');
+    expect(labelId).toBeTruthy();
+    expect(descId).toBeTruthy();
+    expect(document.getElementById(labelId!)).toHaveTextContent('Drawer title');
+    expect(document.getElementById(descId!)).toHaveTextContent('Drawer description');
+  });
+
+  it.each(['left', 'right', 'top', 'bottom'] as const)('applies side=%s via data-side', (side) => {
+    render(<BasicDrawer side={side} />);
+    act(() => {
+      screen.getByRole('button', { name: 'Open drawer' }).click();
+    });
+    expect(screen.getByRole('dialog')).toHaveAttribute('data-side', side);
   });
 
   it('closes on Escape', () => {
@@ -68,11 +87,42 @@ describe('Drawer', () => {
     act(() => {
       screen.getByRole('button', { name: 'Open drawer' }).click();
     });
-    const overlay = document.querySelector('[data-zp-drawer-overlay]') as HTMLElement;
+    const overlay = document.querySelector<HTMLElement>('[data-zp-drawer-overlay]');
+    expect(overlay).not.toBeNull();
     act(() => {
-      fireEvent.mouseDown(overlay);
+      fireEvent.mouseDown(overlay!);
     });
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('does not close on Escape when closeOnEscape=false', () => {
+    render(
+      <Drawer defaultOpen closeOnEscape={false}>
+        <DrawerContent aria-label="locked">
+          <DrawerBody>body</DrawerBody>
+        </DrawerContent>
+      </Drawer>
+    );
+    act(() => {
+      fireEvent.keyDown(document, { key: 'Escape' });
+    });
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  it('does not close on backdrop click when closeOnOverlayClick=false', () => {
+    render(
+      <Drawer defaultOpen closeOnOverlayClick={false}>
+        <DrawerContent aria-label="locked">
+          <DrawerBody>body</DrawerBody>
+        </DrawerContent>
+      </Drawer>
+    );
+    const overlay = document.querySelector<HTMLElement>('[data-zp-drawer-overlay]');
+    expect(overlay).not.toBeNull();
+    act(() => {
+      fireEvent.mouseDown(overlay!);
+    });
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 
   it('closes when DrawerClose is clicked', () => {

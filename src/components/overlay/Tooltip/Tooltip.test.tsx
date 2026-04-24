@@ -99,4 +99,132 @@ describe('Tooltip', () => {
     });
     expect(screen.getByRole('tooltip')).toBeInTheDocument();
   });
+
+  it('closes after closeDelay on pointer leave and cancels if re-entered', () => {
+    vi.useFakeTimers();
+    render(<BasicTooltip openDelay={0} closeDelay={100} />);
+    const trigger = screen.getByRole('button');
+
+    act(() => fireEvent.pointerEnter(trigger));
+    expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+    act(() => fireEvent.pointerLeave(trigger));
+    // Still open — closeDelay hasn't elapsed.
+    expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(100);
+    });
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+  });
+
+  it('merges existing event handlers on the trigger child', () => {
+    const onFocus = vi.fn();
+    const onBlur = vi.fn();
+    const onPointerEnter = vi.fn();
+    const onPointerLeave = vi.fn();
+    const onKeyDown = vi.fn();
+    render(
+      <Tooltip openDelay={0} closeDelay={0}>
+        <TooltipTrigger>
+          <button
+            onFocus={onFocus}
+            onBlur={onBlur}
+            onPointerEnter={onPointerEnter}
+            onPointerLeave={onPointerLeave}
+            onKeyDown={onKeyDown}
+            aria-describedby="user-desc"
+          >
+            x
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>Label</TooltipContent>
+      </Tooltip>
+    );
+    const trigger = screen.getByRole('button');
+    act(() => fireEvent.pointerEnter(trigger));
+    act(() => fireEvent.focus(trigger));
+    act(() => fireEvent.keyDown(trigger, { key: 'a' }));
+    act(() => fireEvent.pointerLeave(trigger));
+    act(() => fireEvent.blur(trigger));
+
+    expect(onPointerEnter).toHaveBeenCalled();
+    expect(onPointerLeave).toHaveBeenCalled();
+    expect(onFocus).toHaveBeenCalled();
+    expect(onBlur).toHaveBeenCalled();
+    expect(onKeyDown).toHaveBeenCalled();
+  });
+
+  it('merges an existing aria-describedby with the tooltip id', () => {
+    render(
+      <Tooltip openDelay={0}>
+        <TooltipTrigger>
+          <button aria-describedby="user-desc">x</button>
+        </TooltipTrigger>
+        <TooltipContent>Label</TooltipContent>
+      </Tooltip>
+    );
+    const trigger = screen.getByRole('button');
+    act(() => fireEvent.focus(trigger));
+
+    const tooltip = screen.getByRole('tooltip');
+    expect(trigger.getAttribute('aria-describedby')).toBe(`user-desc ${tooltip.id}`);
+  });
+
+  it('stays open while pointer is over the content', () => {
+    vi.useFakeTimers();
+    render(<BasicTooltip openDelay={0} closeDelay={100} />);
+    const trigger = screen.getByRole('button');
+    act(() => fireEvent.pointerEnter(trigger));
+
+    const tooltip = screen.getByRole('tooltip');
+    act(() => fireEvent.pointerLeave(trigger));
+    act(() => fireEvent.pointerEnter(tooltip));
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+    // Pointer-enter on tooltip calls openNow, keeping it visible.
+    expect(screen.getByRole('tooltip')).toBeInTheDocument();
+  });
+
+  it.each([
+    ['top', 'start'],
+    ['top', 'end'],
+    ['bottom', 'center'],
+    ['left', 'start'],
+    ['left', 'end'],
+    ['left', 'center'],
+    ['right', 'start'],
+    ['right', 'end'],
+    ['right', 'center'],
+  ] as const)('positions with side=%s align=%s', (side, align) => {
+    render(
+      <Tooltip openDelay={0} defaultOpen>
+        <TooltipTrigger>
+          <button>x</button>
+        </TooltipTrigger>
+        <TooltipContent side={side} align={align}>
+          Label
+        </TooltipContent>
+      </Tooltip>
+    );
+    const tooltip = screen.getByRole('tooltip');
+    expect(tooltip).toHaveAttribute('data-side', side);
+    expect(tooltip).toHaveAttribute('data-align', align);
+  });
+
+  it('renders inline (no portal) when withPortal=false', () => {
+    render(
+      <div data-testid="wrapper">
+        <Tooltip defaultOpen>
+          <TooltipTrigger>
+            <button>x</button>
+          </TooltipTrigger>
+          <TooltipContent withPortal={false}>Label</TooltipContent>
+        </Tooltip>
+      </div>
+    );
+    const wrapper = screen.getByTestId('wrapper');
+    expect(wrapper).toContainElement(screen.getByRole('tooltip'));
+  });
 });

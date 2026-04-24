@@ -13,6 +13,8 @@ import { useFocusTrap } from '../../../hooks/useFocusTrap';
 import { Portal } from '../../Portal';
 import { useEscapeKey } from '../internal/useEscapeKey';
 import { useClickOutside } from '../internal/useClickOutside';
+import { assignRef } from '../internal/assignRef';
+import { warnOnce } from '../../../utils/warnOnce';
 import styles from './Dialog.module.css';
 
 export type DialogSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
@@ -159,8 +161,7 @@ export const DialogTrigger = forwardRef<HTMLButtonElement, DialogTriggerProps>(
     const mergedRef = useCallback(
       (node: HTMLButtonElement | null) => {
         setTriggerNode(node);
-        if (typeof forwardedRef === 'function') forwardedRef(node);
-        else if (forwardedRef) forwardedRef.current = node;
+        assignRef(forwardedRef, node);
       },
       [setTriggerNode, forwardedRef]
     );
@@ -219,8 +220,7 @@ export const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(func
   const mergedRef = useCallback(
     (node: HTMLDivElement | null) => {
       contentRef.current = node;
-      if (typeof forwardedRef === 'function') forwardedRef(node);
-      else if (forwardedRef) forwardedRef.current = node;
+      assignRef(forwardedRef, node);
     },
     [forwardedRef]
   );
@@ -244,6 +244,27 @@ export const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(func
     if (behavior.closeOnOverlayClick) ctx.setOpen(false);
   }, [behavior.closeOnOverlayClick, ctx]);
   useClickOutside(ctx.open, [contentRef], handleOutside);
+
+  // Dev-time warning: a `role="dialog"` / `aria-modal` node must have an
+  // accessible name. Run this in an effect so any `<DialogTitle>` child
+  // has had a chance to register first.
+  const ariaLabel = (rest as { 'aria-label'?: string; 'aria-labelledby'?: string })['aria-label'];
+  const ariaLabelledBy = (rest as { 'aria-labelledby'?: string })['aria-labelledby'];
+  React.useEffect(() => {
+    if (!ctx.open) return;
+    // Defer to the next tick so that child <DialogTitle> effects (which
+    // call `registerTitle(true)` -> state update) have a chance to
+    // propagate and flip `hasTitle` before we decide to warn.
+    const id = setTimeout(() => {
+      if (ctx.open && !ctx.hasTitle && !ariaLabel && !ariaLabelledBy) {
+        warnOnce(
+          `zenput/DialogContent/no-accessible-name/${ctx.contentId}`,
+          'Zenput <DialogContent>: no accessible name. Provide a <DialogTitle> (preferred), or pass an `aria-label`/`aria-labelledby` prop.'
+        );
+      }
+    }, 0);
+    return () => clearTimeout(id);
+  }, [ctx.open, ctx.hasTitle, ctx.contentId, ariaLabel, ariaLabelledBy]);
 
   if (!ctx.open) return null;
 

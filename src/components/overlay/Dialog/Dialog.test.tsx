@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { render, screen, act, fireEvent } from '@testing-library/react';
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import {
   Dialog,
   DialogTrigger,
@@ -105,11 +105,11 @@ describe('Dialog', () => {
 
   it('closes when clicking outside the content (backdrop)', () => {
     render(<BasicDialog defaultOpen />);
-    const overlay = document.querySelector('[data-zp-dialog-overlay]') as HTMLElement;
+    const overlay = document.querySelector<HTMLElement>('[data-zp-dialog-overlay]');
     expect(overlay).not.toBeNull();
 
     act(() => {
-      fireEvent.mouseDown(overlay);
+      fireEvent.mouseDown(overlay!);
     });
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
@@ -123,10 +123,11 @@ describe('Dialog', () => {
         </DialogContent>
       </Dialog>
     );
-    const overlay = document.querySelector('[data-zp-dialog-overlay]') as HTMLElement;
+    const overlay = document.querySelector<HTMLElement>('[data-zp-dialog-overlay]');
+    expect(overlay).not.toBeNull();
 
     act(() => {
-      fireEvent.mouseDown(overlay);
+      fireEvent.mouseDown(overlay!);
     });
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
@@ -188,5 +189,23 @@ describe('Dialog', () => {
     // Focus should be on first tabbable element inside content, which is the
     // inner button (DialogTitle/Description are not tabbable).
     expect(document.activeElement).toBe(screen.getByTestId('inner-btn'));
+  });
+
+  it('warns (in dev) when open without an accessible name', () => {
+    vi.useFakeTimers();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    render(
+      <Dialog defaultOpen>
+        <DialogContent>
+          <DialogBody>no title, no aria-label</DialogBody>
+        </DialogContent>
+      </Dialog>
+    );
+    act(() => {
+      vi.runAllTimers();
+    });
+    expect(warn).toHaveBeenCalledWith(expect.stringMatching(/no accessible name/i));
+    warn.mockRestore();
+    vi.useRealTimers();
   });
 });

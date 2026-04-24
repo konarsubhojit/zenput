@@ -92,4 +92,44 @@ describe('Popover', () => {
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
+
+  // Positioning branches: exercise every (side, align) combo so the
+  // computePosition() branches are covered.
+  it.each([
+    ['top', 'start'],
+    ['top', 'end'],
+    ['bottom', 'center'],
+    ['left', 'start'],
+    ['left', 'end'],
+    ['left', 'center'],
+    ['right', 'start'],
+    ['right', 'end'],
+    ['right', 'center'],
+  ] as const)('renders with side=%s align=%s', (side, align) => {
+    render(
+      <Popover defaultOpen>
+        <PopoverTrigger>t</PopoverTrigger>
+        <PopoverContent side={side} align={align} sideOffset={4} alignOffset={2}>
+          content
+        </PopoverContent>
+      </Popover>
+    );
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveAttribute('data-side', side);
+    expect(dialog).toHaveAttribute('data-align', align);
+  });
+
+  it('renders inline (no portal) when withPortal=false', () => {
+    render(
+      <div data-testid="wrapper">
+        <Popover defaultOpen>
+          <PopoverTrigger>t</PopoverTrigger>
+          <PopoverContent withPortal={false}>inline</PopoverContent>
+        </Popover>
+      </div>
+    );
+    const wrapper = screen.getByTestId('wrapper');
+    const dialog = screen.getByRole('dialog');
+    expect(wrapper).toContainElement(dialog);
+  });
 });

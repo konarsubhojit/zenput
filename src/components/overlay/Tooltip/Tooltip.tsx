@@ -9,10 +9,13 @@ import React, {
   useId,
   useMemo,
   useRef,
+  useState,
 } from 'react';
 import { classNames } from '../../../utils';
 import { useDisclosure } from '../../../hooks/useDisclosure';
 import { Portal } from '../../Portal';
+import { useIsomorphicLayoutEffect } from '../internal/useIsomorphicLayoutEffect';
+import { assignRef } from '../internal/assignRef';
 import styles from './Tooltip.module.css';
 
 export type TooltipSide = 'top' | 'bottom' | 'left' | 'right';
@@ -32,9 +35,9 @@ const TooltipProviderContext = createContext<TooltipProviderValue>({
 });
 
 export interface TooltipProviderProps {
-  /** Delay (ms) before the tooltip opens on hover/focus. Default: `700`. */
+  /** Delay (ms) before the tooltip opens on pointer hover. Default: `700`. Focus opens the tooltip immediately. */
   openDelay?: number;
-  /** Delay (ms) before the tooltip closes on blur/leave. Default: `150`. */
+  /** Delay (ms) before the tooltip closes on pointer leave. Default: `150`. Blur closes the tooltip immediately. */
   closeDelay?: number;
   children: React.ReactNode;
 }
@@ -85,9 +88,9 @@ export interface TooltipProps {
 }
 
 /**
- * Root Tooltip container. Shows on hover/focus of `<TooltipTrigger>`
- * after `openDelay`, hides on leave/blur after `closeDelay`, and on
- * Escape.
+ * Root Tooltip container. Shows on hover of `<TooltipTrigger>` after
+ * `openDelay`, opens immediately on focus, hides after `closeDelay` on
+ * pointer leave, closes immediately on blur or Escape.
  */
 export function Tooltip({
   open: controlledOpen,
@@ -202,7 +205,11 @@ export function TooltipTrigger({ children }: TooltipTriggerProps): React.ReactEl
   }
 
   const childProps: TriggerableProps = child.props ?? {};
-  const childRef = (child as unknown as { ref?: React.Ref<HTMLElement> }).ref;
+  // React 19 moved `ref` onto `props`. Read it there first and fall
+  // back to `child.ref` only if props.ref is not present, so the trigger
+  // continues to work on older versions too.
+  const childRef =
+    childProps.ref ?? (child as unknown as { ref?: React.Ref<HTMLElement> }).ref;
 
   const setRef = (node: HTMLElement | null): void => {
     setTriggerNode(node);
@@ -258,8 +265,10 @@ export interface TooltipContentProps extends React.HTMLAttributes<HTMLDivElement
   side?: TooltipSide;
   /** Alignment along the side. Default: `'center'`. */
   align?: TooltipAlign;
-  /** Gap (px) between trigger and content. Default: `6`. */
+  /** Gap (px) between trigger and content along the main axis. Default: `6`. */
   sideOffset?: number;
+  /** Offset (px) along the cross (alignment) axis. Default: `0`. */
+  alignOffset?: number;
   /** If `false`, renders inline instead of through a portal. Default: `true`. */
   withPortal?: boolean;
   children: React.ReactNode;
@@ -270,7 +279,8 @@ function computePosition(
   content: DOMRect,
   side: TooltipSide,
   align: TooltipAlign,
-  sideOffset: number
+  sideOffset: number,
+  alignOffset: number
 ): { top: number; left: number } {
   let top = 0;
   let left = 0;
@@ -278,15 +288,15 @@ function computePosition(
   if (side === 'top' || side === 'bottom') {
     top =
       side === 'top' ? trigger.top - content.height - sideOffset : trigger.bottom + sideOffset;
-    if (align === 'start') left = trigger.left;
-    else if (align === 'end') left = trigger.right - content.width;
-    else left = trigger.left + trigger.width / 2 - content.width / 2;
+    if (align === 'start') left = trigger.left + alignOffset;
+    else if (align === 'end') left = trigger.right - content.width - alignOffset;
+    else left = trigger.left + trigger.width / 2 - content.width / 2 + alignOffset;
   } else {
     left =
       side === 'left' ? trigger.left - content.width - sideOffset : trigger.right + sideOffset;
-    if (align === 'start') top = trigger.top;
-    else if (align === 'end') top = trigger.bottom - content.height;
-    else top = trigger.top + trigger.height / 2 - content.height / 2;
+    if (align === 'start') top = trigger.top + alignOffset;
+    else if (align === 'end') top = trigger.bottom - content.height - alignOffset;
+    else top = trigger.top + trigger.height / 2 - content.height / 2 + alignOffset;
   }
 
   const vw = typeof window !== 'undefined' ? window.innerWidth : 0;
@@ -298,24 +308,35 @@ function computePosition(
 
 export const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
   function TooltipContent(
-    { side = 'top', align = 'center', sideOffset = 6, withPortal = true, className, children, ...rest },
+    {
+      side = 'top',
+      align = 'center',
+      sideOffset = 6,
+      alignOffset = 0,
+      withPortal = true,
+      className,
+      children,
+      onPointerEnter: userOnPointerEnter,
+      onPointerLeave: userOnPointerLeave,
+      style: userStyle,
+      ...rest
+    },
     forwardedRef
   ) {
     const ctx = useTooltipContext('TooltipContent');
     const { open, triggerRef, contentId, openNow, closeSoon } = ctx;
     const contentElRef = useRef<HTMLDivElement | null>(null);
-    const [coords, setCoords] = React.useState<{ top: number; left: number } | null>(null);
+    const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
 
     const mergedRef = useCallback(
       (node: HTMLDivElement | null) => {
         contentElRef.current = node;
-        if (typeof forwardedRef === 'function') forwardedRef(node);
-        else if (forwardedRef) forwardedRef.current = node;
+        assignRef(forwardedRef, node);
       },
       [forwardedRef]
     );
 
-    React.useLayoutEffect(() => {
+    useIsomorphicLayoutEffect(() => {
       if (!open) return;
       const updatePosition = (): void => {
         const trigger = triggerRef.current;
@@ -327,7 +348,8 @@ export const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
             content.getBoundingClientRect(),
             side,
             align,
-            sideOffset
+            sideOffset,
+            alignOffset
           )
         );
       };
@@ -338,21 +360,35 @@ export const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
         window.removeEventListener('scroll', updatePosition, true);
         window.removeEventListener('resize', updatePosition);
       };
-    }, [open, triggerRef, side, align, sideOffset]);
+    }, [open, triggerRef, side, align, sideOffset, alignOffset]);
 
     if (!open) return null;
 
+    // Merge consumer handlers with the internal "hover-sticky" handlers
+    // so the tooltip still stays open while the pointer is over it.
+    const handlePointerEnter: React.PointerEventHandler<HTMLDivElement> = (e) => {
+      userOnPointerEnter?.(e);
+      openNow();
+    };
+    const handlePointerLeave: React.PointerEventHandler<HTMLDivElement> = (e) => {
+      userOnPointerLeave?.(e);
+      closeSoon();
+    };
+
     const content = (
       <div
+        {...rest}
         ref={mergedRef}
         role="tooltip"
         id={contentId}
         data-side={side}
         data-align={align}
-        // Stay visible while the pointer is over the tooltip itself.
-        onPointerEnter={openNow}
-        onPointerLeave={closeSoon}
+        onPointerEnter={handlePointerEnter}
+        onPointerLeave={handlePointerLeave}
+        // Internal positioning style is authoritative: it is spread last
+        // so caller `style` cannot overwrite top/left/position/visibility.
         style={{
+          ...userStyle,
           position: 'fixed',
           top: coords?.top ?? -9999,
           left: coords?.left ?? -9999,
@@ -360,7 +396,6 @@ export const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
           pointerEvents: 'auto',
         }}
         className={classNames(styles.content, className)}
-        {...rest}
       >
         {children}
       </div>

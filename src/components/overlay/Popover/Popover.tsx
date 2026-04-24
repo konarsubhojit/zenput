@@ -6,12 +6,15 @@ import React, {
   useId,
   useMemo,
   useRef,
+  useState,
 } from 'react';
 import { classNames } from '../../../utils';
 import { useDisclosure } from '../../../hooks/useDisclosure';
 import { Portal } from '../../Portal';
 import { useEscapeKey } from '../internal/useEscapeKey';
 import { useClickOutside } from '../internal/useClickOutside';
+import { useIsomorphicLayoutEffect } from '../internal/useIsomorphicLayoutEffect';
+import { assignRef } from '../internal/assignRef';
 import styles from './Popover.module.css';
 
 export type PopoverSide = 'top' | 'bottom' | 'left' | 'right';
@@ -101,8 +104,7 @@ export const PopoverTrigger = forwardRef<HTMLButtonElement, PopoverTriggerProps>
     const mergedRef = useCallback(
       (node: HTMLButtonElement | null) => {
         setTriggerNode(node);
-        if (typeof forwardedRef === 'function') forwardedRef(node);
-        else if (forwardedRef) forwardedRef.current = node;
+        assignRef(forwardedRef, node);
       },
       [setTriggerNode, forwardedRef]
     );
@@ -207,14 +209,13 @@ export const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
     const ctx = usePopoverContext('PopoverContent');
     const { setContentNode, open, triggerRef, setOpen, contentId, contentRef } = ctx;
     const contentElRef = useRef<HTMLDivElement | null>(null);
-    const [coords, setCoords] = React.useState<{ top: number; left: number } | null>(null);
+    const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
 
     const mergedRef = useCallback(
       (node: HTMLDivElement | null) => {
         contentElRef.current = node;
         setContentNode(node);
-        if (typeof forwardedRef === 'function') forwardedRef(node);
-        else if (forwardedRef) forwardedRef.current = node;
+        assignRef(forwardedRef, node);
       },
       [setContentNode, forwardedRef]
     );
@@ -222,7 +223,7 @@ export const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
     // Position the popover relative to the trigger while open. Recomputes
     // on scroll/resize and on open. Only runs while `open` is true; when
     // closed the component returns null so stale `coords` are irrelevant.
-    React.useLayoutEffect(() => {
+    useIsomorphicLayoutEffect(() => {
       if (!open) return;
       const updatePosition = (): void => {
         const trigger = triggerRef.current;
