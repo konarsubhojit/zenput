@@ -46,10 +46,6 @@ trigger:
       - master
       - release/*
 
-pr:
-  branches:
-    include:
-      - '*'
 
 # Weekly "clean" run — guards against stale state on a long-lived self-hosted
 # agent. Regular CI runs skip the nuke (see `workspace.clean` below).
