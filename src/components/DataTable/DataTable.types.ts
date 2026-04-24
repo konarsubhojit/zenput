@@ -5,6 +5,15 @@ export type DataTableRecord = Record<string, any>;
 
 export type SortDirection = 'asc' | 'desc';
 
+/** Density scale for table row/cell sizing */
+export type DataTableDensity = 'compact' | 'default' | 'comfortable';
+
+/** Explicit sort state shared between controlled and uncontrolled usage */
+export interface DataTableSortState {
+  key: string;
+  direction: SortDirection;
+}
+
 export interface DataTablePagination {
   /** Current page number (1-based) */
   currentPage: number;
@@ -29,6 +38,17 @@ export interface DataTableColumn<T extends DataTableRecord = DataTableRecord> {
   render?: (value: unknown, row: T) => React.ReactNode;
   /** Optional column width (e.g. '150px' or '20%') */
   width?: string | number;
+  /**
+   * Sticks the column to the left or right edge while the table scrolls horizontally.
+   */
+  sticky?: 'left' | 'right';
+  /** Horizontal alignment for header and body cells. Defaults to 'left'. */
+  align?: 'left' | 'center' | 'right';
+  /**
+   * Custom header cell renderer.
+   * When provided, replaces the default header text (and sort button) with the returned node.
+   */
+  headerRender?: (col: DataTableColumn<T>) => React.ReactNode;
 }
 
 export interface DataTableProps<T extends DataTableRecord = DataTableRecord> {
@@ -55,6 +75,8 @@ export interface DataTableProps<T extends DataTableRecord = DataTableRecord> {
   /**
    * Called when a sortable column header is clicked.
    * Receives the column key and the new sort direction.
+   * Both `onSort` and `onSortChange` fire on every click; prefer `onSortChange`
+   * when you also want to drive the sort indicator via `sortState`.
    */
   onSort?: (key: string, direction: SortDirection) => void;
   /**
@@ -93,4 +115,114 @@ export interface DataTableProps<T extends DataTableRecord = DataTableRecord> {
    * Rendered in a bar above the table when at least one row is selected.
    */
   bulkActions?: React.ReactNode;
+
+  // ── Controlled sort state ──────────────────────────────────────────────────
+
+  /**
+   * Controlled sort state. When provided the component operates in controlled
+   * sort mode: the visual sort indicator reflects this value and `onSortChange`
+   * is called when the user clicks a sortable column header.
+   */
+  sortState?: DataTableSortState | null;
+  /**
+   * Called when the user clicks a sortable column header.
+   * Use together with `sortState` for fully controlled sort.
+   */
+  onSortChange?: (state: DataTableSortState | null) => void;
+
+  // ── Controlled filter state ────────────────────────────────────────────────
+
+  /**
+   * Controlled column-filter state: maps column key → array of selected values.
+   * When provided the component is in controlled filter mode and `onFilterChange`
+   * is called on every filter change.
+   */
+  filterState?: Record<string, string[]>;
+  /**
+   * Called whenever the user changes a column filter.
+   * Use together with `filterState` for fully controlled filters.
+   */
+  onFilterChange?: (state: Record<string, string[]>) => void;
+
+  // ── Controlled expansion ───────────────────────────────────────────────────
+
+  /**
+   * Controlled set of expanded row keys.
+   * When provided the component is in controlled expansion mode and
+   * `onExpansionChange` is called when the user toggles a row.
+   */
+  expandedRowKeys?: Set<string | number>;
+  /**
+   * Called when the user toggles a row's expanded state.
+   * Use together with `expandedRowKeys` for fully controlled expansion.
+   */
+  onExpansionChange?: (keys: Set<string | number>) => void;
+
+  // ── Global search filter ───────────────────────────────────────────────────
+
+  /**
+   * Controlled global search string.
+   * When provided, the table filters rows client-side (unless `serverSide` is
+   * true) to those where any visible column value contains this string
+   * (case-insensitive). A search input is rendered in the built-in toolbar.
+   */
+  globalFilter?: string;
+  /**
+   * Called when the built-in global search input value changes.
+   * Use together with `globalFilter` for fully controlled global search.
+   * Providing this prop causes the built-in search input to appear.
+   */
+  onGlobalFilterChange?: (value: string) => void;
+
+  // ── Server-side mode ───────────────────────────────────────────────────────
+
+  /**
+   * When `true`, all sorting and filtering is delegated to the server.
+   * Client-side sort/filter logic is bypassed; `data` is rendered as-is.
+   * Callbacks (`onSortChange`, `onFilterChange`, `onGlobalFilterChange`) still
+   * fire so the parent can issue a new server request.
+   */
+  serverSide?: boolean;
+
+  // ── Column visibility ──────────────────────────────────────────────────────
+
+  /**
+   * Controlled list of column keys that are currently hidden.
+   * When provided the component is in controlled column-visibility mode.
+   */
+  hiddenColumns?: string[];
+  /**
+   * Called when the user toggles column visibility via the built-in toolbar.
+   * Use together with `hiddenColumns` for fully controlled visibility.
+   */
+  onColumnVisibilityChange?: (hidden: string[]) => void;
+
+  // ── Layout ─────────────────────────────────────────────────────────────────
+
+  /** Row/cell sizing density. Defaults to `'default'`. */
+  density?: DataTableDensity;
+  /**
+   * When `true`, the table header row is sticky and stays visible during
+   * vertical scroll.
+   */
+  stickyHeader?: boolean;
+
+  // ── Toolbar ────────────────────────────────────────────────────────────────
+
+  /**
+   * Custom toolbar content rendered above the table.
+   * When provided together with built-in toolbar features (global search,
+   * column toggle, export) the custom content appears to the left of those
+   * controls.
+   */
+  toolbar?: React.ReactNode;
+
+  // ── Export ─────────────────────────────────────────────────────────────────
+
+  /**
+   * Called when the user clicks the built-in "Export CSV" toolbar button.
+   * Receives the currently visible + filtered rows and visible column
+   * definitions. Providing this prop causes the export button to appear.
+   */
+  onExportCSV?: (data: T[], columns: DataTableColumn<T>[]) => void;
 }

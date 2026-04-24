@@ -11,9 +11,175 @@
   --dt-dropdown-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --dt-border-radius: 6px;
   --dt-font-family: inherit;
+  /* Density tokens (overridden by modifier classes) */
+  --dt-cell-padding-v: 10px;
+  --dt-cell-padding-h: 14px;
   font-family: var(--dt-font-family);
   color: var(--dt-text-color);
   display: block;
+}
+
+/* ── Density modifiers ────────────────────────────────── */
+
+.densityCompact {
+  --dt-cell-padding-v: 4px;
+  --dt-cell-padding-h: 10px;
+}
+
+.densityComfortable {
+  --dt-cell-padding-v: 16px;
+  --dt-cell-padding-h: 18px;
+}
+
+/* ── Screen-reader only / announcer ───────────────────── */
+
+.srOnly,
+.srAnnounce {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Toolbar ──────────────────────────────────────────── */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.toolbarCustom {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.toolbarBuiltin {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ── Global search input ──────────────────────────────── */
+
+.globalSearchWrapper {
+  display: flex;
+  align-items: center;
+}
+
+.globalSearch {
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--dt-border-color);
+  border-radius: 4px;
+  font-size: 0.8125rem;
+  color: var(--dt-text-color);
+  background-color: var(--dt-bg-color);
+  outline: none;
+  min-width: 180px;
+  transition: border-color 0.15s ease;
+}
+
+.globalSearch:focus {
+  border-color: var(--dt-primary-color);
+  box-shadow: 0 0 0 3px var(--dt-primary-focus-ring);
+}
+
+/* ── Toolbar buttons (column toggle, export) ──────────── */
+
+.toolbarButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--dt-border-color);
+  border-radius: 4px;
+  background-color: var(--dt-bg-color);
+  color: var(--dt-text-color);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.toolbarButton:hover {
+  border-color: var(--dt-primary-color);
+  color: var(--dt-primary-color);
+}
+
+.toolbarButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--dt-primary-focus-ring);
+}
+
+.toolbarButtonActive {
+  border-color: var(--dt-primary-color);
+  background-color: #eff6ff;
+  color: var(--dt-primary-color);
+}
+
+/* ── Column visibility dropdown ───────────────────────── */
+
+.columnToggleWrapper {
+  position: relative;
+}
+
+.columnToggleDropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 1000;
+  min-width: 160px;
+  background-color: var(--dt-bg-color);
+  border: 1px solid var(--dt-border-color);
+  border-radius: var(--dt-border-radius);
+  box-shadow: var(--dt-dropdown-shadow);
+  padding: 4px 0;
+}
+
+.columnToggleItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  cursor: pointer;
+  font-size: 0.8125rem;
+  color: var(--dt-text-color);
+  transition: background-color 0.1s ease;
+  user-select: none;
+}
+
+.columnToggleItem:hover {
+  background-color: #eff6ff;
+}
+
+/* ── Sticky header ────────────────────────────────────── */
+
+.stickyHeader {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+/* ── Sticky columns ───────────────────────────────────── */
+
+.stickyCol {
+  background-color: var(--dt-bg-color);
 }
 
 /* Horizontally scrollable container so wide tables don't break layout */
@@ -34,7 +200,7 @@
 /* ── Header ──────────────────────────────────────────── */
 
 .th {
-  padding: 10px 14px;
+  padding: var(--dt-cell-padding-v) var(--dt-cell-padding-h);
   text-align: left;
   font-size: 0.75rem;
   font-weight: 600;
@@ -214,7 +380,7 @@
 }
 
 .td {
-  padding: 10px 14px;
+  padding: var(--dt-cell-padding-v) var(--dt-cell-padding-h);
   vertical-align: middle;
   color: var(--dt-text-color);
   font-size: 0.875rem;
