@@ -430,6 +430,293 @@ describe('DataTable', () => {
   });
 });
 
+// ── New flagship features ──────────────────────────────────────────────────
+
+describe('DataTable – global filter', () => {
+  it('renders a global search input when onGlobalFilterChange is provided', () => {
+    render(<DataTable columns={columns} data={data} onGlobalFilterChange={vi.fn()} />);
+    expect(screen.getByRole('searchbox', { name: /global search/i })).toBeInTheDocument();
+  });
+
+  it('filters rows client-side by global search term', async () => {
+    render(<DataTable columns={columns} data={data} onGlobalFilterChange={vi.fn()} />);
+    const input = screen.getByRole('searchbox', { name: /global search/i });
+    await userEvent.clear(input);
+    await userEvent.type(input, 'Alice');
+    expect(screen.getByText('Alice')).toBeInTheDocument();
+    expect(screen.queryByText('Bob')).not.toBeInTheDocument();
+  });
+
+  it('renders controlled global filter value', () => {
+    render(
+      <DataTable
+        columns={columns}
+        data={data}
+        globalFilter="Carol"
+        onGlobalFilterChange={vi.fn()}
+      />
+    );
+    const input = screen.getByRole('searchbox') as HTMLInputElement;
+    expect(input.value).toBe('Carol');
+    expect(screen.getByText('Carol')).toBeInTheDocument();
+    expect(screen.queryByText('Alice')).not.toBeInTheDocument();
+  });
+
+  it('calls onGlobalFilterChange when user types in search input', async () => {
+    const handleChange = vi.fn();
+    render(<DataTable columns={columns} data={data} onGlobalFilterChange={handleChange} />);
+    const input = screen.getByRole('searchbox', { name: /global search/i });
+    await userEvent.clear(input);
+    await userEvent.type(input, 'x');
+    expect(handleChange).toHaveBeenCalled();
+  });
+
+  it('does NOT apply client-side global filter when serverSide is true', async () => {
+    render(
+      <DataTable
+        columns={columns}
+        data={data}
+        globalFilter="Alice"
+        onGlobalFilterChange={vi.fn()}
+        serverSide
+      />
+    );
+    // All rows still visible because serverSide bypasses client filtering
+    expect(screen.getByText('Alice')).toBeInTheDocument();
+    expect(screen.getByText('Bob')).toBeInTheDocument();
+    expect(screen.getByText('Carol')).toBeInTheDocument();
+  });
+});
+
+describe('DataTable – controlled sort state', () => {
+  it('reflects controlled sortState prop in the sort button label', () => {
+    const sortableColumns: DataTableColumn<Person>[] = [
+      { key: 'name', header: 'Name', sortable: true },
+      ...columns.slice(2),
+    ];
+    render(
+      <DataTable
+        columns={sortableColumns}
+        data={data}
+        sortState={{ key: 'name', direction: 'asc' }}
+        onSortChange={vi.fn()}
+      />
+    );
+    expect(screen.getByRole('button', { name: /currently asc/i })).toBeInTheDocument();
+  });
+
+  it('calls onSortChange when a sortable header is clicked', async () => {
+    const handleSortChange = vi.fn();
+    const sortableColumns: DataTableColumn<Person>[] = [
+      { key: 'name', header: 'Name', sortable: true },
+      ...columns.slice(2),
+    ];
+    render(
+      <DataTable
+        columns={sortableColumns}
+        data={data}
+        onSortChange={handleSortChange}
+      />
+    );
+    await userEvent.click(screen.getByRole('button', { name: /Sort by Name/i }));
+    expect(handleSortChange).toHaveBeenCalledWith({ key: 'name', direction: 'asc' });
+  });
+});
+
+describe('DataTable – controlled filter state', () => {
+  it('reflects filterState prop', () => {
+    render(
+      <DataTable
+        columns={columns}
+        data={data}
+        filterState={{ role: ['Admin'] }}
+        onFilterChange={vi.fn()}
+      />
+    );
+    expect(screen.getByText('Alice')).toBeInTheDocument();
+    expect(screen.getByText('Carol')).toBeInTheDocument();
+    expect(screen.queryByText('Bob')).not.toBeInTheDocument();
+  });
+
+  it('calls onFilterChange when a filter checkbox is toggled', async () => {
+    const handleFilterChange = vi.fn();
+    render(
+      <DataTable
+        columns={columns}
+        data={data}
+        filterState={{}}
+        onFilterChange={handleFilterChange}
+      />
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Filter by Role' }));
+    await userEvent.click(screen.getByLabelText('Admin'));
+    expect(handleFilterChange).toHaveBeenCalledWith({ role: ['Admin'] });
+  });
+});
+
+describe('DataTable – controlled expansion', () => {
+  it('respects expandedRowKeys prop', () => {
+    render(
+      <DataTable
+        columns={columns}
+        data={data}
+        rowKey={(r) => r.id}
+        expandedRowKeys={new Set([1])}
+        onExpansionChange={vi.fn()}
+        expandedRowRender={(row) => <div data-testid="expanded">{row.name} details</div>}
+      />
+    );
+    expect(screen.getByTestId('expanded')).toHaveTextContent('Alice details');
+    expect(screen.queryAllByTestId('expanded')).toHaveLength(1);
+  });
+
+  it('calls onExpansionChange when a row is clicked', async () => {
+    const handleExpansionChange = vi.fn();
+    render(
+      <DataTable
+        columns={columns}
+        data={data}
+        rowKey={(r) => r.id}
+        expandedRowKeys={new Set<string | number>()}
+        onExpansionChange={handleExpansionChange}
+        expandedRowRender={(row) => <div>{row.name} details</div>}
+      />
+    );
+    await userEvent.click(screen.getByText('Alice'));
+    expect(handleExpansionChange).toHaveBeenCalledWith(new Set([1]));
+  });
+});
+
+describe('DataTable – column visibility', () => {
+  it('renders a "Columns" toggle button when onColumnVisibilityChange is provided', () => {
+    render(
+      <DataTable columns={columns} data={data} onColumnVisibilityChange={vi.fn()} />
+    );
+    expect(screen.getByRole('button', { name: /toggle column visibility/i })).toBeInTheDocument();
+  });
+
+  it('hides columns listed in hiddenColumns', () => {
+    render(
+      <DataTable
+        columns={columns}
+        data={data}
+        hiddenColumns={['role']}
+        onColumnVisibilityChange={vi.fn()}
+      />
+    );
+    expect(screen.queryByText('Role')).not.toBeInTheDocument();
+    expect(screen.getByText('Name')).toBeInTheDocument();
+  });
+
+  it('toggles column visibility via the dropdown', async () => {
+    const handleChange = vi.fn();
+    render(
+      <DataTable
+        columns={columns}
+        data={data}
+        hiddenColumns={[]}
+        onColumnVisibilityChange={handleChange}
+      />
+    );
+    await userEvent.click(screen.getByRole('button', { name: /toggle column visibility/i }));
+    const dropdown = screen.getByRole('listbox', { name: /columns/i });
+    // Uncheck "Role" column
+    await userEvent.click(within(dropdown).getByLabelText('Role'));
+    expect(handleChange).toHaveBeenCalledWith(['role']);
+  });
+});
+
+describe('DataTable – density', () => {
+  it('renders without errors in compact density', () => {
+    render(<DataTable columns={columns} data={data} density="compact" />);
+    expect(screen.getByText('Alice')).toBeInTheDocument();
+  });
+
+  it('renders without errors in comfortable density', () => {
+    render(<DataTable columns={columns} data={data} density="comfortable" />);
+    expect(screen.getByText('Alice')).toBeInTheDocument();
+  });
+});
+
+describe('DataTable – toolbar slot', () => {
+  it('renders custom toolbar content', () => {
+    render(
+      <DataTable
+        columns={columns}
+        data={data}
+        toolbar={<button>Custom Action</button>}
+      />
+    );
+    expect(screen.getByRole('button', { name: 'Custom Action' })).toBeInTheDocument();
+  });
+});
+
+describe('DataTable – export CSV', () => {
+  it('renders Export CSV button when onExportCSV is provided', () => {
+    render(<DataTable columns={columns} data={data} onExportCSV={vi.fn()} />);
+    expect(screen.getByRole('button', { name: /export csv/i })).toBeInTheDocument();
+  });
+
+  it('calls onExportCSV with filtered data and visible columns when button is clicked', async () => {
+    const handleExport = vi.fn();
+    render(<DataTable columns={columns} data={data} onExportCSV={handleExport} />);
+    await userEvent.click(screen.getByRole('button', { name: /export csv/i }));
+    expect(handleExport).toHaveBeenCalledWith(data, columns);
+  });
+
+  it('passes only filtered rows to onExportCSV when filters are active', async () => {
+    const handleExport = vi.fn();
+    render(
+      <DataTable
+        columns={columns}
+        data={data}
+        filterState={{ role: ['Admin'] }}
+        onFilterChange={vi.fn()}
+        onExportCSV={handleExport}
+      />
+    );
+    await userEvent.click(screen.getByRole('button', { name: /export csv/i }));
+    const exportedRows = handleExport.mock.calls[0][0] as Person[];
+    expect(exportedRows.every((r) => r.role === 'Admin')).toBe(true);
+  });
+});
+
+describe('DataTable – server-side mode', () => {
+  it('bypasses client-side column filters when serverSide is true', async () => {
+    render(<DataTable columns={columns} data={data} serverSide />);
+    await userEvent.click(screen.getByRole('button', { name: 'Filter by Role' }));
+    await userEvent.click(screen.getByLabelText('Admin'));
+    // All rows still present because server-side
+    expect(screen.getByText('Bob')).toBeInTheDocument();
+    expect(screen.getByText('Dave')).toBeInTheDocument();
+  });
+});
+
+describe('DataTable – column features (sticky / align / headerRender)', () => {
+  it('applies text-align style to cells when align is set', () => {
+    const centeredCols: DataTableColumn<Person>[] = [
+      { key: 'id', header: 'ID', align: 'center' },
+      ...columns.slice(1),
+    ];
+    const { container } = render(<DataTable columns={centeredCols} data={data} />);
+    const idHeader = container.querySelector('th[style*="text-align: center"]');
+    expect(idHeader).toBeInTheDocument();
+  });
+
+  it('renders custom header via headerRender', () => {
+    const customCols: DataTableColumn<Person>[] = [
+      {
+        key: 'id',
+        header: 'ID',
+        headerRender: () => <span data-testid="custom-header">Custom ID</span>,
+      },
+      ...columns.slice(1),
+    ];
+    render(<DataTable columns={customCols} data={data} />);
+    expect(screen.getByTestId('custom-header')).toBeInTheDocument();
+  });
+});
+
 describe('a11y (axe)', () => {
   it('has no detectable axe violations in default render', async () => {
     const { container } = render(<DataTable columns={columns} data={data} />);

@@ -1,5 +1,10 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { DataTableProps, DataTableRecord, SortDirection } from './DataTable.types';
+import {
+  DataTableProps,
+  DataTableRecord,
+  DataTableSortState,
+  SortDirection,
+} from './DataTable.types';
 import { classNames } from '../../utils';
 import styles from './DataTable.module.css';
 
@@ -36,6 +41,12 @@ function buildPageItems(current: number, total: number, windowSize = 2): (number
   return items;
 }
 
+/** Density CSS class map */
+const DENSITY_CLASS: Record<string, string> = {
+  compact: styles.densityCompact,
+  comfortable: styles.densityComfortable,
+};
+
 export function DataTable<T extends DataTableRecord = DataTableRecord>({
   columns,
   data,
@@ -53,31 +64,84 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
   selectedRows,
   onSelectionChange,
   bulkActions,
+  // Controlled sort
+  sortState: controlledSortState,
+  onSortChange,
+  // Controlled filters
+  filterState: controlledFilterState,
+  onFilterChange,
+  // Controlled expansion
+  expandedRowKeys: controlledExpandedKeys,
+  onExpansionChange,
+  // Global filter
+  globalFilter: controlledGlobalFilter,
+  onGlobalFilterChange,
+  // Server-side
+  serverSide = false,
+  // Column visibility
+  hiddenColumns: controlledHiddenColumns,
+  onColumnVisibilityChange,
+  // Layout
+  density = 'default',
+  stickyHeader = false,
+  // Toolbar
+  toolbar,
+  // Export
+  onExportCSV,
 }: Readonly<DataTableProps<T>>) {
   /** Key of the column whose filter dropdown is currently open */
   const [openFilterKey, setOpenFilterKey] = useState<string | null>(null);
 
-  /**
-   * Active filter selections: maps column key → array of selected string values.
-   * An empty (or absent) array means "no filter applied" for that column.
-   */
-  const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});
+  /** Internal filter state (used when filterState prop is not provided) */
+  const [internalFilters, setInternalFilters] = useState<Record<string, string[]>>({});
 
-  /** Current sort state: { key, direction } */
-  const [sortState, setSortState] = useState<{ key: string; direction: SortDirection } | null>(
-    null
+  /** Internal sort state (used when sortState prop is not provided) */
+  const [internalSortState, setInternalSortState] = useState<DataTableSortState | null>(null);
+
+  /** Internal expanded row keys (used when expandedRowKeys prop is not provided) */
+  const [internalExpandedKeys, setInternalExpandedKeys] = useState<Set<string | number>>(
+    new Set()
   );
 
-  /** Set of expanded row keys */
-  const [expandedKeys, setExpandedKeys] = useState<Set<string | number>>(new Set());
+  /** Internal global filter (used when globalFilter prop is not provided) */
+  const [internalGlobalFilter, setInternalGlobalFilter] = useState('');
+
+  /** Internal hidden columns (used when hiddenColumns prop is not provided) */
+  const [internalHiddenColumns, setInternalHiddenColumns] = useState<string[]>([]);
+
+  /** Whether the column-visibility dropdown is open */
+  const [columnToggleOpen, setColumnToggleOpen] = useState(false);
 
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  /** Close the open dropdown when user clicks outside the table wrapper */
+  /** The live announce message for screen readers */
+  const [announceMsg, setAnnounceMsg] = useState('');
+
+  // ── Derive active (controlled vs uncontrolled) state ──────────────────────
+
+  const activeFilters = controlledFilterState !== undefined ? controlledFilterState : internalFilters;
+  const activeSortState =
+    controlledSortState !== undefined ? controlledSortState : internalSortState;
+  const activeExpandedKeys =
+    controlledExpandedKeys !== undefined ? controlledExpandedKeys : internalExpandedKeys;
+  const activeGlobalFilter =
+    controlledGlobalFilter !== undefined ? controlledGlobalFilter : internalGlobalFilter;
+  const activeHiddenColumns =
+    controlledHiddenColumns !== undefined ? controlledHiddenColumns : internalHiddenColumns;
+
+  // ── Visible columns (column visibility toggle) ────────────────────────────
+
+  const visibleColumns = useMemo(
+    () => columns.filter((col) => !activeHiddenColumns.includes(col.key)),
+    [columns, activeHiddenColumns]
+  );
+
+  /** Close dropdowns when user clicks outside the table wrapper */
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
         setOpenFilterKey(null);
+        setColumnToggleOpen(false);
       }
     };
     document.addEventListener('mousedown', handleOutsideClick);
@@ -97,27 +161,38 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
   /** Toggle the filter dropdown for a column */
   const toggleFilterDropdown = useCallback((key: string) => {
     setOpenFilterKey((prev) => (prev === key ? null : key));
+    setColumnToggleOpen(false);
   }, []);
 
   /** Toggle a single checkbox value inside a column's filter */
-  const toggleFilterValue = useCallback((columnKey: string, value: string) => {
-    setActiveFilters((prev) => {
-      const current = prev[columnKey] ?? [];
+  const toggleFilterValue = useCallback(
+    (columnKey: string, value: string) => {
+      const current = activeFilters[columnKey] ?? [];
       const next = current.includes(value)
         ? current.filter((v) => v !== value)
         : [...current, value];
-      return { ...prev, [columnKey]: next };
-    });
-  }, []);
+      const nextState = { ...activeFilters, [columnKey]: next };
+      if (controlledFilterState === undefined) setInternalFilters(nextState);
+      onFilterChange?.(nextState);
+    },
+    [activeFilters, controlledFilterState, onFilterChange]
+  );
 
   /** Clear all selected values for a column filter */
-  const clearFilter = useCallback((columnKey: string) => {
-    setActiveFilters((prev) => ({ ...prev, [columnKey]: [] }));
-  }, []);
+  const clearFilter = useCallback(
+    (columnKey: string) => {
+      const nextState = { ...activeFilters, [columnKey]: [] };
+      if (controlledFilterState === undefined) setInternalFilters(nextState);
+      onFilterChange?.(nextState);
+    },
+    [activeFilters, controlledFilterState, onFilterChange]
+  );
 
-  /** Rows after applying all active filters (AND across columns, OR within a column) */
+  /** Rows after applying all active column filters (AND across columns, OR within) + global filter */
   const filteredData = useMemo(() => {
-    return data.filter((row) =>
+    if (serverSide) return data;
+
+    const columnFiltered = data.filter((row) =>
       columns.every((col) => {
         if (!col.filterable) return true;
         const selected = activeFilters[col.key];
@@ -125,17 +200,27 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
         return selected.includes(String(row[col.key] ?? ''));
       })
     );
-  }, [data, columns, activeFilters]);
+
+    if (!activeGlobalFilter.trim()) return columnFiltered;
+
+    const lower = activeGlobalFilter.toLowerCase();
+    return columnFiltered.filter((row) =>
+      visibleColumns.some((col) => String(row[col.key] ?? '').toLowerCase().includes(lower))
+    );
+  }, [data, columns, visibleColumns, activeFilters, activeGlobalFilter, serverSide]);
 
   /** Handle sortable column header click */
   const handleSortClick = useCallback(
     (key: string) => {
       const nextDirection: SortDirection =
-        sortState?.key === key && sortState.direction === 'asc' ? 'desc' : 'asc';
-      setSortState({ key, direction: nextDirection });
+        activeSortState?.key === key && activeSortState.direction === 'asc' ? 'desc' : 'asc';
+      const nextState: DataTableSortState = { key, direction: nextDirection };
+      if (controlledSortState === undefined) setInternalSortState(nextState);
       onSort?.(key, nextDirection);
+      onSortChange?.(nextState);
+      setAnnounceMsg(`Sorted by ${key} ${nextDirection === 'asc' ? 'ascending' : 'descending'}`);
     },
-    [sortState, onSort]
+    [activeSortState, controlledSortState, onSort, onSortChange]
   );
 
   /** Derive the row key for a given row + index */
@@ -147,17 +232,19 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
   );
 
   /** Toggle expanded state for a row */
-  const toggleExpandedRow = useCallback((key: string | number) => {
-    setExpandedKeys((prev) => {
-      const next = new Set(prev);
+  const toggleExpandedRow = useCallback(
+    (key: string | number) => {
+      const next = new Set(activeExpandedKeys);
       if (next.has(key)) {
         next.delete(key);
       } else {
         next.add(key);
       }
-      return next;
-    });
-  }, []);
+      if (controlledExpandedKeys === undefined) setInternalExpandedKeys(next);
+      onExpansionChange?.(next);
+    },
+    [activeExpandedKeys, controlledExpandedKeys, onExpansionChange]
+  );
 
   /** Handle row click */
   const handleRowClick = useCallback(
@@ -215,20 +302,148 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
     [activeSelected, isControlledSelection, onSelectionChange]
   );
 
+  // ── Global filter handler ──────────────────────────────────────────────────
+
+  const handleGlobalFilterChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      if (controlledGlobalFilter === undefined) setInternalGlobalFilter(value);
+      onGlobalFilterChange?.(value);
+    },
+    [controlledGlobalFilter, onGlobalFilterChange]
+  );
+
+  // ── Column visibility handler ──────────────────────────────────────────────
+
+  const toggleColumnVisibility = useCallback(
+    (key: string) => {
+      const next = activeHiddenColumns.includes(key)
+        ? activeHiddenColumns.filter((k) => k !== key)
+        : [...activeHiddenColumns, key];
+      if (controlledHiddenColumns === undefined) setInternalHiddenColumns(next);
+      onColumnVisibilityChange?.(next);
+    },
+    [activeHiddenColumns, controlledHiddenColumns, onColumnVisibilityChange]
+  );
+
+  // ── Export handler ─────────────────────────────────────────────────────────
+
+  const handleExportCSV = useCallback(() => {
+    onExportCSV?.(filteredData, visibleColumns);
+  }, [onExportCSV, filteredData, visibleColumns]);
+
   // ── Pagination ─────────────────────────────────────────────────────────────
 
   const totalPages = pagination
     ? Math.max(1, Math.ceil(pagination.totalCount / pagination.pageSize))
     : 1;
 
-  const colSpan = columns.length + (selectable ? 1 : 0);
+  const colSpan = visibleColumns.length + (selectable ? 1 : 0);
 
   // ── Skeleton rows ──────────────────────────────────────────────────────────
 
   const skeletonRows = useMemo(() => Array.from({ length: skeletonRowCount }), [skeletonRowCount]);
 
+  // ── Toolbar visibility ─────────────────────────────────────────────────────
+
+  const showBuiltinGlobalSearch =
+    onGlobalFilterChange !== undefined || controlledGlobalFilter !== undefined;
+  const showColumnToggle =
+    onColumnVisibilityChange !== undefined || controlledHiddenColumns !== undefined;
+  const showExportBtn = onExportCSV !== undefined;
+  const showToolbarRow =
+    toolbar !== undefined || showBuiltinGlobalSearch || showColumnToggle || showExportBtn;
+
   return (
-    <div ref={wrapperRef} className={classNames(styles.wrapper, className)} style={style}>
+    <div
+      ref={wrapperRef}
+      className={classNames(
+        styles.wrapper,
+        density !== 'default' ? DENSITY_CLASS[density] : undefined,
+        className
+      )}
+      style={style}
+    >
+      {/* Screen-reader live announcement region */}
+      <div className={styles.srAnnounce} aria-live="polite" aria-atomic="true">
+        {announceMsg}
+      </div>
+
+      {/* Toolbar row */}
+      {showToolbarRow && (
+        <div className={styles.toolbar}>
+          {toolbar && <div className={styles.toolbarCustom}>{toolbar}</div>}
+          <div className={styles.toolbarBuiltin}>
+            {showBuiltinGlobalSearch && (
+              <div className={styles.globalSearchWrapper}>
+                <label htmlFor="dt-global-search" className={styles.srOnly}>
+                  Search
+                </label>
+                <input
+                  id="dt-global-search"
+                  type="search"
+                  className={styles.globalSearch}
+                  placeholder="Search…"
+                  value={activeGlobalFilter}
+                  onChange={handleGlobalFilterChange}
+                  aria-label="Global search"
+                />
+              </div>
+            )}
+            {showColumnToggle && (
+              <div className={styles.columnToggleWrapper}>
+                <button
+                  type="button"
+                  className={classNames(
+                    styles.toolbarButton,
+                    columnToggleOpen ? styles.toolbarButtonActive : undefined
+                  )}
+                  aria-expanded={columnToggleOpen}
+                  aria-haspopup="listbox"
+                  aria-label="Toggle column visibility"
+                  onClick={() => {
+                    setColumnToggleOpen((v) => !v);
+                    setOpenFilterKey(null);
+                  }}
+                >
+                  Columns
+                </button>
+                {columnToggleOpen && (
+                  <div className={styles.columnToggleDropdown} role="listbox" aria-label="Columns">
+                    {columns.map((col) => {
+                      const isVisible = !activeHiddenColumns.includes(col.key);
+                      const checkId = `dt-col-toggle-${col.key}`;
+                      return (
+                        <label key={col.key} htmlFor={checkId} className={styles.columnToggleItem}>
+                          <input
+                            id={checkId}
+                            type="checkbox"
+                            checked={isVisible}
+                            onChange={() => toggleColumnVisibility(col.key)}
+                            className={styles.filterCheckbox}
+                          />
+                          <span>{col.header}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+            {showExportBtn && (
+              <button
+                type="button"
+                className={styles.toolbarButton}
+                onClick={handleExportCSV}
+                aria-label="Export CSV"
+              >
+                Export CSV
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Bulk actions bar */}
       {selectable && activeSelected.size > 0 && bulkActions && (
         <div className={styles.bulkActionsBar}>
@@ -238,8 +453,8 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
       )}
 
       <div className={styles.tableContainer}>
-        <table className={styles.table}>
-          <thead>
+        <table className={styles.table} role="grid">
+          <thead className={classNames(stickyHeader ? styles.stickyHeader : undefined)}>
             <tr>
               {selectable && (
                 <th className={classNames(styles.th, styles.checkboxTh)}>
@@ -255,22 +470,43 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
                   />
                 </th>
               )}
-              {columns.map((col) => {
+              {visibleColumns.map((col) => {
                 const isOpen = openFilterKey === col.key;
                 const selectedValues = activeFilters[col.key] ?? [];
                 const isActive = selectedValues.length > 0;
                 const uniqueValues = col.filterable ? getUniqueValues(col.key) : [];
-                const isSorted = sortState?.key === col.key;
-                const sortDir = isSorted ? sortState!.direction : null;
+                const isSorted = activeSortState?.key === col.key;
+                const sortDir = isSorted ? activeSortState!.direction : null;
+
+                const stickyStyle: React.CSSProperties =
+                  col.sticky === 'left'
+                    ? { position: 'sticky', left: 0, zIndex: 2 }
+                    : col.sticky === 'right'
+                      ? { position: 'sticky', right: 0, zIndex: 2 }
+                      : {};
+                const alignStyle: React.CSSProperties =
+                  col.align ? { textAlign: col.align } : {};
 
                 return (
                   <th
                     key={col.key}
-                    className={styles.th}
-                    style={col.width === undefined ? undefined : { width: col.width }}
+                    className={classNames(
+                      styles.th,
+                      col.sticky ? styles.stickyCol : undefined
+                    )}
+                    aria-sort={
+                      isSorted ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined
+                    }
+                    style={{
+                      ...(col.width === undefined ? undefined : { width: col.width }),
+                      ...stickyStyle,
+                      ...alignStyle,
+                    }}
                   >
                     <div className={styles.thContent}>
-                      {col.sortable ? (
+                      {col.headerRender ? (
+                        col.headerRender(col)
+                      ) : col.sortable ? (
                         <button
                           type="button"
                           className={classNames(
@@ -371,7 +607,7 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
                       <div className={classNames(styles.skeletonCell, styles.skeletonCheckbox)} />
                     </td>
                   )}
-                  {columns.map((col) => (
+                  {visibleColumns.map((col) => (
                     <td key={col.key} className={styles.td}>
                       <div className={styles.skeletonCell} />
                     </td>
@@ -388,7 +624,7 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
               filteredData.map((row, rowIndex) => {
                 const key = getRowKey(row, rowIndex);
                 const isSelected = activeSelected.has(key);
-                const isExpanded = expandedKeys.has(key);
+                const isExpanded = activeExpandedKeys.has(key);
                 const isClickable = !!(onRowClick || expandedRowRender);
 
                 return (
@@ -417,11 +653,30 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
                           />
                         </td>
                       )}
-                      {columns.map((col) => (
-                        <td key={col.key} className={styles.td}>
-                          {col.render ? col.render(row[col.key], row) : String(row[col.key] ?? '')}
-                        </td>
-                      ))}
+                      {visibleColumns.map((col) => {
+                        const stickyStyle: React.CSSProperties =
+                          col.sticky === 'left'
+                            ? { position: 'sticky', left: 0 }
+                            : col.sticky === 'right'
+                              ? { position: 'sticky', right: 0 }
+                              : {};
+                        const alignStyle: React.CSSProperties =
+                          col.align ? { textAlign: col.align } : {};
+                        return (
+                          <td
+                            key={col.key}
+                            className={classNames(
+                              styles.td,
+                              col.sticky ? styles.stickyCol : undefined
+                            )}
+                            style={{ ...stickyStyle, ...alignStyle }}
+                          >
+                            {col.render
+                              ? col.render(row[col.key], row)
+                              : String(row[col.key] ?? '')}
+                          </td>
+                        );
+                      })}
                     </tr>
                     {expandedRowRender && isExpanded && (
                       <tr className={styles.expandedRow}>
