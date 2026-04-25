@@ -22,12 +22,12 @@
 
 .description {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--zp-color-text-secondary, #6b7280);
 }
 
 .message {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--zp-color-text-secondary, #6b7280);
 }
 
 .message.error {
@@ -48,7 +48,7 @@
 
 .counter {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--zp-color-text-secondary, #6b7280);
   align-self: flex-end;
 }
 

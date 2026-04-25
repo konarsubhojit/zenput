@@ -20,6 +20,19 @@ export interface FieldContextValue {
   disabled?: boolean;
   /** Current validation state. */
   validationState?: ValidationState;
+  /**
+   * IDs of currently-mounted described-by elements (FieldDescription + FieldMessage).
+   * Used to build `aria-describedby` only for elements that are actually rendered.
+   */
+  describedByIds: readonly string[];
+  /** Called by FieldDescription on mount. */
+  onDescriptionMount: () => void;
+  /** Called by FieldDescription on unmount. */
+  onDescriptionUnmount: () => void;
+  /** Called by FieldMessage on mount. */
+  onMessageMount: () => void;
+  /** Called by FieldMessage on unmount. */
+  onMessageUnmount: () => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -37,7 +50,7 @@ export interface FieldProps {
    */
   description?: string;
   /**
-   * Shorthand message text. Requires `validationState` to determine styling.
+   * Shorthand message text. Requires `validationState` (or `error`) to determine styling.
    * Renders a `<FieldMessage>` automatically.
    */
   message?: string;
@@ -45,9 +58,15 @@ export interface FieldProps {
   validationState?: ValidationState;
   /** Convenience alias – sets `validationState` to `'error'`. */
   error?: boolean;
-  /** Whether the field is required (adds asterisk to label, aria-required to control). */
+  /**
+   * Whether the field is required.
+   * Adds an asterisk to the label and sets `aria-required` on the control.
+   */
   required?: boolean;
-  /** Whether the field is disabled (aria-disabled on control). */
+  /**
+   * Whether the field is disabled.
+   * Sets `aria-disabled` and the native `disabled` attribute on supported controls.
+   */
   disabled?: boolean;
   /**
    * Explicit id for the control element (input, select, textarea…).
@@ -81,16 +100,31 @@ export interface FieldControlInjectedProps {
   'aria-invalid'?: true;
   'aria-required'?: true;
   'aria-disabled'?: true;
+  disabled?: true;
 }
 
+/**
+ * Own (non-forwarded) props for FieldControl.
+ * Use `FieldControlProps<C>` for the full set of component props.
+ */
 export interface FieldControlOwnProps {
-  /** Element type to render (default: `'div'`). Pass a component like `TextInput`. */
-  as?: React.ElementType;
   className?: string;
   style?: React.CSSProperties;
   children?: React.ReactNode;
-  [key: string]: unknown;
 }
+
+/**
+ * Full prop type for `<FieldControl as={C}>`.
+ * Combines own props, the `as` prop, and the element/component's own props
+ * (minus the injected ARIA/id props which are managed by the Field context).
+ */
+export type FieldControlProps<C extends React.ElementType = 'div'> = FieldControlOwnProps & {
+  /** Element type to render (default: `'div'`). Pass a component like `TextInput`. */
+  as?: C;
+} & Omit<
+    React.ComponentPropsWithoutRef<C>,
+    keyof FieldControlInjectedProps | keyof FieldControlOwnProps | 'as'
+  >;
 
 // ---------------------------------------------------------------------------
 // FieldDescription

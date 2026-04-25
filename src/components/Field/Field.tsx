@@ -1,9 +1,9 @@
-import React, { createContext, useContext, useId, useMemo } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useId, useMemo, useState } from 'react';
 import { classNames } from '../../utils';
 import styles from './Field.module.css';
 import type {
   FieldContextValue,
-  FieldControlOwnProps,
+  FieldControlProps,
   FieldCounterProps,
   FieldDescriptionProps,
   FieldLabelProps,
@@ -38,7 +38,7 @@ function useFieldContext(): FieldContextValue {
  * @example Simple usage
  * ```tsx
  * <Field label="Name" required error={hasError} message="Name is required">
- *   <TextInput />
+ *   <FieldControl as={TextInput} />
  * </Field>
  * ```
  *
@@ -77,6 +77,23 @@ export function Field({
     ? 'error'
     : validationState;
 
+  // Track which described-by elements are actually mounted so aria-describedby
+  // only references IDs that exist in the DOM.
+  const [descriptionMounted, setDescriptionMounted] = useState(false);
+  const [messageMounted, setMessageMounted] = useState(false);
+
+  const onDescriptionMount = useCallback(() => setDescriptionMounted(true), []);
+  const onDescriptionUnmount = useCallback(() => setDescriptionMounted(false), []);
+  const onMessageMount = useCallback(() => setMessageMounted(true), []);
+  const onMessageUnmount = useCallback(() => setMessageMounted(false), []);
+
+  const describedByIds = useMemo<readonly string[]>(() => {
+    const ids: string[] = [];
+    if (descriptionMounted) ids.push(descriptionId);
+    if (messageMounted) ids.push(messageId);
+    return ids;
+  }, [descriptionMounted, messageMounted, descriptionId, messageId]);
+
   const ctx = useMemo<FieldContextValue>(
     () => ({
       controlId,
@@ -86,8 +103,26 @@ export function Field({
       required,
       disabled,
       validationState: resolvedValidationState,
+      describedByIds,
+      onDescriptionMount,
+      onDescriptionUnmount,
+      onMessageMount,
+      onMessageUnmount,
     }),
-    [controlId, descriptionId, messageId, counterId, required, disabled, resolvedValidationState]
+    [
+      controlId,
+      descriptionId,
+      messageId,
+      counterId,
+      required,
+      disabled,
+      resolvedValidationState,
+      describedByIds,
+      onDescriptionMount,
+      onDescriptionUnmount,
+      onMessageMount,
+      onMessageUnmount,
+    ]
   );
 
   return (
@@ -99,11 +134,9 @@ export function Field({
         {label && <FieldLabel>{label}</FieldLabel>}
         {children}
         {description && <FieldDescription>{description}</FieldDescription>}
-        {message && (
-          <FieldMessage type={resolvedValidationState as FieldMessageType | undefined}>
-            {message}
-          </FieldMessage>
-        )}
+        {/* Omit the `type` prop so FieldMessage resolves styling from validationState context,
+            avoiding the risk of forwarding 'default' as an invalid message type. */}
+        {message && <FieldMessage>{message}</FieldMessage>}
       </div>
     </FieldContext.Provider>
   );
@@ -145,6 +178,9 @@ FieldLabel.displayName = 'FieldLabel';
 // FieldControl
 // ---------------------------------------------------------------------------
 
+/** Intrinsic HTML elements that accept the native `disabled` attribute. */
+const DISABLED_ELEMENTS = new Set(['input', 'select', 'textarea', 'button', 'fieldset', 'optgroup', 'option']);
+
 /**
  * Wraps a form control and injects the correct `id` and ARIA attributes from
  * the surrounding `<Field>` context.
@@ -158,28 +194,37 @@ FieldLabel.displayName = 'FieldLabel';
  * render the control directly as a child of `<Field>` and use
  * `useFieldControlProps()` to spread the props manually.
  */
-export function FieldControl({
-  as: Component = 'div',
+export function FieldControl<C extends React.ElementType = 'div'>({
+  as,
   className,
   style,
   children,
   ...rest
-}: FieldControlOwnProps): React.ReactElement {
-  const { controlId, descriptionId, messageId, required, disabled, validationState } =
+}: FieldControlProps<C>): React.ReactElement {
+  const Component = (as ?? 'div') as React.ElementType;
+  const { controlId, describedByIds, required, disabled, validationState } =
     useFieldContext();
 
-  // Build an aria-describedby that merges description and message ids when
-  // they exist. We can't know at this point whether the description/message
-  // elements are actually rendered, so we include both and let the browser
-  // silently ignore any that don't match an element.
-  const ariaDescribedBy = [descriptionId, messageId].join(' ');
+  // Merge any consumer-supplied aria-describedby with field-generated ids.
+  const restRecord = rest as Record<string, unknown>;
+  const consumerDescribedBy =
+    typeof restRecord['aria-describedby'] === 'string'
+      ? restRecord['aria-describedby'].trim().split(/\s+/).filter(Boolean)
+      : [];
+  const mergedDescribedByIds = [...consumerDescribedBy, ...describedByIds];
+  const ariaDescribedBy = mergedDescribedByIds.length > 0 ? mergedDescribedByIds.join(' ') : undefined;
+
+  // Only set native `disabled` for elements/components that support it.
+  const supportsNativeDisabled =
+    typeof Component === 'string' ? DISABLED_ELEMENTS.has(Component) : true;
 
   const injected: Record<string, unknown> = {
     id: controlId,
-    'aria-describedby': ariaDescribedBy,
+    ...(ariaDescribedBy !== undefined ? { 'aria-describedby': ariaDescribedBy } : {}),
     ...(validationState === 'error' ? { 'aria-invalid': true as const } : {}),
     ...(required ? { 'aria-required': true as const } : {}),
     ...(disabled ? { 'aria-disabled': true as const } : {}),
+    ...(disabled && supportsNativeDisabled ? { disabled: true } : {}),
   };
 
   return (
@@ -207,7 +252,12 @@ export function FieldDescription({
   className,
   ...rest
 }: FieldDescriptionProps): React.ReactElement {
-  const { descriptionId } = useFieldContext();
+  const { descriptionId, onDescriptionMount, onDescriptionUnmount } = useFieldContext();
+
+  useEffect(() => {
+    onDescriptionMount();
+    return onDescriptionUnmount;
+  }, [onDescriptionMount, onDescriptionUnmount]);
 
   return (
     <span
@@ -240,6 +290,9 @@ function resolveMessageType(
  * Validation/status message displayed below the control.
  * The `type` prop controls the colour; it defaults to the Field's
  * `validationState`.
+ *
+ * Uses `role="alert"` for errors (assertive) and `role="status"` for all
+ * other types (polite) to avoid noisy screen-reader interruptions.
  */
 export function FieldMessage({
   type,
@@ -247,14 +300,22 @@ export function FieldMessage({
   className,
   ...rest
 }: FieldMessageProps): React.ReactElement {
-  const { messageId, validationState } = useFieldContext();
+  const { messageId, validationState, onMessageMount, onMessageUnmount } = useFieldContext();
   const resolvedType = resolveMessageType(type, validationState);
+
+  useEffect(() => {
+    onMessageMount();
+    return onMessageUnmount;
+  }, [onMessageMount, onMessageUnmount]);
+
+  // Use assertive "alert" only for errors; polite "status" for all other types.
+  const role = resolvedType === 'error' ? 'alert' : 'status';
 
   return (
     <span
       {...rest}
       id={messageId}
-      role="alert"
+      role={role}
       className={classNames(
         styles.message,
         resolvedType ? styles[resolvedType] : undefined,
@@ -316,12 +377,16 @@ export function useFieldControlProps() {
   const ctx = useContext(FieldContext);
   if (!ctx) return {};
 
-  const { controlId, descriptionId, messageId, required, disabled, validationState } = ctx;
+  const { controlId, describedByIds, required, disabled, validationState } = ctx;
+  const ariaDescribedBy = describedByIds.length > 0 ? describedByIds.join(' ') : undefined;
+
   return {
     id: controlId,
-    'aria-describedby': `${descriptionId} ${messageId}`,
+    ...(ariaDescribedBy !== undefined ? { 'aria-describedby': ariaDescribedBy } : {}),
     ...(validationState === 'error' ? { 'aria-invalid': true as const } : {}),
     ...(required ? { 'aria-required': true as const } : {}),
     ...(disabled ? { 'aria-disabled': true as const } : {}),
+    ...(disabled ? { disabled: true as const } : {}),
   };
 }
+

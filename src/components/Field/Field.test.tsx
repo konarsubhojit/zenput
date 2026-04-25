@@ -11,6 +11,7 @@ import {
   FieldCounter,
   useFieldControlProps,
 } from './Field';
+import styles from './Field.module.css';
 import { expectNoA11yViolations } from '../../test-utils/axe';
 
 // ---------------------------------------------------------------------------
@@ -113,13 +114,15 @@ describe('FieldLabel', () => {
 // ---------------------------------------------------------------------------
 
 describe('FieldControl', () => {
-  it('renders a div by default', () => {
+  it('renders a div by default with the injected id', () => {
     const { container } = render(
       <Field id="ctrl">
         <FieldControl>content</FieldControl>
       </Field>
     );
-    expect(container.querySelector('div')).toBeInTheDocument();
+    const control = container.querySelector('#ctrl');
+    expect(control).toBeInTheDocument();
+    expect(control?.tagName).toBe('DIV');
   });
 
   it('renders as a custom element type', () => {
@@ -158,13 +161,49 @@ describe('FieldControl', () => {
     expect(container.querySelector('input')).toHaveAttribute('aria-required', 'true');
   });
 
-  it('sets aria-disabled when disabled', () => {
+  it('sets aria-disabled and native disabled when disabled', () => {
     const { container } = render(
       <Field id="my-field" disabled>
         <FieldControl as="input" />
       </Field>
     );
-    expect(container.querySelector('input')).toHaveAttribute('aria-disabled', 'true');
+    const input = container.querySelector('input');
+    expect(input).toHaveAttribute('aria-disabled', 'true');
+    expect(input).toBeDisabled();
+  });
+
+  it('merges consumer-provided aria-describedby with field-generated ids', () => {
+    const { container } = render(
+      <Field id="my-field">
+        <FieldControl as="input" aria-describedby="external-hint" />
+        <FieldDescription>hint</FieldDescription>
+      </Field>
+    );
+    const input = container.querySelector('input');
+    const describedBy = input?.getAttribute('aria-describedby') ?? '';
+    expect(describedBy).toContain('external-hint');
+    expect(describedBy).toContain('my-field-description');
+  });
+
+  it('sets aria-describedby only when description or message are rendered', () => {
+    const { container } = render(
+      <Field id="my-field">
+        <FieldControl as="input" />
+      </Field>
+    );
+    // No FieldDescription or FieldMessage — aria-describedby should not be set
+    expect(container.querySelector('input')).not.toHaveAttribute('aria-describedby');
+  });
+
+  it('sets aria-describedby when FieldDescription is rendered', () => {
+    const { container } = render(
+      <Field id="my-field">
+        <FieldControl as="input" />
+        <FieldDescription>A description</FieldDescription>
+      </Field>
+    );
+    const input = container.querySelector('input');
+    expect(input?.getAttribute('aria-describedby')).toContain('my-field-description');
   });
 
   it('throws if rendered outside Field', () => {
@@ -222,7 +261,7 @@ describe('FieldMessage', () => {
     expect(screen.getByText('Error occurred')).toBeInTheDocument();
   });
 
-  it('has role="alert"', () => {
+  it('uses role="alert" for error messages', () => {
     render(
       <Field validationState="error">
         <FieldMessage>Error</FieldMessage>
@@ -232,7 +271,40 @@ describe('FieldMessage', () => {
     expect(screen.getByRole('alert')).toBeInTheDocument();
   });
 
-  it('renders error message with role="alert"', () => {
+  it('uses role="status" for success messages', () => {
+    render(
+      <Field>
+        <FieldMessage type="success">Success</FieldMessage>
+        <input />
+      </Field>
+    );
+    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(screen.getByText('Success')).toBeInTheDocument();
+  });
+
+  it('uses role="status" for warning messages', () => {
+    render(
+      <Field>
+        <FieldMessage type="warning">Warning</FieldMessage>
+        <input />
+      </Field>
+    );
+    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(screen.getByText('Warning')).toBeInTheDocument();
+  });
+
+  it('uses role="status" when validationState is warning', () => {
+    render(
+      <Field validationState="warning">
+        <FieldMessage>Watch out</FieldMessage>
+        <input />
+      </Field>
+    );
+    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(screen.getByText('Watch out')).toBeInTheDocument();
+  });
+
+  it('uses role="alert" for explicit error type', () => {
     render(
       <Field>
         <FieldMessage type="error">Error</FieldMessage>
@@ -241,39 +313,6 @@ describe('FieldMessage', () => {
     );
     expect(screen.getByRole('alert')).toBeInTheDocument();
     expect(screen.getByText('Error')).toBeInTheDocument();
-  });
-
-  it('renders success message with role="alert"', () => {
-    render(
-      <Field>
-        <FieldMessage type="success">Success</FieldMessage>
-        <input />
-      </Field>
-    );
-    expect(screen.getByRole('alert')).toBeInTheDocument();
-    expect(screen.getByText('Success')).toBeInTheDocument();
-  });
-
-  it('renders warning message with role="alert"', () => {
-    render(
-      <Field>
-        <FieldMessage type="warning">Warning</FieldMessage>
-        <input />
-      </Field>
-    );
-    expect(screen.getByRole('alert')).toBeInTheDocument();
-    expect(screen.getByText('Warning')).toBeInTheDocument();
-  });
-
-  it('renders message when using Field validationState', () => {
-    render(
-      <Field validationState="warning">
-        <FieldMessage>Watch out</FieldMessage>
-        <input />
-      </Field>
-    );
-    expect(screen.getByRole('alert')).toBeInTheDocument();
-    expect(screen.getByText('Watch out')).toBeInTheDocument();
   });
 
   it('throws if rendered outside Field', () => {
@@ -298,25 +337,24 @@ describe('FieldCounter', () => {
     expect(screen.getByText('5/20')).toBeInTheDocument();
   });
 
-  it('counter text turns red when current > max (has aria-live)', () => {
+  it('applies exceeded style when current > max', () => {
     render(
       <Field>
         <FieldCounter current={25} max={20} />
         <input />
       </Field>
     );
-    const counter = screen.getByText('25/20');
-    expect(counter).toHaveAttribute('aria-live', 'polite');
+    expect(screen.getByText('25/20')).toHaveClass(styles.exceeded);
   });
 
-  it('does not apply exceeded class when current <= max', () => {
+  it('does not apply exceeded style when current <= max', () => {
     render(
       <Field>
         <FieldCounter current={10} max={20} />
         <input />
       </Field>
     );
-    expect(screen.getByText('10/20')).not.toHaveClass('exceeded');
+    expect(screen.getByText('10/20')).not.toHaveClass(styles.exceeded);
   });
 
   it('has aria-live="polite"', () => {
@@ -351,7 +389,7 @@ describe('useFieldControlProps', () => {
     expect(result).toEqual({});
   });
 
-  it('returns id and aria-describedby inside Field', () => {
+  it('returns id inside Field', () => {
     let result: Record<string, unknown> = {};
     function Consumer() {
       result = useFieldControlProps();
@@ -363,7 +401,35 @@ describe('useFieldControlProps', () => {
       </Field>
     );
     expect(result.id).toBe('test-field');
-    expect(typeof result['aria-describedby']).toBe('string');
+  });
+
+  it('does not include aria-describedby when no description or message is rendered', () => {
+    let result: Record<string, unknown> = {};
+    function Consumer() {
+      result = useFieldControlProps();
+      return null;
+    }
+    render(
+      <Field id="test-field">
+        <Consumer />
+      </Field>
+    );
+    expect(result['aria-describedby']).toBeUndefined();
+  });
+
+  it('includes aria-describedby when FieldDescription is rendered', () => {
+    let result: Record<string, unknown> = {};
+    function Consumer() {
+      result = useFieldControlProps();
+      return null;
+    }
+    render(
+      <Field id="test-field">
+        <Consumer />
+        <FieldDescription>A description</FieldDescription>
+      </Field>
+    );
+    expect(result['aria-describedby']).toContain('test-field-description');
   });
 
   it('includes aria-invalid when validationState is error', () => {
@@ -378,6 +444,21 @@ describe('useFieldControlProps', () => {
       </Field>
     );
     expect(result['aria-invalid']).toBe(true);
+  });
+
+  it('includes disabled when Field is disabled', () => {
+    let result: Record<string, unknown> = {};
+    function Consumer() {
+      result = useFieldControlProps();
+      return null;
+    }
+    render(
+      <Field id="test-field" disabled>
+        <Consumer />
+      </Field>
+    );
+    expect(result['aria-disabled']).toBe(true);
+    expect(result['disabled']).toBe(true);
   });
 });
 
