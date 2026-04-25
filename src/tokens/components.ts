@@ -123,6 +123,20 @@ export interface TooltipTokens {
 }
 
 /**
+ * Menu component tokens
+ */
+export interface MenuTokens {
+  bg?: string;
+  border?: string;
+  radius?: string;
+  shadow?: string;
+  itemPaddingY?: string;
+  itemPaddingX?: string;
+  itemHoverBg?: string;
+  separatorColor?: string;
+}
+
+/**
  * DataTable component tokens
  */
 export interface DataTableTokens {
@@ -232,6 +246,17 @@ export const defaultComponentTokens = {
     rowBgSelected: 'var(--zp-color-brand-subtle)',
     rowBgAlt: 'var(--zp-color-surface)',
   } satisfies DataTableTokens,
+
+  menu: {
+    bg: 'var(--zp-color-surface)',
+    border: 'var(--zp-color-border)',
+    radius: 'var(--zp-radius-md)',
+    shadow: 'var(--zp-shadow-lg)',
+    itemPaddingY: 'var(--zp-space-2)',
+    itemPaddingX: 'var(--zp-space-3)',
+    itemHoverBg: 'var(--zp-color-surface-raised)',
+    separatorColor: 'var(--zp-color-border-subtle)',
+  } satisfies MenuTokens,
 };
 
 /**
@@ -244,6 +269,7 @@ export interface ComponentTokensMap {
   dialog?: Partial<DialogTokens>;
   tooltip?: Partial<TooltipTokens>;
   dataTable?: Partial<DataTableTokens>;
+  menu?: Partial<MenuTokens>;
 }
 
 export type ComponentName = keyof ComponentTokensMap;
