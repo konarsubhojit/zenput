@@ -11,6 +11,10 @@ export default defineConfig({
     alias: {
       zenput: path.resolve(__dirname, '../src'),
     },
+    // Force Vite/Rolldown to always resolve react from demo's own node_modules.
+    // Without this, Rolldown fails when bundling ../src/** files that import
+    // 'react' — it cannot walk up past the repo root into demo/node_modules.
+    dedupe: ['react', 'react-dom', 'react/jsx-runtime'],
   },
   server: {
     port: 5173,
