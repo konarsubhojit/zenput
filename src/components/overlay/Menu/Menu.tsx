@@ -15,6 +15,7 @@ import { Portal } from '../../Portal';
 import { useIsomorphicLayoutEffect } from '../internal/useIsomorphicLayoutEffect';
 import { assignRef } from '../internal/assignRef';
 import { getMenuItems, isOutsideAll } from '../internal/menuUtils';
+import { useMenuKeyboardNav } from '../internal/useMenuKeyboardNav';
 import styles from './Menu.module.css';
 
 export type MenuSide = 'top' | 'bottom' | 'left' | 'right';
@@ -188,8 +189,6 @@ export const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
     const { open, setOpen, triggerRef, contentId } = ctx;
     const contentElRef = useRef<HTMLDivElement | null>(null);
     const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
-    const typeAheadBuffer = useRef('');
-    const typeAheadTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const mergedRef = useCallback(
       (node: HTMLDivElement | null) => {
@@ -237,12 +236,6 @@ export const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
     }, [open]);
 
     useEffect(() => {
-      return () => {
-        if (typeAheadTimer.current) clearTimeout(typeAheadTimer.current);
-      };
-    }, []);
-
-    useEffect(() => {
       if (!open) return;
       const handleMouseDown = (e: MouseEvent) => {
         const target = e.target as Node;
@@ -258,74 +251,16 @@ export const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
       };
     }, [open, setOpen, triggerRef]);
 
-    const handleKeyDown = useCallback(
-      (e: React.KeyboardEvent<HTMLDivElement>) => {
-        const el = contentElRef.current;
-        if (!el) return;
-        const items = getMenuItems(el);
-        const focused = document.activeElement as HTMLElement | null;
-        const currentIndex = focused ? items.indexOf(focused) : -1;
+    const handleClose = useCallback(() => {
+      setOpen(false);
+      triggerRef.current?.focus();
+    }, [setOpen, triggerRef]);
 
-        switch (e.key) {
-          case 'ArrowDown': {
-            e.preventDefault();
-            const next = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
-            items[next]?.focus();
-            break;
-          }
-          case 'ArrowUp': {
-            e.preventDefault();
-            const prev = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
-            items[prev]?.focus();
-            break;
-          }
-          case 'Home': {
-            e.preventDefault();
-            items[0]?.focus();
-            break;
-          }
-          case 'End': {
-            e.preventDefault();
-            items[items.length - 1]?.focus();
-            break;
-          }
-          case 'Enter':
-          case ' ': {
-            e.preventDefault();
-            if (focused && items.includes(focused)) {
-              focused.click();
-            }
-            break;
-          }
-          case 'Tab': {
-            e.preventDefault();
-            setOpen(false);
-            triggerRef.current?.focus();
-            break;
-          }
-          case 'Escape': {
-            e.preventDefault();
-            setOpen(false);
-            triggerRef.current?.focus();
-            break;
-          }
-          default: {
-            if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-              typeAheadBuffer.current += e.key.toLowerCase();
-              if (typeAheadTimer.current) clearTimeout(typeAheadTimer.current);
-              typeAheadTimer.current = setTimeout(() => {
-                typeAheadBuffer.current = '';
-              }, 500);
-              const match = items.find((item) =>
-                (item.textContent ?? '').trim().toLowerCase().startsWith(typeAheadBuffer.current)
-              );
-              match?.focus();
-            }
-          }
-        }
-      },
-      [setOpen, triggerRef]
-    );
+    const handleKeyDown = useMenuKeyboardNav({
+      containerRef: contentElRef,
+      onTab: handleClose,
+      onEscape: handleClose,
+    });
 
     if (!open) return null;
 
@@ -670,8 +605,6 @@ export const MenuSubContent = forwardRef<HTMLDivElement, MenuSubContentProps>(
 
     const contentElRef = useRef<HTMLDivElement | null>(null);
     const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
-    const typeAheadBuffer = useRef('');
-    const typeAheadTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const mergedRef = useCallback(
       (node: HTMLDivElement | null) => {
@@ -730,77 +663,27 @@ export const MenuSubContent = forwardRef<HTMLDivElement, MenuSubContentProps>(
       return () => document.removeEventListener('mousedown', handleMouseDown);
     }, [subCtx]);
 
-    const handleKeyDown = useCallback(
-      (e: React.KeyboardEvent<HTMLDivElement>) => {
-        const el = contentElRef.current;
-        if (!el) return;
-        const items = getMenuItems(el);
-        const focused = document.activeElement as HTMLElement | null;
-        const currentIndex = focused ? items.indexOf(focused) : -1;
-
-        switch (e.key) {
-          case 'ArrowLeft':
-          case 'Escape': {
-            e.preventDefault();
-            e.stopPropagation();
-            subCtx.setOpen(false);
-            subCtx.triggerRef.current?.focus();
-            break;
-          }
-          case 'ArrowDown': {
-            e.preventDefault();
-            const next = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
-            items[next]?.focus();
-            break;
-          }
-          case 'ArrowUp': {
-            e.preventDefault();
-            const prev = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
-            items[prev]?.focus();
-            break;
-          }
-          case 'Home': {
-            e.preventDefault();
-            items[0]?.focus();
-            break;
-          }
-          case 'End': {
-            e.preventDefault();
-            items[items.length - 1]?.focus();
-            break;
-          }
-          case 'Enter':
-          case ' ': {
-            e.preventDefault();
-            if (focused && items.includes(focused)) {
-              focused.click();
-            }
-            break;
-          }
-          case 'Tab': {
-            e.preventDefault();
-            subCtx.setOpen(false);
-            parentCtx?.setOpen(false);
-            parentCtx?.triggerRef.current?.focus();
-            break;
-          }
-          default: {
-            if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-              typeAheadBuffer.current += e.key.toLowerCase();
-              if (typeAheadTimer.current) clearTimeout(typeAheadTimer.current);
-              typeAheadTimer.current = setTimeout(() => {
-                typeAheadBuffer.current = '';
-              }, 500);
-              const match = items.find((item) =>
-                (item.textContent ?? '').trim().toLowerCase().startsWith(typeAheadBuffer.current)
-              );
-              match?.focus();
-            }
-          }
-        }
+    const handleEscapeOrArrowLeft = useCallback(
+      (e: React.KeyboardEvent) => {
+        e.stopPropagation();
+        subCtx.setOpen(false);
+        subCtx.triggerRef.current?.focus();
       },
-      [subCtx, parentCtx]
+      [subCtx]
     );
+
+    const handleTab = useCallback(() => {
+      subCtx.setOpen(false);
+      parentCtx?.setOpen(false);
+      parentCtx?.triggerRef.current?.focus();
+    }, [subCtx, parentCtx]);
+
+    const handleKeyDown = useMenuKeyboardNav({
+      containerRef: contentElRef,
+      onTab: handleTab,
+      onEscape: handleEscapeOrArrowLeft,
+      onArrowLeft: handleEscapeOrArrowLeft,
+    });
 
     if (!subCtx.open) return null;
 

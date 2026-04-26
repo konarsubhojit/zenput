@@ -188,6 +188,39 @@ describe('Menu', () => {
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
+  it('Enter on focused item calls onSelect exactly once (no double invocation)', () => {
+    const onSelect = vi.fn();
+    render(
+      <Menu>
+        <MenuTrigger>Open Menu</MenuTrigger>
+        <MenuContent aria-label="Actions">
+          <MenuItem onSelect={onSelect}>Apple</MenuItem>
+          <MenuItem>Banana</MenuItem>
+        </MenuContent>
+      </Menu>
+    );
+
+    act(() => {
+      screen.getByRole('button', { name: 'Open Menu' }).click();
+    });
+
+    const items = screen.getAllByRole('menuitem');
+
+    act(() => {
+      items[0].focus();
+    });
+
+    // Simulate the real user flow: keydown fires on the focused item and
+    // bubbles up to the menu container. The item's own onKeyDown handles
+    // it (calling e.preventDefault()), so the container must not call
+    // focused.click() on top of it.
+    act(() => {
+      fireEvent.keyDown(items[0], { key: 'Enter', bubbles: true });
+    });
+
+    expect(onSelect).toHaveBeenCalledTimes(1);
+  });
+
   it('Tab closes menu', () => {
     render(<BasicMenu />);
     act(() => {

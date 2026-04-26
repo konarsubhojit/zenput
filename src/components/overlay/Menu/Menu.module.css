@@ -10,7 +10,8 @@
   overflow: hidden;
 }
 
-.item {
+/* Shared base for all item-like rows (item, checkbox, radio, subTrigger). */
+.menuItemBase {
   display: flex;
   align-items: center;
   gap: var(--zp-space-2);
@@ -24,9 +25,13 @@
   line-height: var(--zp-line-height-normal);
 }
 
-.item:hover,
-.item:focus {
+.menuItemBase:hover,
+.menuItemBase:focus {
   background-color: var(--zp-component-menu-item-hover-bg, var(--zp-color-surface-raised));
+}
+
+.item {
+  composes: menuItemBase;
 }
 
 .itemDestructive {
@@ -69,60 +74,15 @@
 }
 
 .checkboxItem {
-  display: flex;
-  align-items: center;
-  gap: var(--zp-space-2);
-  padding: var(--zp-component-menu-item-padding-y, var(--zp-space-2)) var(--zp-component-menu-item-padding-x, var(--zp-space-3));
-  cursor: default;
-  user-select: none;
-  outline: none;
-  border-radius: var(--zp-radius-sm);
-  color: var(--zp-color-text-primary);
-  font-size: var(--zp-font-size-sm);
-  line-height: var(--zp-line-height-normal);
-}
-
-.checkboxItem:hover,
-.checkboxItem:focus {
-  background-color: var(--zp-component-menu-item-hover-bg, var(--zp-color-surface-raised));
+  composes: menuItemBase;
 }
 
 .radioItem {
-  display: flex;
-  align-items: center;
-  gap: var(--zp-space-2);
-  padding: var(--zp-component-menu-item-padding-y, var(--zp-space-2)) var(--zp-component-menu-item-padding-x, var(--zp-space-3));
-  cursor: default;
-  user-select: none;
-  outline: none;
-  border-radius: var(--zp-radius-sm);
-  color: var(--zp-color-text-primary);
-  font-size: var(--zp-font-size-sm);
-  line-height: var(--zp-line-height-normal);
-}
-
-.radioItem:hover,
-.radioItem:focus {
-  background-color: var(--zp-component-menu-item-hover-bg, var(--zp-color-surface-raised));
+  composes: menuItemBase;
 }
 
 .subTrigger {
-  display: flex;
-  align-items: center;
-  gap: var(--zp-space-2);
-  padding: var(--zp-component-menu-item-padding-y, var(--zp-space-2)) var(--zp-component-menu-item-padding-x, var(--zp-space-3));
-  cursor: default;
-  user-select: none;
-  outline: none;
-  border-radius: var(--zp-radius-sm);
-  color: var(--zp-color-text-primary);
-  font-size: var(--zp-font-size-sm);
-  line-height: var(--zp-line-height-normal);
-}
-
-.subTrigger:hover,
-.subTrigger:focus {
-  background-color: var(--zp-component-menu-item-hover-bg, var(--zp-color-surface-raised));
+  composes: menuItemBase;
 }
 
 .subTriggerArrow {
