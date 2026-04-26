@@ -14,16 +14,12 @@ import React, {
 } from 'react';
 import { CalendarProps } from './Calendar.types';
 import { classNames } from '../../utils';
+import { toLocalDateStr } from '../_pickerInternals';
 import styles from './Calendar.module.css';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-/** Timezone-safe local date-only string in YYYY-MM-DD format. */
-function toLocalDateStr(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
 
 function isSameDay(a: Date, b: Date): boolean {
   return (
@@ -357,7 +353,7 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>(function Calen
       <table
         ref={gridRef}
         role="grid"
-        aria-label={ariaLabel ?? (ariaLabelledby ? undefined : undefined)}
+        aria-label={ariaLabel}
         aria-labelledby={ariaLabel ? undefined : (ariaLabelledby ?? titleId)}
         className={styles.grid}
         onKeyDown={handleGridKeyDown}

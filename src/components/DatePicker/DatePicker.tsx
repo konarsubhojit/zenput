@@ -12,6 +12,11 @@ import { classNames } from '../../utils';
 import { useFormField } from '../../hooks';
 import inputStyles from '../DateInput/DateInput.module.css';
 import styles from './DatePicker.module.css';
+import {
+  ClearButton,
+  PickerFieldShell,
+  toLocalDateStr,
+} from '../_pickerInternals';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -24,11 +29,6 @@ function formatDate(
 ): string {
   if (!date) return '';
   return new Intl.DateTimeFormat(locale, opts).format(date);
-}
-
-/** Timezone-safe local date-only string in YYYY-MM-DD format. */
-function toLocalDateStr(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 function isTouchDevice(): boolean {
@@ -176,24 +176,6 @@ export function DatePicker({
     [value, locale, format]
   );
 
-  const activeMessage =
-    validationState === 'error'
-      ? errorMessage
-      : validationState === 'success'
-        ? successMessage
-        : validationState === 'warning'
-          ? warningMessage
-          : helperText;
-
-  const messageClass =
-    validationState === 'error'
-      ? inputStyles.errorText
-      : validationState === 'success'
-        ? inputStyles.successText
-        : validationState === 'warning'
-          ? inputStyles.warningText
-          : inputStyles.helperText;
-
   // On touch devices with nativeFallback, render the simpler DateInput.
   if (nativeFallback && isTouchDevice()) {
     return (
@@ -223,30 +205,25 @@ export function DatePicker({
   }
 
   return (
-    <div
-      className={classNames(
-        inputStyles.wrapper,
-        inputStyles[size],
-        inputStyles[variant],
-        validationState !== 'default' ? inputStyles[validationState] : undefined,
-        wrapperClassName
-      )}
-      style={wrapperStyle}
+    <PickerFieldShell
+      helperId={helperId}
+      label={label}
+      required={required}
+      validationState={validationState}
+      size={size}
+      variant={variant}
+      helperText={helperText}
+      errorMessage={errorMessage}
+      successMessage={successMessage}
+      warningMessage={warningMessage}
+      labelProps={labelProps}
+      wrapperClassName={wrapperClassName}
+      wrapperStyle={wrapperStyle}
+      labelClassName={labelClassName}
+      labelStyle={labelStyle}
+      helperTextClassName={helperTextClassName}
+      helperTextStyle={helperTextStyle}
     >
-      {label && (
-        <label
-          {...labelProps}
-          className={classNames(
-            inputStyles.label,
-            required ? inputStyles.required : undefined,
-            labelClassName
-          )}
-          style={labelStyle}
-        >
-          {label}
-        </label>
-      )}
-
       <Popover>
         <div className={classNames(inputStyles.inputWrapper, styles.triggerWrap)}>
           <PopoverTrigger
@@ -268,18 +245,11 @@ export function DatePicker({
             </span>
           </PopoverTrigger>
           {clearable && value && !disabled && !readOnly && (
-            <button
-              type="button"
+            <ClearButton
               aria-label="Clear date"
               className={styles.clearBtn}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-              onClick={handleClear}
-            >
-              \u2715
-            </button>
+              onClear={handleClear}
+            />
           )}
         </div>
 
@@ -296,17 +266,7 @@ export function DatePicker({
           />
         </PopoverContent>
       </Popover>
-
-      {activeMessage && (
-        <span
-          id={helperId}
-          className={classNames(messageClass, helperTextClassName)}
-          style={helperTextStyle}
-        >
-          {activeMessage}
-        </span>
-      )}
-    </div>
+    </PickerFieldShell>
   );
 }
 

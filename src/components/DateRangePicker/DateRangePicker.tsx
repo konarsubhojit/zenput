@@ -15,6 +15,7 @@ import { classNames } from '../../utils';
 import { useFormField } from '../../hooks';
 import inputStyles from '../DateInput/DateInput.module.css';
 import styles from './DateRangePicker.module.css';
+import { ClearButton, PickerFieldShell } from '../_pickerInternals';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -268,49 +269,26 @@ export function DateRangePicker({
     return `${startStr} \u2013 ${endStr}`;
   }, [value, locale, format]);
 
-  const activeMessage =
-    validationState === 'error'
-      ? errorMessage
-      : validationState === 'success'
-        ? successMessage
-        : validationState === 'warning'
-          ? warningMessage
-          : helperText;
-
-  const messageClass =
-    validationState === 'error'
-      ? inputStyles.errorText
-      : validationState === 'success'
-        ? inputStyles.successText
-        : validationState === 'warning'
-          ? inputStyles.warningText
-          : inputStyles.helperText;
-
   return (
-    <div
-      className={classNames(
-        inputStyles.wrapper,
-        inputStyles[size],
-        inputStyles[variant],
-        validationState !== 'default' ? inputStyles[validationState] : undefined,
-        wrapperClassName
-      )}
-      style={wrapperStyle}
+    <PickerFieldShell
+      helperId={helperId}
+      label={label}
+      required={required}
+      validationState={validationState}
+      size={size}
+      variant={variant}
+      helperText={helperText}
+      errorMessage={errorMessage}
+      successMessage={successMessage}
+      warningMessage={warningMessage}
+      labelProps={labelProps}
+      wrapperClassName={wrapperClassName}
+      wrapperStyle={wrapperStyle}
+      labelClassName={labelClassName}
+      labelStyle={labelStyle}
+      helperTextClassName={helperTextClassName}
+      helperTextStyle={helperTextStyle}
     >
-      {label && (
-        <label
-          {...labelProps}
-          className={classNames(
-            inputStyles.label,
-            required ? inputStyles.required : undefined,
-            labelClassName
-          )}
-          style={labelStyle}
-        >
-          {label}
-        </label>
-      )}
-
       <Popover>
         <div className={classNames(inputStyles.inputWrapper, styles.triggerWrap)}>
           <PopoverTrigger
@@ -331,22 +309,11 @@ export function DateRangePicker({
             </span>
           </PopoverTrigger>
           {clearable && (value.start || value.end) && !disabled && !readOnly && (
-            <button
-              type="button"
+            <ClearButton
               aria-label="Clear date range"
               className={styles.clearBtn}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleClear(e);
-              }}
-            >
-              \u2715
-            </button>
+              onClear={handleClear}
+            />
           )}
         </div>
 
@@ -373,17 +340,7 @@ export function DateRangePicker({
           />
         </PopoverContent>
       </Popover>
-
-      {activeMessage && (
-        <span
-          id={helperId}
-          className={classNames(messageClass, helperTextClassName)}
-          style={helperTextStyle}
-        >
-          {activeMessage}
-        </span>
-      )}
-    </div>
+    </PickerFieldShell>
   );
 }
 
