@@ -21,3 +21,4 @@ export { OTPInputSection } from './OTPInput';
 export { AutoCompleteSection } from './AutoComplete';
 export { MoneyInputSection } from './MoneyInput';
 export { DataTableSection } from './DataTable';
+export { ToastSection } from './Toast';

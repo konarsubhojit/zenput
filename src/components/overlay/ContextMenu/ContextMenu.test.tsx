@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, act, fireEvent } from '@testing-library/react';
+import { render, screen, act, fireEvent, RenderResult } from '@testing-library/react';
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { ContextMenu, ContextMenuTrigger, ContextMenuContent } from './ContextMenu';
 import { MenuItem } from '../Menu/Menu';
@@ -7,6 +7,8 @@ import { MenuItem } from '../Menu/Menu';
 afterEach(() => {
   document.querySelectorAll('[data-zenput-portal]').forEach((el) => el.remove());
 });
+
+// ── Shared fixture ─────────────────────────────────────────────────────────
 
 function BasicContextMenu() {
   return (
@@ -23,6 +25,24 @@ function BasicContextMenu() {
   );
 }
 
+interface OpenResult extends RenderResult {
+  menuEl: HTMLElement;
+  items: HTMLElement[];
+}
+
+/** Renders BasicContextMenu and fires a contextmenu event to open it. */
+function renderOpenContextMenu(x = 100, y = 200): OpenResult {
+  const utils = render(<BasicContextMenu />) as OpenResult;
+  act(() => {
+    fireEvent.contextMenu(screen.getByTestId('trigger-area'), { clientX: x, clientY: y });
+  });
+  utils.menuEl = screen.getByRole('menu');
+  utils.items = screen.getAllByRole('menuitem');
+  return utils;
+}
+
+// ── Tests ──────────────────────────────────────────────────────────────────
+
 describe('ContextMenu', () => {
   it('is hidden by default', () => {
     render(<BasicContextMenu />);
@@ -30,34 +50,24 @@ describe('ContextMenu', () => {
   });
 
   it('opens on right-click (contextmenu event)', () => {
-    render(<BasicContextMenu />);
-    act(() => {
-      fireEvent.contextMenu(screen.getByTestId('trigger-area'), { clientX: 100, clientY: 200 });
-    });
+    renderOpenContextMenu();
+    expect(screen.getByRole('menu')).toBeInTheDocument();
+  });
+
+  it('positions menu at right-click coordinates', () => {
+    renderOpenContextMenu(150, 250);
     expect(screen.getByRole('menu')).toBeInTheDocument();
   });
 
   it('closes on Escape', () => {
-    render(<BasicContextMenu />);
-    act(() => {
-      fireEvent.contextMenu(screen.getByTestId('trigger-area'), { clientX: 100, clientY: 200 });
-    });
-    expect(screen.getByRole('menu')).toBeInTheDocument();
-    act(() => {
-      fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' });
-    });
+    const { menuEl } = renderOpenContextMenu();
+    act(() => { fireEvent.keyDown(menuEl, { key: 'Escape' }); });
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
   it('closes on Tab', () => {
-    render(<BasicContextMenu />);
-    act(() => {
-      fireEvent.contextMenu(screen.getByTestId('trigger-area'), { clientX: 100, clientY: 200 });
-    });
-    expect(screen.getByRole('menu')).toBeInTheDocument();
-    act(() => {
-      fireEvent.keyDown(screen.getByRole('menu'), { key: 'Tab' });
-    });
+    const { menuEl } = renderOpenContextMenu();
+    act(() => { fireEvent.keyDown(menuEl, { key: 'Tab' }); });
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
@@ -72,58 +82,44 @@ describe('ContextMenu', () => {
       fireEvent.contextMenu(screen.getByTestId('trigger-area'), { clientX: 50, clientY: 50 });
     });
     expect(screen.getByRole('menu')).toBeInTheDocument();
+    act(() => { fireEvent.mouseDown(screen.getByTestId('outside')); });
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  });
 
+  it('closes on outside touchstart', () => {
+    render(
+      <div>
+        <BasicContextMenu />
+        <button data-testid="outside">Outside</button>
+      </div>
+    );
     act(() => {
-      fireEvent.mouseDown(screen.getByTestId('outside'));
+      fireEvent.contextMenu(screen.getByTestId('trigger-area'), { clientX: 50, clientY: 50 });
     });
-
+    expect(screen.getByRole('menu')).toBeInTheDocument();
+    act(() => { fireEvent.touchStart(screen.getByTestId('outside')); });
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
   it('ArrowDown moves focus to next item', () => {
-    render(<BasicContextMenu />);
-    act(() => {
-      fireEvent.contextMenu(screen.getByTestId('trigger-area'), { clientX: 100, clientY: 200 });
-    });
-    const menuEl = screen.getByRole('menu');
-    const items = screen.getAllByRole('menuitem');
+    const { menuEl, items } = renderOpenContextMenu();
     act(() => { items[0].focus(); });
     act(() => { fireEvent.keyDown(menuEl, { key: 'ArrowDown' }); });
     expect(document.activeElement).toBe(items[1]);
   });
 
   it('ArrowUp moves focus to previous item', () => {
-    render(<BasicContextMenu />);
-    act(() => {
-      fireEvent.contextMenu(screen.getByTestId('trigger-area'), { clientX: 100, clientY: 200 });
-    });
-    const menuEl = screen.getByRole('menu');
-    const items = screen.getAllByRole('menuitem');
+    const { menuEl, items } = renderOpenContextMenu();
     act(() => { items[1].focus(); });
     act(() => { fireEvent.keyDown(menuEl, { key: 'ArrowUp' }); });
     expect(document.activeElement).toBe(items[0]);
   });
 
   it('type-ahead jumps to matching item', () => {
-    render(<BasicContextMenu />);
-    act(() => {
-      fireEvent.contextMenu(screen.getByTestId('trigger-area'), { clientX: 100, clientY: 200 });
-    });
-    const menuEl = screen.getByRole('menu');
-    const items = screen.getAllByRole('menuitem');
+    const { menuEl, items } = renderOpenContextMenu();
     act(() => { items[0].focus(); });
     act(() => { fireEvent.keyDown(menuEl, { key: 'p' }); });
-    const pasteItem = items.find((el) => el.textContent === 'Paste');
-    expect(document.activeElement).toBe(pasteItem);
-  });
-
-  it('positions menu at right-click coordinates', () => {
-    render(<BasicContextMenu />);
-    act(() => {
-      fireEvent.contextMenu(screen.getByTestId('trigger-area'), { clientX: 150, clientY: 250 });
-    });
-    const menu = screen.getByRole('menu');
-    expect(menu).toBeInTheDocument();
+    expect(document.activeElement).toBe(items.find((el) => el.textContent === 'Paste'));
   });
 
   it('Space key activates focused item', () => {
@@ -156,30 +152,10 @@ describe('ContextMenu', () => {
         fireEvent.contextMenu(screen.getByTestId('trigger-area'), { clientX: 50, clientY: 50 });
       });
       act(() => { vi.runAllTimers(); });
-      const items = screen.getAllByRole('menuitem');
-      expect(document.activeElement).toBe(items[0]);
+      expect(document.activeElement).toBe(screen.getAllByRole('menuitem')[0]);
     } finally {
       vi.useRealTimers();
     }
-  });
-
-  it('closes on outside touchstart', () => {
-    render(
-      <div>
-        <BasicContextMenu />
-        <button data-testid="outside">Outside</button>
-      </div>
-    );
-    act(() => {
-      fireEvent.contextMenu(screen.getByTestId('trigger-area'), { clientX: 50, clientY: 50 });
-    });
-    expect(screen.getByRole('menu')).toBeInTheDocument();
-
-    act(() => {
-      fireEvent.touchStart(screen.getByTestId('outside'));
-    });
-
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
   it('ContextMenu controlled open/close via open prop', () => {
