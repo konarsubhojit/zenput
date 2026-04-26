@@ -8,11 +8,12 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { useIsomorphicLayoutEffect } from '../internal/useIsomorphicLayoutEffect';
 import { classNames } from '../../../utils';
 import { useDisclosure } from '../../../hooks/useDisclosure';
 import { Portal } from '../../Portal';
 import { assignRef } from '../internal/assignRef';
+import { useIsomorphicLayoutEffect } from '../internal/useIsomorphicLayoutEffect';
+import { getMenuItems, isOutsideAll } from '../internal/menuUtils';
 import { MenuContext } from '../Menu/Menu';
 import styles from './ContextMenu.module.css';
 
@@ -22,15 +23,6 @@ interface ContextMenuContextValue {
 }
 
 const ContextMenuContext = React.createContext<ContextMenuContextValue | null>(null);
-
-function getMenuItems(container: HTMLElement): HTMLElement[] {
-  const all = container.querySelectorAll<HTMLElement>(
-    '[role="menuitem"],[role="menuitemcheckbox"],[role="menuitemradio"]'
-  );
-  return Array.from(all).filter(
-    (el) => el.getAttribute('aria-disabled') !== 'true' && !el.hasAttribute('data-disabled')
-  );
-}
 
 export interface ContextMenuProps {
   open?: boolean;
@@ -177,8 +169,7 @@ export const ContextMenuContent = forwardRef<HTMLDivElement, ContextMenuContentP
       if (!open) return;
       const handleMouseDown = (e: MouseEvent) => {
         const target = e.target as Node;
-        const content = contentElRef.current;
-        if (content && !content.contains(target)) {
+        if (isOutsideAll(target, [contentElRef.current])) {
           setOpen(false);
         }
       };

@@ -14,6 +14,7 @@ import { useDisclosure } from '../../../hooks/useDisclosure';
 import { Portal } from '../../Portal';
 import { useIsomorphicLayoutEffect } from '../internal/useIsomorphicLayoutEffect';
 import { assignRef } from '../internal/assignRef';
+import { getMenuItems, isOutsideAll } from '../internal/menuUtils';
 import styles from './Menu.module.css';
 
 export type MenuSide = 'top' | 'bottom' | 'left' | 'right';
@@ -87,15 +88,6 @@ function computePosition(
   top = Math.max(4, Math.min(top, vh - content.height - 4));
 
   return { top, left };
-}
-
-function getMenuItems(container: HTMLElement): HTMLElement[] {
-  const all = container.querySelectorAll<HTMLElement>(
-    '[role="menuitem"],[role="menuitemcheckbox"],[role="menuitemradio"]'
-  );
-  return Array.from(all).filter(
-    (el) => el.getAttribute('aria-disabled') !== 'true' && !el.hasAttribute('data-disabled')
-  );
 }
 
 export interface MenuProps {
@@ -254,12 +246,7 @@ export const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
       if (!open) return;
       const handleMouseDown = (e: MouseEvent) => {
         const target = e.target as Node;
-        const content = contentElRef.current;
-        const trigger = triggerRef.current;
-        if (
-          content && !content.contains(target) &&
-          trigger && !trigger.contains(target)
-        ) {
+        if (isOutsideAll(target, [contentElRef.current, triggerRef.current])) {
           setOpen(false);
         }
       };
@@ -735,12 +722,7 @@ export const MenuSubContent = forwardRef<HTMLDivElement, MenuSubContentProps>(
       if (!subCtx.open) return;
       const handleMouseDown = (e: MouseEvent) => {
         const target = e.target as Node;
-        const content = contentElRef.current;
-        const trigger = subCtx.triggerRef.current;
-        if (
-          content && !content.contains(target) &&
-          trigger && !trigger.contains(target)
-        ) {
+        if (isOutsideAll(target, [contentElRef.current, subCtx.triggerRef.current])) {
           subCtx.setOpen(false);
         }
       };
