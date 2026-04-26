@@ -1,4 +1,13 @@
-import React, { createContext, useContext, useMemo, CSSProperties } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  CSSProperties,
+} from 'react';
 import {
   buildCssVariables,
   cssVar,
@@ -8,6 +17,12 @@ import {
   DensityScale,
   ComponentTokensMap,
 } from '../tokens';
+
+/**
+ * User-facing color mode. Extends {@link ThemeMode} with `'system'`,
+ * which resolves to `'light'` or `'dark'` based on the OS preference.
+ */
+export type ColorMode = ThemeMode | 'system';
 
 /**
  * Theme override shape.
@@ -38,8 +53,11 @@ export interface Theme {
   disabledText?: string;
 
   // ---- Design-system overrides ----
-  /** Theme mode. Default: `'light'`. */
-  mode?: ThemeMode;
+  /**
+   * Theme mode. Default: `'light'`.
+   * Use `'system'` to follow the OS `prefers-color-scheme` preference.
+   */
+  mode?: ColorMode;
   /** Partial overrides on top of the mode's semantic palette. */
   semantic?: Partial<SemanticColors>;
   /** Density scale for component sizing. Default: `'normal'`. */
@@ -53,6 +71,18 @@ export interface Theme {
   cssVars?: Record<string, string>;
 }
 
+/** Value returned by {@link useColorMode}. */
+export interface ColorModeContextValue {
+  /** The user-selected mode (may be `'system'`). */
+  mode: ColorMode;
+  /** The actual applied mode after resolving `'system'`. */
+  resolvedMode: ThemeMode;
+  /** Set a new color mode (persists to storage if `storageKey` is set). */
+  setMode: (mode: ColorMode) => void;
+  /** Toggle between `'light'` and `'dark'`. */
+  toggle: () => void;
+}
+
 interface ThemeContextValue {
   theme: Theme;
   mode: ThemeMode;
@@ -60,6 +90,8 @@ interface ThemeContextValue {
   density: DensityScale;
   components: ComponentTokensMap;
   cssVars: Record<string, string>;
+  /** @internal — true when inside an actual ThemeProvider (vs. default context). */
+  _hasProvider: boolean;
 }
 
 const defaultMode: ThemeMode = 'light';
@@ -75,11 +107,81 @@ const ThemeContext = createContext<ThemeContextValue>({
   density: defaultDensity,
   components: defaultComponents,
   cssVars: defaultCssVars,
+  _hasProvider: false,
 });
+
+const defaultColorModeContextValue: ColorModeContextValue = {
+  mode: 'light',
+  resolvedMode: 'light',
+  setMode: () => {},
+  toggle: () => {},
+};
+
+const ColorModeContext = createContext<ColorModeContextValue>(defaultColorModeContextValue);
+
+const VALID_COLOR_MODES: ReadonlySet<string> = new Set<ColorMode>([
+  'light',
+  'dark',
+  'highContrast',
+  'system',
+]);
+
+function isValidColorMode(value: string): value is ColorMode {
+  return VALID_COLOR_MODES.has(value);
+}
+
+function getStorageApi(type: 'localStorage' | 'sessionStorage'): Storage | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window[type];
+  } catch {
+    return null;
+  }
+}
+
+/** Read the OS dark-mode preference safely (returns false in SSR). */
+function matchesDarkScheme(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  } catch {
+    return false;
+  }
+}
+
+/** Read the OS high-contrast preference safely (returns false in SSR). */
+function matchesHighContrast(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return window.matchMedia('(prefers-contrast: more)').matches;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Resolve a user-selected `ColorMode` to the `ThemeMode` actually applied.
+ *
+ * @param mode - User-selected mode (may be `'system'`).
+ * @param systemDark - Whether the OS prefers dark.
+ * @param systemHighContrast - Whether the OS prefers high contrast AND
+ *   `detectHighContrast` is enabled.
+ */
+function resolveColorMode(
+  mode: ColorMode,
+  systemDark: boolean,
+  systemHighContrast: boolean
+): ThemeMode {
+  if (mode !== 'system') return mode;
+  if (systemHighContrast) return 'highContrast';
+  return systemDark ? 'dark' : 'light';
+}
 
 /**
  * Create a resolved theme object. Accepts partial overrides and falls
  * back to the mode's default semantic palette.
+ *
+ * The `mode` field must be a resolved {@link ThemeMode} (not `'system'`).
  */
 export function createTheme(theme: Theme = {}): {
   mode: ThemeMode;
@@ -88,7 +190,8 @@ export function createTheme(theme: Theme = {}): {
   components: ComponentTokensMap;
   cssVars: Record<string, string>;
 } {
-  const mode = theme.mode ?? defaultMode;
+  const rawMode = (theme.mode ?? defaultMode) as string;
+  const mode: ThemeMode = rawMode === 'system' ? 'light' : (rawMode as ThemeMode);
   const density = theme.density ?? defaultDensity;
   const components = theme.components ?? defaultComponents;
   const semantic: SemanticColors = {
@@ -137,6 +240,21 @@ interface ThemeProviderProps {
    */
   as?: keyof React.JSX.IntrinsicElements | React.ElementType;
   children: React.ReactNode;
+  /**
+   * When set, the resolved color mode is persisted to storage under this
+   * key and rehydrated on mount. Works with `mode="system"`.
+   */
+  storageKey?: string;
+  /**
+   * Which Web Storage API to use for persistence. Default: `'localStorage'`.
+   */
+  storage?: 'localStorage' | 'sessionStorage';
+  /**
+   * When `true`, automatically switches to `'highContrast'` mode when the
+   * OS `prefers-contrast: more` media feature is active and
+   * `mode="system"`.
+   */
+  detectHighContrast?: boolean;
 }
 
 /** Referentially-stable default theme so consumers that omit `theme`
@@ -147,33 +265,169 @@ export function ThemeProvider({
   theme = EMPTY_THEME,
   as = 'div',
   children,
+  storageKey,
+  storage = 'localStorage',
+  detectHighContrast = false,
 }: Readonly<ThemeProviderProps>): React.JSX.Element {
-  const { mode, semantic, density, components, cssVars } = useMemo(
-    () => createTheme(theme),
-    [theme]
+  // ── Detect parent context (for nested providers) ───────────────────
+  const parentCtx = useContext(ThemeContext);
+  const isNested = parentCtx._hasProvider;
+
+  // ── Determine the initial color mode ──────────────────────────────
+  // Priority: stored value → theme.mode prop → inherited from parent → 'light'
+  const getInitialMode = useCallback((): ColorMode => {
+    if (storageKey) {
+      const stored = getStorageApi(storage)?.getItem(storageKey);
+      if (stored && isValidColorMode(stored)) return stored;
+    }
+    if (theme.mode) return theme.mode;
+    if (isNested) {
+      // Inherit parent's resolved mode so nested providers don't accidentally
+      // reset back to light.
+      return parentCtx.mode;
+    }
+    return 'light';
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps — intentionally stable init
+
+  const [colorMode, setColorModeState] = useState<ColorMode>(getInitialMode);
+
+  // ── System preference detection ────────────────────────────────────
+  const [systemDark, setSystemDark] = useState<boolean>(matchesDarkScheme);
+  const [systemHighContrast, setSystemHighContrast] = useState<boolean>(() =>
+    detectHighContrast ? matchesHighContrast() : false
   );
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    let darkMql: MediaQueryList | undefined;
+    let contrastMql: MediaQueryList | undefined;
+    let onDarkChange: ((e: MediaQueryListEvent) => void) | undefined;
+    let onContrastChange: ((e: MediaQueryListEvent) => void) | undefined;
+
+    try {
+      darkMql = window.matchMedia('(prefers-color-scheme: dark)');
+      onDarkChange = (e: MediaQueryListEvent) => setSystemDark(e.matches);
+      darkMql.addEventListener('change', onDarkChange);
+
+      if (detectHighContrast) {
+        contrastMql = window.matchMedia('(prefers-contrast: more)');
+        onContrastChange = (e: MediaQueryListEvent) => setSystemHighContrast(e.matches);
+        contrastMql.addEventListener('change', onContrastChange);
+      }
+
+      return () => {
+        if (darkMql && onDarkChange) darkMql.removeEventListener('change', onDarkChange);
+        if (contrastMql && onContrastChange)
+          contrastMql.removeEventListener('change', onContrastChange);
+      };
+    } catch {
+      // matchMedia not available (test env, old browser, etc.)
+      return undefined;
+    }
+  }, [detectHighContrast]);
+
+  // ── Sync colorMode when theme.mode prop changes ────────────────────
+  const prevThemeModeRef = useRef<ColorMode | undefined>(theme.mode);
+  useEffect(() => {
+    if (theme.mode !== prevThemeModeRef.current) {
+      prevThemeModeRef.current = theme.mode;
+      if (theme.mode) {
+        setColorModeState(theme.mode);
+      }
+    }
+  }, [theme.mode]);
+
+  // ── Resolve the actual ThemeMode ──────────────────────────────────
+  const resolvedMode = useMemo<ThemeMode>(
+    () => resolveColorMode(colorMode, systemDark, detectHighContrast && systemHighContrast),
+    [colorMode, systemDark, systemHighContrast, detectHighContrast]
+  );
+
+  // ── Build CSS variables for the resolved mode ─────────────────────
+  const { semantic, density, components, cssVars: rawCssVars } = useMemo(
+    () => createTheme({ ...theme, mode: resolvedMode }),
+    [theme, resolvedMode]
+  );
+
   const legacy = useMemo(() => legacyCssVars(theme), [theme]);
 
-  const mergedVars = useMemo(() => ({ ...cssVars, ...legacy }), [cssVars, legacy]);
+  // Merge: parent cssVars first (lowest priority), then child, then legacy
+  const mergedVars = useMemo(
+    () => ({
+      ...(isNested ? parentCtx.cssVars : {}),
+      ...rawCssVars,
+      ...legacy,
+    }),
+    [isNested, parentCtx.cssVars, rawCssVars, legacy]
+  );
 
+  // ── Color mode control API ─────────────────────────────────────────
+  const setMode = useCallback(
+    (next: ColorMode) => {
+      setColorModeState(next);
+      if (storageKey) {
+        try {
+          getStorageApi(storage)?.setItem(storageKey, next);
+        } catch {
+          // storage quota or security error — silently ignore
+        }
+      }
+    },
+    [storageKey, storage]
+  );
+
+  const toggle = useCallback(() => {
+    setMode(resolvedMode === 'dark' ? 'light' : 'dark');
+  }, [setMode, resolvedMode]);
+
+  const colorModeValue = useMemo<ColorModeContextValue>(
+    () => ({ mode: colorMode, resolvedMode, setMode, toggle }),
+    [colorMode, resolvedMode, setMode, toggle]
+  );
+
+  // ── Theme context value ────────────────────────────────────────────
   const contextValue = useMemo<ThemeContextValue>(
-    () => ({ theme, mode, semantic, density, components, cssVars: mergedVars }),
-    [theme, mode, semantic, density, components, mergedVars]
+    () => ({
+      theme,
+      mode: resolvedMode,
+      semantic,
+      density,
+      components,
+      cssVars: mergedVars,
+      _hasProvider: true,
+    }),
+    [theme, resolvedMode, semantic, density, components, mergedVars]
   );
 
   const WrapperComponent = as as React.ElementType;
 
   return (
     <ThemeContext.Provider value={contextValue}>
-      <WrapperComponent data-zp-theme={mode} style={mergedVars as CSSProperties}>
-        {children}
-      </WrapperComponent>
+      <ColorModeContext.Provider value={colorModeValue}>
+        <WrapperComponent data-zp-theme={resolvedMode} style={mergedVars as CSSProperties}>
+          {children}
+        </WrapperComponent>
+      </ColorModeContext.Provider>
     </ThemeContext.Provider>
   );
 }
 
 export function useTheme(): ThemeContextValue {
   return useContext(ThemeContext);
+}
+
+/**
+ * Access and control the current color mode.
+ *
+ * Returns `{ mode, resolvedMode, setMode, toggle }`.
+ * - `mode` — the user-selected mode (may be `'system'`).
+ * - `resolvedMode` — the actual applied mode (`'light' | 'dark' | 'highContrast'`).
+ * - `setMode(mode)` — change the mode (persists if `storageKey` was provided).
+ * - `toggle()` — toggle between `'light'` and `'dark'`.
+ */
+export function useColorMode(): ColorModeContextValue {
+  return useContext(ColorModeContext);
 }
 
 /**
