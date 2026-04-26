@@ -63,6 +63,11 @@ describe('ProgressBar', () => {
     render(<ProgressBar data-testid="pb" size="lg" value={50} />);
     expect(screen.getByTestId('pb').className).toMatch(/size-lg/);
   });
+
+  it('handles max of 0 by reporting 0%', () => {
+    render(<ProgressBar value={5} max={0} aria-label="empty" />);
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuetext', '0%');
+  });
 });
 
 describe('ProgressBar a11y (axe)', () => {

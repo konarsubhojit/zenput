@@ -58,6 +58,22 @@ describe('CircularProgress', () => {
     expect(svg).toHaveAttribute('width', '80');
     expect(svg).toHaveAttribute('height', '80');
   });
+
+  it('handles max of 0 by reporting 0%', () => {
+    render(<CircularProgress value={5} max={0} aria-label="empty" />);
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuetext', '0%');
+  });
+
+  it('renders the textual label when showValue is false', () => {
+    render(<CircularProgress value={50} label="Uploading" />);
+    expect(screen.getByText('Uploading')).toBeInTheDocument();
+  });
+
+  it('hides numeric value when indeterminate even if showValue is true', () => {
+    render(<CircularProgress indeterminate showValue aria-label="Loading" />);
+    // No percentage text should be rendered
+    expect(screen.queryByText(/%$/)).toBeNull();
+  });
 });
 
 describe('CircularProgress a11y (axe)', () => {
