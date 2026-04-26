@@ -16,13 +16,12 @@ import peerDepsExternal from 'rollup-plugin-peer-deps-external';
 function preserveDirectives() {
   return {
     name: 'preserve-directives',
-    renderChunk(code, _chunk, options) {
+    renderChunk(code) {
       const directiveRe = /^(?:'use client'|"use client"|'use server'|"use server");?\s*/m;
       const match = code.match(directiveRe);
       if (!match) return null;
       // Strip all occurrences then prepend once at the very top.
       const stripped = code.replace(new RegExp(directiveRe.source, 'gm'), '');
-      const eol = options.sourcemap ? '\n' : '\n';
       return { code: `'use client';\n${stripped}`, map: null };
     },
   };

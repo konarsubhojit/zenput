@@ -40,11 +40,58 @@ export interface GetColorModeScriptOptions {
 }
 
 /**
+ * Valid HTML/data attribute names: begin with a letter, then alphanumeric,
+ * hyphens, underscores, colons, or dots (covers `data-*`, `aria-*`, …).
+ */
+const ATTR_RE = /^[a-zA-Z][a-zA-Z0-9\-_:.]*$/;
+
+/**
+ * Valid storage keys: printable ASCII only, no characters that could
+ * escape the generated JS string.
+ */
+const KEY_RE = /^[a-zA-Z0-9\-_.@/:]+$/;
+
+/** Allowed fallback values — the full ColorMode union. */
+const VALID_MODES: readonly ColorMode[] = ['light', 'dark', 'highContrast'];
+
+/**
+ * Validates and normalises option values so that none of the user-controlled
+ * strings can escape the generated JS string literals.
+ */
+function sanitizeOptions(options: GetColorModeScriptOptions): Required<GetColorModeScriptOptions> {
+  const attribute = options.attribute ?? 'data-zp-theme';
+  const storageKey = options.storageKey ?? 'zp-color-mode';
+  const fallback = options.fallback ?? 'light';
+  const respectSystemPreference = options.respectSystemPreference ?? true;
+
+  if (!ATTR_RE.test(attribute)) {
+    throw new Error(
+      `getColorModeScript: "attribute" must be a valid HTML attribute name; received: ${String(attribute)}`
+    );
+  }
+  if (!KEY_RE.test(storageKey)) {
+    throw new Error(
+      `getColorModeScript: "storageKey" must contain only safe characters (alphanumeric, -, _, ., @, /, :); received: ${String(storageKey)}`
+    );
+  }
+  if (!(VALID_MODES as readonly string[]).includes(fallback)) {
+    throw new Error(
+      `getColorModeScript: "fallback" must be one of ${VALID_MODES.join(', ')}; received: ${String(fallback)}`
+    );
+  }
+
+  return { attribute, storageKey, fallback, respectSystemPreference };
+}
+
+/**
  * Returns a string containing a small, synchronous inline `<script>` that
  * reads the user's stored color-mode preference (or system preference) and
  * writes the appropriate `data-zp-theme` attribute onto `<html>` before
  * first paint. Inject it into `<head>` as early as possible to avoid a
  * flash of wrong theme.
+ *
+ * Input options are validated before being embedded in the generated script
+ * to prevent code injection.
  *
  * ### Next.js App Router usage
  * ```tsx
@@ -69,19 +116,31 @@ export interface GetColorModeScriptOptions {
  * synchronously so it blocks no rendering beyond its own execution.
  */
 export function getColorModeScript(options: GetColorModeScriptOptions = {}): string {
-  const {
-    attribute = 'data-zp-theme',
-    storageKey = 'zp-color-mode',
-    fallback = 'light',
-    respectSystemPreference = true,
-  } = options;
+  // Validate and sanitize all user-supplied options before embedding them
+  // in the generated JavaScript to prevent code injection.
+  const { attribute, storageKey, fallback, respectSystemPreference } = sanitizeOptions(options);
 
-  // The script is inlined as a template literal so it can reference the
-  // options values (which are known at SSR time) without an extra network
-  // request. Variable names are kept terse to minimize payload size.
-  return `(function(){try{var s=localStorage.getItem(${JSON.stringify(storageKey)});if(s==='light'||s==='dark'||s==='highContrast'){document.documentElement.setAttribute(${JSON.stringify(attribute)},s);return;}}catch(e){}${
-    respectSystemPreference
-      ? `var m=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)');var mode=m&&m.matches?'dark':${JSON.stringify(fallback)};`
-      : `var mode=${JSON.stringify(fallback)};`
-  }document.documentElement.setAttribute(${JSON.stringify(attribute)},mode);})();`;
+  // After sanitization, attribute and storageKey match strict safe-character
+  // regexes, so JSON.stringify produces safe string literals with no risk of
+  // breaking out of the surrounding JS string context.
+  const attrLiteral = JSON.stringify(attribute);
+  const keyLiteral = JSON.stringify(storageKey);
+  // fallback is validated against VALID_MODES (a closed enum), so it is always
+  // one of the three known-safe identifiers; embed it without JSON.stringify to
+  // keep the script payload minimal.
+  const fallbackLiteral = `'${fallback}'`;
+
+  const systemPart = respectSystemPreference
+    ? `var m=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)');var mode=m&&m.matches?'dark':${fallbackLiteral};`
+    : `var mode=${fallbackLiteral};`;
+
+  return (
+    `(function(){` +
+    `try{var s=localStorage.getItem(${keyLiteral});` +
+    `if(s==='light'||s==='dark'||s==='highContrast'){document.documentElement.setAttribute(${attrLiteral},s);return;}}` +
+    `catch(e){}` +
+    `${systemPart}` +
+    `document.documentElement.setAttribute(${attrLiteral},mode);` +
+    `})();`
+  );
 }
