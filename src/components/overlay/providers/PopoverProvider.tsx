@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useRef, useSt
 import { Portal } from '../../Portal';
 import { useEscapeKey } from '../internal/useEscapeKey';
 import { useClickOutside } from '../internal/useClickOutside';
+import { computePosition } from '../internal/computePosition';
 import styles from '../Popover/Popover.module.css';
 
 // ---------------------------------------------------------------------------
@@ -31,42 +32,6 @@ function getAnchorRect(anchor: PopoverAnchor): DOMRect | null {
   if ('current' in anchor) return anchor.current?.getBoundingClientRect() ?? null;
   // {x, y} coordinate — treat as a zero-size rect at those coordinates
   return new DOMRect(anchor.x, anchor.y, 0, 0);
-}
-
-function computePosition(
-  anchorRect: DOMRect,
-  contentRect: DOMRect,
-  side: ImpPopoverSide,
-  align: ImpPopoverAlign,
-  sideOffset: number
-): PopoverCoords {
-  let top = 0;
-  let left = 0;
-
-  if (side === 'top' || side === 'bottom') {
-    top =
-      side === 'top'
-        ? anchorRect.top - contentRect.height - sideOffset
-        : anchorRect.bottom + sideOffset;
-    if (align === 'start') left = anchorRect.left;
-    else if (align === 'end') left = anchorRect.right - contentRect.width;
-    else left = anchorRect.left + anchorRect.width / 2 - contentRect.width / 2;
-  } else {
-    left =
-      side === 'left'
-        ? anchorRect.left - contentRect.width - sideOffset
-        : anchorRect.right + sideOffset;
-    if (align === 'start') top = anchorRect.top;
-    else if (align === 'end') top = anchorRect.bottom - contentRect.height;
-    else top = anchorRect.top + anchorRect.height / 2 - contentRect.height / 2;
-  }
-
-  const vw = typeof window !== 'undefined' ? window.innerWidth : 0;
-  const vh = typeof window !== 'undefined' ? window.innerHeight : 0;
-  left = Math.max(4, Math.min(left, vw - contentRect.width - 4));
-  top = Math.max(4, Math.min(top, vh - contentRect.height - 4));
-
-  return { top, left };
 }
 
 interface PopoverStackEntry {

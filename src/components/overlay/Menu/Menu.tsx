@@ -16,10 +16,12 @@ import { useIsomorphicLayoutEffect } from '../internal/useIsomorphicLayoutEffect
 import { assignRef } from '../internal/assignRef';
 import { getMenuItems, isOutsideAll } from '../internal/menuUtils';
 import { useMenuKeyboardNav } from '../internal/useMenuKeyboardNav';
+import { computePosition } from '../internal/computePosition';
+import type { OverlaySide, OverlayAlign } from '../internal/computePosition';
 import styles from './Menu.module.css';
 
-export type MenuSide = 'top' | 'bottom' | 'left' | 'right';
-export type MenuAlign = 'start' | 'center' | 'end';
+export type MenuSide = OverlaySide;
+export type MenuAlign = OverlayAlign;
 
 interface MenuContextValue {
   open: boolean;
@@ -53,37 +55,6 @@ interface MenuRadioGroupContextValue {
 }
 
 const MenuRadioGroupContext = createContext<MenuRadioGroupContextValue | null>(null);
-
-function computePosition(
-  trigger: DOMRect,
-  content: DOMRect,
-  side: MenuSide,
-  align: MenuAlign,
-  sideOffset: number,
-  alignOffset: number
-): { top: number; left: number } {
-  let top = 0;
-  let left = 0;
-
-  if (side === 'top' || side === 'bottom') {
-    top = side === 'top' ? trigger.top - content.height - sideOffset : trigger.bottom + sideOffset;
-    if (align === 'start') left = trigger.left + alignOffset;
-    else if (align === 'end') left = trigger.right - content.width - alignOffset;
-    else left = trigger.left + trigger.width / 2 - content.width / 2 + alignOffset;
-  } else {
-    left = side === 'left' ? trigger.left - content.width - sideOffset : trigger.right + sideOffset;
-    if (align === 'start') top = trigger.top + alignOffset;
-    else if (align === 'end') top = trigger.bottom - content.height - alignOffset;
-    else top = trigger.top + trigger.height / 2 - content.height / 2 + alignOffset;
-  }
-
-  const vw = typeof window !== 'undefined' ? window.innerWidth : 0;
-  const vh = typeof window !== 'undefined' ? window.innerHeight : 0;
-  left = Math.max(4, Math.min(left, vw - content.width - 4));
-  top = Math.max(4, Math.min(top, vh - content.height - 4));
-
-  return { top, left };
-}
 
 export interface MenuProps {
   open?: boolean;

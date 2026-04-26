@@ -1,6 +1,6 @@
 import React, { forwardRef, useState, useCallback } from 'react';
 import { PasswordInputProps } from './PasswordInput.types';
-import { classNames } from '../../utils';
+import { classNames, getValidationMessage, getValidationMessageClass } from '../../utils';
 import { useFormField } from '../../hooks';
 import styles from './PasswordInput.module.css';
 
@@ -81,23 +81,15 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
 
     const strength = showStrengthIndicator ? getPasswordStrength(currentValue) : 0;
 
-    const activeMessage =
-      validationState === 'error'
-        ? errorMessage
-        : validationState === 'success'
-          ? successMessage
-          : validationState === 'warning'
-            ? warningMessage
-            : helperText;
+    const activeMessage = getValidationMessage(
+      validationState,
+      errorMessage,
+      successMessage,
+      warningMessage,
+      helperText
+    );
 
-    const messageClass =
-      validationState === 'error'
-        ? styles.errorText
-        : validationState === 'success'
-          ? styles.successText
-          : validationState === 'warning'
-            ? styles.warningText
-            : styles.helperText;
+    const messageClass = getValidationMessageClass(validationState, styles);
 
     return (
       <div
@@ -145,7 +137,6 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             onClick={() => setVisible((v) => !v)}
             disabled={disabled}
             aria-label={visible ? 'Hide password' : 'Show password'}
-            tabIndex={-1}
           >
             {visible ? (hideIcon ?? <span>🙈</span>) : (showIcon ?? <span>👁</span>)}
           </button>
