@@ -1,6 +1,6 @@
 # Zenput – Next.js App Router Smoke-test Fixture
 
-This minimal Next.js 14 (App Router) project verifies that zenput components
+This minimal Next.js 15 (App Router) project verifies that zenput components
 can be consumed from a Next.js App Router application without errors. It is
 used as a CI smoke test to catch regressions in `'use client'` directives or
 sub-path exports.
