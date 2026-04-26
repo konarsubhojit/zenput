@@ -102,6 +102,11 @@ export function getToastHandle(): ToastHandle | null {
   return _singletonHandle;
 }
 
+// Delay (ms) between dismissing the loading toast and showing the
+// success/error toast in `promise()`. Gives the exit animation time
+// to start before the new toast enters, preventing a visual jump.
+const PROMISE_TRANSITION_DELAY_MS = 100;
+
 // ---------------------------------------------------------------------------
 // Default status icons
 // ---------------------------------------------------------------------------
@@ -205,10 +210,6 @@ function DefaultIcon({ status }: { status: ToastStatus }): React.ReactElement {
       );
   }
 }
-
-// ---------------------------------------------------------------------------
-// Individual toast item component
-// ---------------------------------------------------------------------------
 
 interface ToastItemComponentProps {
   toast: ToastItem;
@@ -438,7 +439,8 @@ export function ToastProvider({
 
   const show = useCallback(
     (options: ToastOptions): string => {
-      const id = `toast-${++idCounterRef.current}`;
+      idCounterRef.current += 1;
+      const id = `toast-${idCounterRef.current}`;
       const item: ToastItem = {
         id,
         status: options.status ?? 'info',
@@ -486,14 +488,14 @@ export function ToastProvider({
           const title =
             typeof messages.success === 'function' ? messages.success(data) : messages.success;
           dismiss(id);
-          setTimeout(() => show({ title, status: 'success' }), 100);
+          setTimeout(() => show({ title, status: 'success' }), PROMISE_TRANSITION_DELAY_MS);
           return data;
         },
         (err: unknown) => {
           const title =
             typeof messages.error === 'function' ? messages.error(err) : messages.error;
           dismiss(id);
-          setTimeout(() => show({ title, status: 'error' }), 100);
+          setTimeout(() => show({ title, status: 'error' }), PROMISE_TRANSITION_DELAY_MS);
           throw err;
         }
       );
