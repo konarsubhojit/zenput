@@ -338,6 +338,17 @@ export interface ProgressTokens {
 }
 
 /**
+ * SegmentedControl component tokens
+ */
+export interface SegmentedTokens {
+  bg?: string;
+  indicatorBg?: string;
+  indicatorShadow?: string;
+  padding?: string;
+  radius?: string;
+}
+
+/**
  * All component token types
  */
 export interface ComponentTokensMap {
@@ -351,6 +362,7 @@ export interface ComponentTokensMap {
   toast?: Partial<ToastTokens>;
   skeleton?: Partial<SkeletonTokens>;
   progress?: Partial<ProgressTokens>;
+  segmented?: Partial<SegmentedTokens>;
 }
 
 export type ComponentName = keyof ComponentTokensMap;
