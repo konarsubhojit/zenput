@@ -323,6 +323,13 @@ export const defaultComponentTokens = {
     rangeEdgeBg: 'var(--zp-color-brand)',
     weekdayColor: 'var(--zp-color-text-secondary)',
   } satisfies CalendarTokens,
+  segmented: {
+    bg: 'var(--zp-color-surface)',
+    indicatorBg: 'var(--zp-color-background)',
+    indicatorShadow: 'var(--zp-shadow-sm, 0 1px 2px rgba(0,0,0,0.1))',
+    padding: '0.1875rem',
+    radius: 'var(--zp-radius-lg)',
+  } satisfies SegmentedTokens,
 };
 
 /**
@@ -365,6 +372,14 @@ export interface CalendarTokens {
   rangeEdgeBg?: string;
   /** Color of the weekday header labels. Default: `var(--zp-color-text-secondary)`. */
   weekdayColor?: string;
+ * SegmentedControl component tokens
+ */
+export interface SegmentedTokens {
+  bg?: string;
+  indicatorBg?: string;
+  indicatorShadow?: string;
+  padding?: string;
+  radius?: string;
 }
 
 /**
@@ -382,6 +397,7 @@ export interface ComponentTokensMap {
   skeleton?: Partial<SkeletonTokens>;
   progress?: Partial<ProgressTokens>;
   calendar?: Partial<CalendarTokens>;
+  segmented?: Partial<SegmentedTokens>;
 }
 
 export type ComponentName = keyof ComponentTokensMap;
