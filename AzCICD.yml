@@ -26,9 +26,12 @@
 #   Pool:          "Default" (self-hosted). Adjust `pool.name` below if yours
 #                  is named differently.
 #   OS:            Linux ARM64 / aarch64 (Oracle Cloud Ampere A1).
-#   Pre-installed: git, Node 20.x, npm 10+. Playwright Chromium browsers
+#   Pre-installed: git, nvm, npm 10+. Playwright Chromium browsers
 #                  are in `/home/ubuntu/.cache/ms-playwright`. Vercel CLI and
 #                  http-server are installed globally on the agent.
+#                  Node is selected via `nvm install 24 && nvm use 24` in the
+#                  pipeline (do not rely on the agent's default Node — vitest 4
+#                  / rolldown require Node ^20.19.0 || >=22.12.0).
 #
 # ── Pipeline variables / service connections ────────────────────────────────
 #   SonarCloud service connection : "SonarCloud"
@@ -100,6 +103,21 @@ stages:
           - checkout: self
             clean: false       # keep node_modules/checkout between runs for speed
             fetchDepth: 1
+
+          # ── Node toolchain (pin to a vitest 4 / rolldown-compatible version) ─
+          # Self-hosted agent uses nvm; install/select Node 24 and prepend it to
+          # PATH so all subsequent script steps in this job use it.
+          - script: |
+              set -e
+              export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+              # shellcheck disable=SC1091
+              . "$NVM_DIR/nvm.sh"
+              nvm install 24
+              nvm use 24
+              NODE_BIN_DIR="$(dirname "$(nvm which 24)")"
+              echo "##vso[task.prependpath]$NODE_BIN_DIR"
+              echo "Selected Node: $(node -v) at $NODE_BIN_DIR"
+            displayName: 'Use Node 24.x (via nvm)'
 
           # ── Toolchain verification ──────────────────────────────────────
           - script: |
@@ -258,6 +276,17 @@ stages:
               steps:
                 - checkout: self
                   clean: false
+                - script: |
+                    set -e
+                    export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+                    # shellcheck disable=SC1091
+                    . "$NVM_DIR/nvm.sh"
+                    nvm install 24
+                    nvm use 24
+                    NODE_BIN_DIR="$(dirname "$(nvm which 24)")"
+                    echo "##vso[task.prependpath]$NODE_BIN_DIR"
+                    echo "Selected Node: $(node -v) at $NODE_BIN_DIR"
+                  displayName: 'Use Node 24.x (via nvm)'
                 - script: npm ci --prefer-offline --no-audit --fund=false
                   displayName: 'npm ci'
                 - script: npm run build
