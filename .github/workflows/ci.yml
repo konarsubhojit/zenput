@@ -135,7 +135,6 @@ jobs:
 
   a11y:
     name: Storybook a11y (axe)
-    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     needs: storybook
     steps:
