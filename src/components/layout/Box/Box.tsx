@@ -1,5 +1,6 @@
 import React, { forwardRef } from 'react';
 import { classNames } from '../../../utils';
+import { Slot } from '../../../utils/slot';
 import { normalizeSpacingKey } from '../../../tokens';
 import type { PolymorphicProps, PolymorphicRef } from '../../../types/polymorphic';
 import styles from './Box.module.css';
@@ -91,11 +92,12 @@ function colorToken(v: string | undefined): string | undefined {
 
 /**
  * Low-level styled container. Accepts spacing/color/radius/shadow
- * props that map to design tokens. Polymorphic via `as`.
+ * props that map to design tokens. Polymorphic via `as`/`asChild`.
  */
 export const Box = forwardRef(function Box(
   {
     as,
+    asChild,
     p,
     px,
     py,
@@ -122,7 +124,7 @@ export const Box = forwardRef(function Box(
   }: PolymorphicProps<React.ElementType, BoxOwnProps>,
   ref: React.ForwardedRef<Element>
 ) {
-  const Component: React.ElementType = as ?? 'div';
+  const Component: React.ElementType = asChild ? Slot : (as ?? 'div');
   const resolvedStyle: React.CSSProperties = {
     padding: spacingToken(p),
     paddingLeft: spacingToken(pl) ?? spacingToken(px),

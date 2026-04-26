@@ -1,6 +1,8 @@
 import React, { forwardRef } from 'react';
 import { classNames } from '../../../utils';
+import { Slot } from '../../../utils/slot';
 import { Spinner } from '../../feedback/Spinner';
+import type { PolymorphicProps, PolymorphicRef } from '../../../types/polymorphic';
 import styles from './Button.module.css';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'subtle' | 'outline' | 'ghost' | 'danger';
@@ -28,6 +30,14 @@ interface ButtonBaseProps {
   className?: string;
 }
 
+type ButtonComponent = <C extends React.ElementType = 'button'>(
+  props: (
+    | ({ iconOnly: true; 'aria-label': string } & PolymorphicProps<C, ButtonBaseProps>)
+    | ({ iconOnly?: false } & PolymorphicProps<C, ButtonBaseProps>)
+  ) & { ref?: PolymorphicRef<C> }
+) => React.ReactElement | null;
+
+// Legacy exported type for backward compatibility.
 export type ButtonProps =
   | ({ iconOnly: true; 'aria-label': string } & Omit<
       React.ButtonHTMLAttributes<HTMLButtonElement>,
@@ -41,14 +51,19 @@ export type ButtonProps =
  * outline, ghost, danger), three sizes, icon slots, `iconOnly` and
  * `loading` states.
  *
+ * Polymorphic via `as` (e.g. `as="a"`) or `asChild` (Radix-style
+ * merging onto a single child: `<Button asChild><NextLink …/></Button>`).
+ *
  * While `loading` is true the button is both `disabled` and
  * `aria-busy="true"`. The content is visually hidden (via a
  * visually-hidden style so the label is still exposed to assistive
  * tech) and a decorative spinner is rendered. Pass `loadingLabel` to
  * override the accessible name with a localized "loading" phrase.
  */
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+export const Button = forwardRef(function Button(
   {
+    as,
+    asChild,
     variant = 'primary',
     size = 'md',
     leftIcon,
@@ -58,32 +73,61 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     loadingLabel,
     fullWidth,
     disabled,
-    type = 'button',
+    type,
     className,
     children,
     'aria-busy': ariaBusy,
     'aria-label': ariaLabel,
     ...rest
-  },
-  ref
+  }: PolymorphicProps<
+    React.ElementType,
+    ButtonBaseProps & {
+      iconOnly?: boolean;
+      disabled?: boolean;
+      type?: React.ButtonHTMLAttributes<HTMLButtonElement>['type'];
+      'aria-busy'?: React.AriaAttributes['aria-busy'];
+      'aria-label'?: string;
+    }
+  >,
+  ref: React.ForwardedRef<Element>
 ) {
   const isDisabled = Boolean(disabled || loading);
   const resolvedAriaLabel = loading && loadingLabel ? loadingLabel : ariaLabel;
+
+  const buttonClassName = classNames(
+    styles.button,
+    styles[`variant-${variant}`],
+    styles[`size-${size}`],
+    iconOnly ? styles.iconOnly : undefined,
+    fullWidth ? styles.fullWidth : undefined,
+    className
+  );
+
+  // asChild: merge button styles onto the single child element.
+  if (asChild) {
+    return (
+      <Slot
+        ref={ref}
+        className={buttonClassName}
+        aria-busy={loading ? true : ariaBusy}
+        aria-label={resolvedAriaLabel}
+        {...rest}
+      >
+        {children}
+      </Slot>
+    );
+  }
+
+  const Component: React.ElementType = as ?? 'button';
+  const isNativeButton = Component === 'button';
+
   return (
-    <button
+    <Component
       ref={ref}
-      type={type}
-      disabled={isDisabled}
+      {...(isNativeButton ? { type: type ?? 'button', disabled: isDisabled } : {})}
       aria-busy={loading ? true : ariaBusy}
       aria-label={resolvedAriaLabel}
-      className={classNames(
-        styles.button,
-        styles[`variant-${variant}`],
-        styles[`size-${size}`],
-        iconOnly ? styles.iconOnly : undefined,
-        fullWidth ? styles.fullWidth : undefined,
-        className
-      )}
+      className={buttonClassName}
       {...rest}
     >
       {loading && (
@@ -103,6 +147,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
         {children}
         {rightIcon && <span aria-hidden="true">{rightIcon}</span>}
       </span>
-    </button>
+    </Component>
   );
-});
+}) as unknown as ButtonComponent & { displayName?: string };
+
+(Button as { displayName?: string }).displayName = 'Button';
+

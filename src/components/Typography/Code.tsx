@@ -1,19 +1,31 @@
 import React, { forwardRef } from 'react';
 import { classNames } from '../../utils';
+import { Slot } from '../../utils/slot';
+import type { PolymorphicProps, PolymorphicRef } from '../../types/polymorphic';
 import styles from './Typography.module.css';
 
-export interface CodeProps extends React.HTMLAttributes<HTMLElement> {
+export interface CodeOwnProps {
   className?: string;
 }
 
-/** Inline monospace code snippet. */
-export const Code = forwardRef<HTMLElement, CodeProps>(function Code(
-  { className, children, ...rest },
-  ref
+type CodeComponent = <C extends React.ElementType = 'code'>(
+  props: PolymorphicProps<C, CodeOwnProps> & { ref?: PolymorphicRef<C> }
+) => React.ReactElement | null;
+
+/** Inline monospace code snippet. Polymorphic via `as`/`asChild`. */
+export const Code = forwardRef(function Code(
+  { as, asChild, className, children, ...rest }: PolymorphicProps<React.ElementType, CodeOwnProps>,
+  ref: React.ForwardedRef<Element>
 ) {
+  const Component: React.ElementType = asChild ? Slot : (as ?? 'code');
   return (
-    <code ref={ref} className={classNames(styles.code, className)} {...rest}>
+    <Component ref={ref} className={classNames(styles.code, className)} {...rest}>
       {children}
-    </code>
+    </Component>
   );
-});
+}) as unknown as CodeComponent & { displayName?: string };
+
+(Code as { displayName?: string }).displayName = 'Code';
+
+/** @deprecated Use `CodeOwnProps` or the component's inferred props instead. */
+export type CodeProps = PolymorphicProps<'code', CodeOwnProps>;

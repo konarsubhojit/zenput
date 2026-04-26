@@ -1,5 +1,6 @@
 import React, { forwardRef } from 'react';
 import { classNames } from '../../../utils';
+import { Slot } from '../../../utils/slot';
 import { normalizeSpacingKey } from '../../../tokens';
 import type { PolymorphicProps, PolymorphicRef } from '../../../types/polymorphic';
 import type { SpacingValue } from '../Box/Box';
@@ -49,11 +50,12 @@ type StackComponent = <C extends React.ElementType = 'div'>(
 
 /**
  * Flex container with a `gap`. Use `HStack` / `VStack` as convenient
- * aliases. Polymorphic via `as`.
+ * aliases. Polymorphic via `as`/`asChild`.
  */
 export const Stack = forwardRef(function Stack(
   {
     as,
+    asChild,
     direction = 'column',
     gap = '2',
     align,
@@ -67,7 +69,7 @@ export const Stack = forwardRef(function Stack(
   }: PolymorphicProps<React.ElementType, StackOwnProps>,
   ref: React.ForwardedRef<Element>
 ) {
-  const Component: React.ElementType = as ?? 'div';
+  const Component: React.ElementType = asChild ? Slot : (as ?? 'div');
   const resolvedStyle: React.CSSProperties = {
     flexDirection: direction,
     gap: `var(--zp-space-${normalizeSpacingKey(gap)})`,

@@ -85,6 +85,45 @@ describe('Button', () => {
     render(<Button type="submit">s</Button>);
     expect(screen.getByRole('button')).toHaveAttribute('type', 'submit');
   });
+
+  it('renders as a different element via `as`', () => {
+    render(
+      <Button as="a" href="/x">
+        link
+      </Button>
+    );
+    const el = screen.getByText('link');
+    expect(el.closest('a')).not.toBeNull();
+    expect(el.closest('a')).toHaveAttribute('href', '/x');
+  });
+
+  it('merges button styles onto the child element via `asChild`', () => {
+    render(
+      <Button asChild variant="secondary">
+        <a href="/x">go</a>
+      </Button>
+    );
+    const el = screen.getByRole('link', { name: 'go' });
+    expect(el.tagName).toBe('A');
+    expect(el).toHaveAttribute('href', '/x');
+    expect(el.className).toMatch(/button/);
+    expect(el.className).toMatch(/variant-secondary/);
+  });
+
+  it('composes onClick handlers when using `asChild`', () => {
+    const parentClick = vi.fn();
+    const childClick = vi.fn();
+    render(
+      <Button asChild onClick={parentClick}>
+        <a href="#" onClick={childClick}>
+          click
+        </a>
+      </Button>
+    );
+    fireEvent.click(screen.getByRole('link', { name: 'click' }));
+    expect(childClick).toHaveBeenCalledTimes(1);
+    expect(parentClick).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('a11y (axe)', () => {
