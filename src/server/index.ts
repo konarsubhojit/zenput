@@ -125,10 +125,9 @@ export function getColorModeScript(options: GetColorModeScriptOptions = {}): str
   // breaking out of the surrounding JS string context.
   const attrLiteral = JSON.stringify(attribute);
   const keyLiteral = JSON.stringify(storageKey);
-  // fallback is validated against VALID_MODES (a closed enum), so it is always
-  // one of the three known-safe identifiers; embed it without JSON.stringify to
-  // keep the script payload minimal.
-  const fallbackLiteral = `'${fallback}'`;
+  // fallback is validated against VALID_MODES (a closed enum of known-safe
+  // string values); JSON.stringify is used for consistency with the other literals.
+  const fallbackLiteral = JSON.stringify(fallback);
 
   const systemPart = respectSystemPreference
     ? `var m=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)');var mode=m&&m.matches?'dark':${fallbackLiteral};`

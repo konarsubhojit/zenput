@@ -17,11 +17,13 @@ function preserveDirectives() {
   return {
     name: 'preserve-directives',
     renderChunk(code) {
-      const directiveRe = /^(?:'use client'|"use client"|'use server'|"use server");?\s*/m;
-      const match = code.match(directiveRe);
-      if (!match) return null;
+      // Match any 'use client' / 'use server' directive at the start of a line.
+      // The global flag strips every occurrence so we can re-prepend exactly once.
+      const directiveRe = /^(?:'use client'|"use client"|'use server'|"use server");?\s*/gm;
+      const hasDirective = directiveRe.test(code);
+      if (!hasDirective) return null;
       // Strip all occurrences then prepend once at the very top.
-      const stripped = code.replace(new RegExp(directiveRe.source, 'gm'), '');
+      const stripped = code.replace(directiveRe, '');
       return { code: `'use client';\n${stripped}`, map: null };
     },
   };
