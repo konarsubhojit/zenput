@@ -89,8 +89,8 @@ const BASE_THEMES: Record<string, Theme> = {
     disabledBg: '#313244',
     disabledText: '#585b70',
   },
-  System: {
-    mode: 'dark' as const,
+  'Dark (alt)': {
+    mode: 'dark',
     primaryColor: '#818cf8',
   },
   'High Contrast': {
