@@ -88,11 +88,15 @@ export function Pagination({
   className,
   style,
 }: PaginationProps): React.ReactElement {
-  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
-  const items = buildPaginationItems(currentPage, totalPages, siblingCount, boundaryCount);
+  // Normalize inputs so the UI stays consistent if `currentPage`/`pageSize`
+  // drift out of range (e.g. when totalCount shrinks).
+  const safePageSize = Math.max(1, Math.floor(pageSize) || 1);
+  const totalPages = Math.max(1, Math.ceil(Math.max(0, totalCount) / safePageSize));
+  const safeCurrentPage = Math.min(Math.max(1, Math.floor(currentPage) || 1), totalPages);
+  const items = buildPaginationItems(safeCurrentPage, totalPages, siblingCount, boundaryCount);
 
   const goTo = (page: number) => {
-    if (!disabled && page >= 1 && page <= totalPages) {
+    if (!disabled && page >= 1 && page <= totalPages && page !== safeCurrentPage) {
       onPageChange(page);
     }
   };
@@ -109,7 +113,7 @@ export function Pagination({
           <span className={styles.pageSizeLabel}>Rows per page:</span>
           <select
             className={styles.pageSizeSelect}
-            value={pageSize}
+            value={safePageSize}
             disabled={disabled}
             aria-label="Rows per page"
             onChange={(e) => onPageSizeChange(Number(e.target.value))}
@@ -130,7 +134,7 @@ export function Pagination({
           <button
             type="button"
             className={styles.btn}
-            disabled={disabled || currentPage <= 1}
+            disabled={disabled || safeCurrentPage <= 1}
             onClick={() => goTo(1)}
             aria-label="First page"
           >
@@ -142,8 +146,8 @@ export function Pagination({
         <button
           type="button"
           className={styles.btn}
-          disabled={disabled || currentPage <= 1}
-          onClick={() => goTo(currentPage - 1)}
+          disabled={disabled || safeCurrentPage <= 1}
+          onClick={() => goTo(safeCurrentPage - 1)}
           aria-label="Previous page"
         >
           ‹
@@ -165,12 +169,12 @@ export function Pagination({
               type="button"
               className={classNames(
                 styles.btn,
-                item === currentPage ? styles.btnActive : undefined
+                item === safeCurrentPage ? styles.btnActive : undefined
               )}
               disabled={disabled}
               onClick={() => goTo(item)}
               aria-label={`Page ${item}`}
-              aria-current={item === currentPage ? 'page' : undefined}
+              aria-current={item === safeCurrentPage ? 'page' : undefined}
             >
               {item}
             </button>
@@ -181,8 +185,8 @@ export function Pagination({
         <button
           type="button"
           className={styles.btn}
-          disabled={disabled || currentPage >= totalPages}
-          onClick={() => goTo(currentPage + 1)}
+          disabled={disabled || safeCurrentPage >= totalPages}
+          onClick={() => goTo(safeCurrentPage + 1)}
           aria-label="Next page"
         >
           ›
@@ -193,7 +197,7 @@ export function Pagination({
           <button
             type="button"
             className={styles.btn}
-            disabled={disabled || currentPage >= totalPages}
+            disabled={disabled || safeCurrentPage >= totalPages}
             onClick={() => goTo(totalPages)}
             aria-label="Last page"
           >

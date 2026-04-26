@@ -55,6 +55,18 @@ describe('EmptyState', () => {
     expect(link).toHaveAttribute('href', '/docs');
   });
 
+  it('renders nothing for an action with neither onClick nor href', () => {
+    render(
+      <EmptyState
+        title="Empty"
+        primaryAction={{ label: 'Broken' }}
+      />
+    );
+    expect(screen.queryByRole('button', { name: 'Broken' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Broken' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Broken')).not.toBeInTheDocument();
+  });
+
   it('has role="status" and aria-live="polite"', () => {
     render(<EmptyState title="No results" />);
     const el = screen.getByRole('status');

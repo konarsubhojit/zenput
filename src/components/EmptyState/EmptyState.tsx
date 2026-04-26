@@ -24,11 +24,15 @@ function ActionNode({ action, primary }: { action: EmptyStateAction; primary: bo
       </button>
     );
   }
-  return (
-    <a href={action.href} className={cls}>
-      {action.label}
-    </a>
-  );
+  if (action.href) {
+    return (
+      <a href={action.href} className={cls}>
+        {action.label}
+      </a>
+    );
+  }
+  // Neither onClick nor href provided; nothing actionable to render.
+  return null;
 }
 
 /**

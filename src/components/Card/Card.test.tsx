@@ -42,6 +42,28 @@ describe('Card', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Click' }));
     expect(onClick).toHaveBeenCalledTimes(1);
   });
+
+  it('does not forward href when rendering a native button', () => {
+    render(<Card interactive>Click</Card>);
+    const btn = screen.getByRole('button');
+    expect(btn).not.toHaveAttribute('href');
+    expect(btn).toHaveAttribute('type', 'button');
+  });
+
+  it('does not set type attribute when rendering a div', () => {
+    const { container } = render(<Card>Plain</Card>);
+    const root = container.firstElementChild as HTMLElement;
+    expect(root.tagName).toBe('DIV');
+    expect(root).not.toHaveAttribute('type');
+    expect(root).not.toHaveAttribute('href');
+  });
+
+  it('forwards href when interactive without explicit as (anchor mode)', () => {
+    render(<Card interactive href="/x">Link</Card>);
+    const link = screen.getByRole('link');
+    expect(link).toHaveAttribute('href', '/x');
+    expect(link).not.toHaveAttribute('type');
+  });
 });
 
 describe('CardHeader', () => {
@@ -82,6 +104,21 @@ describe('CardMedia', () => {
     const { container } = render(<CardMedia src="/img.jpg" />);
     const img = container.querySelector('img');
     expect(img).toHaveAttribute('alt', '');
+  });
+
+  it('falls back to a 16:9 aspect ratio when given a non-positive value', () => {
+    const { container } = render(<CardMedia src="/img.jpg" aspectRatio={0} />);
+    const inner = container.querySelector('[style*="padding-bottom"]') as HTMLElement;
+    // 1 / (16/9) * 100 = 56.25%
+    expect(inner.style.paddingBottom).toBe('56.25%');
+  });
+
+  it('falls back to a 16:9 aspect ratio when given a non-finite value', () => {
+    const { container } = render(
+      <CardMedia src="/img.jpg" aspectRatio={Number.POSITIVE_INFINITY} />
+    );
+    const inner = container.querySelector('[style*="padding-bottom"]') as HTMLElement;
+    expect(inner.style.paddingBottom).toBe('56.25%');
   });
 });
 

@@ -249,6 +249,67 @@ describe('Pagination', () => {
     buttons.forEach((btn) => expect(btn).toBeDisabled());
   });
 
+  it('clamps currentPage above totalPages and disables Next/Last', () => {
+    const onChange = vi.fn();
+    render(
+      <Pagination
+        currentPage={99}
+        totalCount={20}
+        pageSize={10}
+        onPageChange={onChange}
+        showFirstLast
+      />
+    );
+    // totalPages = 2; currentPage clamped to 2 → Next/Last disabled,
+    // Prev/First enabled, and page 2 is marked aria-current.
+    expect(screen.getByLabelText('Next page')).toBeDisabled();
+    expect(screen.getByLabelText('Last page')).toBeDisabled();
+    expect(screen.getByLabelText('Previous page')).not.toBeDisabled();
+    expect(screen.getByLabelText('Page 2')).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('clamps currentPage below 1 and disables Prev/First', () => {
+    render(
+      <Pagination
+        currentPage={0}
+        totalCount={50}
+        pageSize={10}
+        onPageChange={vi.fn()}
+        showFirstLast
+      />
+    );
+    expect(screen.getByLabelText('Previous page')).toBeDisabled();
+    expect(screen.getByLabelText('First page')).toBeDisabled();
+    expect(screen.getByLabelText('Page 1')).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('treats invalid pageSize (0 or negative) as 1', () => {
+    render(
+      <Pagination
+        currentPage={1}
+        totalCount={5}
+        pageSize={0}
+        onPageChange={vi.fn()}
+      />
+    );
+    // With safePageSize=1 and totalCount=5, totalPages=5 → page 5 button rendered.
+    expect(screen.getByLabelText('Page 5')).toBeInTheDocument();
+  });
+
+  it('does not call onPageChange when the page would not change', async () => {
+    const onChange = vi.fn();
+    render(
+      <Pagination
+        currentPage={2}
+        totalCount={50}
+        pageSize={10}
+        onPageChange={onChange}
+      />
+    );
+    await userEvent.click(screen.getByLabelText('Page 2'));
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
   it('passes a11y checks', async () => {
     const { container } = render(
       <Pagination

@@ -133,7 +133,7 @@ export const WithAvatar: Story = {
               width: 40,
               height: 40,
               borderRadius: '50%',
-              background: '#3b82f6',
+              background: '#1d4ed8',
               color: '#fff',
               display: 'flex',
               alignItems: 'center',

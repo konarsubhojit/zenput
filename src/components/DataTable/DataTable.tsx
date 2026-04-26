@@ -742,26 +742,39 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
       </div>
 
       {/* Pagination controls */}
-      {pagination && (
-        <div className={styles.pagination}>
-          <span className={styles.paginationInfo}>
-            {loading || pagination.totalCount === 0
-              ? `0–0 of ${pagination.totalCount}`
-              : `${(pagination.currentPage - 1) * pagination.pageSize + 1}–${Math.min(
-                  pagination.currentPage * pagination.pageSize,
-                  pagination.totalCount
-                )} of ${pagination.totalCount}`}
-          </span>
-          <Pagination
-            currentPage={pagination.currentPage}
-            totalCount={pagination.totalCount}
-            pageSize={pagination.pageSize}
-            onPageChange={pagination.onPageChange}
-            disabled={loading}
-            size="sm"
-          />
-        </div>
-      )}
+      {pagination && (() => {
+        // Clamp the displayed range to valid bounds so the "x–y of total" label
+        // stays consistent even if the consumer's currentPage drifts out of
+        // range (for example after totalCount shrinks).
+        const safePageSize = Math.max(1, Math.floor(pagination.pageSize) || 1);
+        const totalPages = Math.max(
+          1,
+          Math.ceil(Math.max(0, pagination.totalCount) / safePageSize)
+        );
+        const safeCurrentPage = Math.min(
+          Math.max(1, Math.floor(pagination.currentPage) || 1),
+          totalPages
+        );
+        const rangeStart = (safeCurrentPage - 1) * safePageSize + 1;
+        const rangeEnd = Math.min(safeCurrentPage * safePageSize, pagination.totalCount);
+        return (
+          <div className={styles.pagination}>
+            <span className={styles.paginationInfo}>
+              {loading || pagination.totalCount === 0
+                ? `0–0 of ${pagination.totalCount}`
+                : `${rangeStart}–${rangeEnd} of ${pagination.totalCount}`}
+            </span>
+            <Pagination
+              currentPage={pagination.currentPage}
+              totalCount={pagination.totalCount}
+              pageSize={pagination.pageSize}
+              onPageChange={pagination.onPageChange}
+              disabled={loading}
+              size="sm"
+            />
+          </div>
+        );
+      })()}
     </div>
   );
 }

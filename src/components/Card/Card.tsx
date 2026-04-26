@@ -49,6 +49,19 @@ export function Card({
 }: CardProps): React.ReactElement {
   const Component: React.ElementType = as ?? (interactive ? (href ? 'a' : 'button') : 'div');
 
+  // Only forward `href` when rendering an `<a>` (or a custom component which
+  // may consume it); only forward `type="button"` when rendering a native
+  // `<button>` so React doesn't warn about invalid DOM attributes.
+  const isAnchor = Component === 'a';
+  const isNativeButton = Component === 'button';
+  const extraProps: Record<string, unknown> = {};
+  if (isAnchor || (typeof Component !== 'string' && href !== undefined)) {
+    extraProps.href = href;
+  }
+  if (isNativeButton) {
+    extraProps.type = 'button';
+  }
+
   return (
     <Component
       className={classNames(
@@ -60,9 +73,8 @@ export function Card({
       )}
       style={style}
       onClick={onClick}
-      href={href}
       tabIndex={interactive ? (tabIndex ?? 0) : tabIndex}
-      type={!as && interactive && !href ? 'button' : undefined}
+      {...extraProps}
     >
       {children}
     </Component>
@@ -113,8 +125,11 @@ export function CardMedia({
   className,
   style,
 }: CardMediaProps): React.ReactElement {
-  // Use padding-bottom trick for intrinsic aspect-ratio reservation.
-  const paddingBottom = `${(1 / aspectRatio) * 100}%`;
+  // Use padding-bottom trick for intrinsic aspect-ratio reservation. Guard
+  // against zero/negative/non-finite values which would produce broken layout.
+  const safeAspectRatio =
+    Number.isFinite(aspectRatio) && aspectRatio > 0 ? aspectRatio : 16 / 9;
+  const paddingBottom = `${(1 / safeAspectRatio) * 100}%`;
 
   return (
     <div className={classNames(styles.media, className)} style={style}>
