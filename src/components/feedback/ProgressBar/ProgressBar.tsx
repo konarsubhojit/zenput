@@ -45,10 +45,15 @@ export function ProgressBar({
   showValue = false,
   striped = false,
   className,
+  'aria-label': ariaLabel,
+  'aria-labelledby': ariaLabelledBy,
   ...rest
 }: ProgressBarProps): React.ReactElement {
   const clampedValue = Math.min(Math.max(value, 0), max);
   const percentage = max > 0 ? (clampedValue / max) * 100 : 0;
+  // Prefer an explicit `aria-label`/`aria-labelledby` passed by the consumer;
+  // fall back to the `label` prop so the progressbar always has an accessible name.
+  const accessibleLabel = ariaLabel ?? label;
 
   return (
     <div
@@ -76,7 +81,8 @@ export function ProgressBar({
         aria-valuemin={0}
         aria-valuemax={max}
         aria-valuetext={indeterminate ? undefined : `${Math.round(percentage)}%`}
-        aria-label={label}
+        aria-label={accessibleLabel}
+        aria-labelledby={ariaLabelledBy}
         className={classNames(styles.track, styles[`size-${size}`])}
       >
         <div

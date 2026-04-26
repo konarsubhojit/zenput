@@ -59,10 +59,15 @@ export function CircularProgress({
   label,
   showValue = false,
   className,
+  'aria-label': ariaLabel,
+  'aria-labelledby': ariaLabelledBy,
   ...rest
 }: CircularProgressProps): React.ReactElement {
   const diameter = diameterProp ?? sizeMap[size];
   const thickness = thicknessProp ?? thicknessMap[size];
+  // Prefer an explicit `aria-label`/`aria-labelledby` passed by the consumer;
+  // fall back to the `label` prop so the progressbar always has an accessible name.
+  const accessibleLabel = ariaLabel ?? label;
 
   const clampedValue = Math.min(Math.max(value, 0), max);
   const percentage = max > 0 ? (clampedValue / max) * 100 : 0;
@@ -94,7 +99,8 @@ export function CircularProgress({
         aria-valuemin={0}
         aria-valuemax={max}
         aria-valuetext={indeterminate ? undefined : `${Math.round(percentage)}%`}
-        aria-label={label}
+        aria-label={accessibleLabel}
+        aria-labelledby={ariaLabelledBy}
       >
         <circle
           className={styles.track}

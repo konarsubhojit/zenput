@@ -74,6 +74,26 @@ describe('CircularProgress', () => {
     // No percentage text should be rendered
     expect(screen.queryByText(/%$/)).toBeNull();
   });
+
+  it('forwards aria-label from props onto the progressbar element', () => {
+    render(<CircularProgress value={50} aria-label="Upload progress" />);
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-label', 'Upload progress');
+  });
+
+  it('forwards aria-labelledby from props onto the progressbar element', () => {
+    render(
+      <>
+        <span id="cp-label">Upload</span>
+        <CircularProgress value={50} aria-labelledby="cp-label" />
+      </>
+    );
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-labelledby', 'cp-label');
+  });
+
+  it('uses the label prop as the accessible name when no aria-label is provided', () => {
+    render(<CircularProgress value={50} label="Uploading" />);
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-label', 'Uploading');
+  });
 });
 
 describe('CircularProgress a11y (axe)', () => {

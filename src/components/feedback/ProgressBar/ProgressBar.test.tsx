@@ -68,6 +68,26 @@ describe('ProgressBar', () => {
     render(<ProgressBar value={5} max={0} aria-label="empty" />);
     expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuetext', '0%');
   });
+
+  it('forwards aria-label from props onto the progressbar element', () => {
+    render(<ProgressBar value={50} aria-label="Upload progress" />);
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-label', 'Upload progress');
+  });
+
+  it('forwards aria-labelledby from props onto the progressbar element', () => {
+    render(
+      <>
+        <span id="pb-label">Upload</span>
+        <ProgressBar value={50} aria-labelledby="pb-label" />
+      </>
+    );
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-labelledby', 'pb-label');
+  });
+
+  it('uses the label prop as the accessible name when no aria-label is provided', () => {
+    render(<ProgressBar value={50} label="Uploading" />);
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-label', 'Uploading');
+  });
 });
 
 describe('ProgressBar a11y (axe)', () => {
