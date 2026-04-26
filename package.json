@@ -21,6 +21,9 @@
     "dist"
   ],
   "sideEffects": false,
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
   "scripts": {
     "build": "rollup -c",
     "test": "vitest run",
