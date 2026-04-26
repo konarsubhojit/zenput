@@ -1,3 +1,4 @@
+'use client';
 import React, { createContext, useCallback, useContext, useEffect, useRef } from 'react';
 import { Controller, FormProvider, useFormContext, useFormState } from 'react-hook-form';
 import type { FieldErrors, FieldValues, Path } from 'react-hook-form';

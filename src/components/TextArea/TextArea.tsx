@@ -1,3 +1,4 @@
+'use client';
 import React, { forwardRef, useRef, useCallback } from 'react';
 import { TextAreaProps } from './TextArea.types';
 import { classNames, getValidationMessage, getValidationMessageClass } from '../../utils';

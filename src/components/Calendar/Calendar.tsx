@@ -1,3 +1,4 @@
+'use client';
 /* ---------------------------------------------------------------------------
  * Calendar – popover-based, WAI-ARIA grid-pattern date picker surface.
  * Keyboard: ArrowKeys, PageUp/Down (month), Shift+PageUp/Down (year),

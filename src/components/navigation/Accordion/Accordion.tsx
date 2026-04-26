@@ -1,3 +1,4 @@
+'use client';
 import React, { createContext, useCallback, useContext, useId, useMemo, useState } from 'react';
 import { classNames } from '../../../utils';
 import styles from './Accordion.module.css';

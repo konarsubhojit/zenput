@@ -1,3 +1,4 @@
+'use client';
 /* ---------------------------------------------------------------------------
  * Shared internals for the popover-based pickers (DatePicker,
  * DateRangePicker, TimePicker). Not part of the public API.

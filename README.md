@@ -871,6 +871,122 @@ function EmailField() {
 ```
 
 
+## Next.js App Router
+
+Zenput ships with `'use client'` directives in its bundle so every component
+and hook is clearly marked as a Client Component boundary. This means you can
+import zenput components directly from **Server Components** — Next.js will
+automatically render them on the client.
+
+### Server-safe sub-path exports
+
+| Import path | Contents | Safe in Server Component? |
+|---|---|---|
+| `zenput` | All components + hooks | ✅ (via `'use client'` boundary) |
+| `zenput/tokens` | Design token objects, `cssVar()`, `buildCssVariables()` | ✅ Yes (no React) |
+| `zenput/server` | `getColorModeScript()` | ✅ Yes (no React) |
+| `zenput/forms` | `Form`, `useZenputForm` | ✅ (via `'use client'` boundary) |
+
+### Minimal App Router setup
+
+```tsx
+// app/layout.tsx  (Server Component)
+import { getColorModeScript } from 'zenput/server';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = { title: 'My App' };
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <head>
+        {/* Prevents theme flash on first paint */}
+        <script dangerouslySetInnerHTML={{ __html: getColorModeScript() }} />
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+```tsx
+// app/page.tsx  (Server Component — token utilities run on the server)
+import { cssVar, CSS_VAR_PREFIX } from 'zenput/tokens';
+import MyForm from './MyForm';           // client component
+
+export default function Page() {
+  const brand = cssVar('color-brand');   // runs on server, no hooks needed
+  return <MyForm />;
+}
+```
+
+```tsx
+// app/MyForm.tsx  (Client Component)
+'use client';
+import { ThemeProvider, TextInput, Button } from 'zenput';
+
+export default function MyForm() {
+  return (
+    <ThemeProvider>
+      <TextInput label="Email" placeholder="you@example.com" />
+      <Button>Submit</Button>
+    </ThemeProvider>
+  );
+}
+```
+
+### `getColorModeScript` options
+
+```ts
+import { getColorModeScript } from 'zenput/server';
+
+// defaults
+getColorModeScript({
+  attribute: 'data-zp-theme',       // written on <html>
+  storageKey: 'zp-color-mode',      // localStorage key
+  fallback: 'light',                // when no preference found
+  respectSystemPreference: true,    // honour prefers-color-scheme
+});
+```
+
+### `transpilePackages` (optional)
+
+If you see module resolution errors, add zenput to `transpilePackages` in
+`next.config.ts`:
+
+```ts
+// next.config.ts
+const nextConfig = {
+  transpilePackages: ['zenput'],
+};
+export default nextConfig;
+```
+
+---
+
+## SSR Safety
+
+All Zenput components are designed to render safely in server-side environments:
+
+- **`Portal`** — Uses `useSyncExternalStore` with a server snapshot of `false`;
+  renders `null` on the server and activates portals only after mount on the
+  client. No `document` access happens at module evaluation time.
+
+- **`useFocusTrap`** — All `document` access is inside `useEffect`, which only
+  runs on the client. Perfectly safe to call during SSR.
+
+- **`ThemeProvider`** — Pure React context + `useMemo`; no browser globals. The
+  `mode` prop accepts `'light' | 'dark' | 'highContrast'` (not `'system'`),
+  so there is no `matchMedia` call inside the provider.
+
+- **`useDisclosure`** — Uses `useState` and `useRef` from React 18+; no
+  `useId` fallback or random values that could cause hydration mismatches.
+
+- **Internal hooks** (`useClickOutside`, `useEscapeKey`, `useMenuKeyboardNav`)
+  — All event-listener registration is deferred to `useEffect`.
+
+---
+
 ## License
 
 MIT © konarsubhojit

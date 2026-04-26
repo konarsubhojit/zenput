@@ -1,3 +1,4 @@
+'use client';
 import React, { createContext, useContext, useMemo, CSSProperties } from 'react';
 import {
   buildCssVariables,

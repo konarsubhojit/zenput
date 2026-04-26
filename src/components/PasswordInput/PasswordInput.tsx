@@ -1,3 +1,4 @@
+'use client';
 import React, { forwardRef, useState, useCallback } from 'react';
 import { PasswordInputProps } from './PasswordInput.types';
 import { classNames, getValidationMessage, getValidationMessageClass } from '../../utils';

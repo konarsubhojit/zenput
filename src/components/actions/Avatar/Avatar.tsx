@@ -1,3 +1,4 @@
+'use client';
 import React, { forwardRef, useState } from 'react';
 import { classNames } from '../../../utils';
 import styles from './Avatar.module.css';

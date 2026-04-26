@@ -1,3 +1,4 @@
+'use client';
 import React, { useCallback, useMemo, useState } from 'react';
 import { DatePickerProps } from './DatePicker.types';
 import { Calendar } from '../Calendar/Calendar';

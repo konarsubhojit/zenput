@@ -1,3 +1,4 @@
+'use client';
 import React, { useState, useCallback, useRef, useEffect, useMemo, useId } from 'react';
 import {
   DataTableProps,
