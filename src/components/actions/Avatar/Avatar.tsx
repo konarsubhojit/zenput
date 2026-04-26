@@ -25,16 +25,16 @@ export interface AvatarProps extends React.HTMLAttributes<HTMLSpanElement> {
 }
 
 const BG_COLORS = [
-  '#4f46e5', // indigo
-  '#7c3aed', // violet
-  '#db2777', // pink
-  '#dc2626', // red
-  '#d97706', // amber
-  '#059669', // emerald
-  '#0284c7', // sky
-  '#0891b2', // cyan
-  '#16a34a', // green
-  '#9333ea', // purple
+  '#4338ca', // indigo-700
+  '#6d28d9', // violet-700
+  '#be185d', // pink-700
+  '#b91c1c', // red-700
+  '#b45309', // amber-700
+  '#047857', // emerald-700
+  '#0369a1', // sky-700
+  '#0e7490', // cyan-700
+  '#15803d', // green-700
+  '#7e22ce', // purple-700
 ];
 
 /** Derive initials (up to 2 chars) from a display name. */

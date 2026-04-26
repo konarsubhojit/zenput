@@ -14,6 +14,18 @@ import styles from './SegmentedControl.module.css';
 
 export type SegmentedControlSize = 'sm' | 'md' | 'lg';
 
+/**
+ * Encode an arbitrary string into a deterministic, ID-safe segment. HTML id
+ * attributes technically allow most characters, but values containing spaces,
+ * quotes, or other CSS-significant punctuation cause problems when used in
+ * selectors or `aria-*` references. We escape any character outside
+ * `[A-Za-z0-9_-]` as its lowercase hex char code prefixed with `_`, which is
+ * collision-free for distinct inputs and always produces a valid id segment.
+ */
+function safeIdSegment(value: string): string {
+  return value.replace(/[^A-Za-z0-9_-]/g, (ch) => `_${ch.charCodeAt(0).toString(16)}`);
+}
+
 // ---------------------------------------------------------------------------
 // SegmentedControl context
 // ---------------------------------------------------------------------------
@@ -205,7 +217,7 @@ export function SegmentedControlItem({
     <button
       role="radio"
       type="button"
-      id={`${baseId}-item-${value}`}
+      id={`${baseId}-item-${safeIdSegment(value)}`}
       aria-checked={isSelected}
       tabIndex={isSelected ? 0 : -1}
       disabled={disabled}
@@ -265,6 +277,12 @@ interface ToggleGroupContextValue {
   toggle: (value: string) => void;
   size: SegmentedControlSize;
   baseId: string;
+  /** Selection mode — used to determine whether items participate in a roving
+   *  tabindex (single) or each remain independently tabbable (multiple). */
+  type: ToggleGroupType;
+  /** Value that currently owns the tabstop when `type === 'single'`
+   *  (roving tabindex). Null in multiple mode. */
+  rovingValue: string | null;
 }
 
 const ToggleGroupContext = createContext<ToggleGroupContextValue | null>(null);
@@ -353,6 +371,16 @@ export function ToggleGroup(props: ToggleGroupProps): React.ReactElement {
     return values;
   }, [children]);
 
+  // Determine the value that should currently own tab focus when in single mode
+  // (roving tabindex). Falls back to the first item if nothing is selected so
+  // the group is always reachable via Tab.
+  const rovingValue: string | null = useMemo(() => {
+    if (type !== 'single') return null;
+    const current = isSingleControlled ? singleControlledValue : singleInternal;
+    if (current && itemValues.includes(current)) return current;
+    return itemValues[0] ?? null;
+  }, [type, isSingleControlled, singleControlledValue, singleInternal, itemValues]);
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
       const enabled = itemValues.filter((v) => {
@@ -396,7 +424,9 @@ export function ToggleGroup(props: ToggleGroupProps): React.ReactElement {
   );
 
   return (
-    <ToggleGroupContext.Provider value={{ isSelected, toggle, size, baseId }}>
+    <ToggleGroupContext.Provider
+      value={{ isSelected, toggle, size, baseId, type, rovingValue }}
+    >
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- keyboard handler enables arrow-key navigation between toggle items */}
       <div
         ref={groupRef}
@@ -445,19 +475,24 @@ export function ToggleGroupItem({
   children,
   className,
 }: ToggleGroupItemProps): React.ReactElement {
-  const { isSelected, toggle, baseId } = useToggleGroupContext();
+  const { isSelected, toggle, baseId, type, rovingValue } = useToggleGroupContext();
   const selected = isSelected(value);
 
   const handleClick = useCallback(() => {
     if (!disabled) toggle(value);
   }, [disabled, toggle, value]);
 
+  // For `type="single"`, the group acts as a single tabstop with arrow-key
+  // navigation between items (roving tabindex). For `type="multiple"`, each
+  // toggle is independent and remains in the natural Tab sequence.
+  const tabIndex = type === 'single' ? (rovingValue === value ? 0 : -1) : 0;
+
   return (
     <button
       type="button"
-      id={`${baseId}-tg-${value}`}
+      id={`${baseId}-tg-${safeIdSegment(value)}`}
       aria-pressed={selected}
-      tabIndex={0}
+      tabIndex={tabIndex}
       disabled={disabled}
       data-tg-value={value}
       data-selected={selected || undefined}
