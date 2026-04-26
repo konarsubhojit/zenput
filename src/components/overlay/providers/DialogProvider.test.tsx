@@ -483,3 +483,168 @@ describe('hook guard', () => {
     spy.mockRestore();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Additional branch coverage
+// ---------------------------------------------------------------------------
+
+describe('useConfirm - branch coverage', () => {
+  it('renders the description when provided', async () => {
+    render(
+      <DialogProvider>
+        <ConfirmButton
+          options={{ title: 'Confirm', description: 'Are you sure about this?' }}
+          onResult={() => undefined}
+        />
+      </DialogProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open Confirm').click();
+    });
+
+    expect(screen.getByText('Are you sure about this?')).toBeInTheDocument();
+  });
+
+  it('uses default labels when none are provided', async () => {
+    render(
+      <DialogProvider>
+        <ConfirmButton onResult={() => undefined} />
+      </DialogProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open Confirm').click();
+    });
+
+    // Both title and confirm button use "Confirm" as default label
+    expect(screen.getAllByText('Confirm').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText('Cancel')).toBeInTheDocument();
+  });
+});
+
+describe('usePrompt - branch coverage', () => {
+  it('shows the generic "Invalid value" error when validate returns false (no string)', async () => {
+    render(
+      <DialogProvider>
+        <PromptButton
+          options={{ validate: () => false }}
+          onResult={() => undefined}
+        />
+      </DialogProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open Prompt').click();
+    });
+    await act(async () => {
+      screen.getByText('OK').click();
+    });
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Invalid value');
+  });
+
+  it('renders without a label when none is provided', async () => {
+    render(
+      <DialogProvider>
+        <PromptButton onResult={() => undefined} />
+      </DialogProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open Prompt').click();
+    });
+
+    expect(screen.queryByText('New name')).not.toBeInTheDocument();
+    expect(screen.getByRole('textbox')).toBeInTheDocument();
+  });
+
+  it('uses default title and labels when none are provided', async () => {
+    render(
+      <DialogProvider>
+        <PromptButton onResult={() => undefined} />
+      </DialogProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open Prompt').click();
+    });
+
+    expect(screen.getByText('Enter a value')).toBeInTheDocument();
+    expect(screen.getByText('OK')).toBeInTheDocument();
+    expect(screen.getByText('Cancel')).toBeInTheDocument();
+  });
+});
+
+describe('useAlert - branch coverage', () => {
+  it('uses default title and dismiss label when none are provided', async () => {
+    render(
+      <DialogProvider>
+        <AlertButton onResult={() => undefined} />
+      </DialogProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open Alert').click();
+    });
+
+    expect(screen.getByText('Alert')).toBeInTheDocument();
+    expect(screen.getByText('OK')).toBeInTheDocument();
+  });
+
+  it('renders without a description when none is provided', async () => {
+    render(
+      <DialogProvider>
+        <AlertButton onResult={() => undefined} />
+      </DialogProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open Alert').click();
+    });
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+});
+
+describe('DialogProvider - unmount cleanup', () => {
+  it('resolves pending promises with null on provider unmount', async () => {
+    const results: unknown[] = [];
+
+    function App() {
+      const dialog = useDialog();
+      return (
+        <button
+          onClick={() => {
+            const handle = dialog.open({
+              content: () => <span>Open dialog</span>,
+            });
+            handle.result.then((v) => results.push(v));
+          }}
+        >
+          Open
+        </button>
+      );
+    }
+
+    const { unmount } = render(
+      <DialogProvider>
+        <App />
+      </DialogProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open').click();
+    });
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    unmount();
+
+    // Allow microtasks to flush so the resolved promise propagates.
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(results).toEqual([null]);
+  });
+});

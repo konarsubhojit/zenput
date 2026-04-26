@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, act, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import { PopoverProvider, usePopover } from './PopoverProvider';
 
 afterEach(() => {
@@ -144,5 +144,201 @@ describe('usePopover', () => {
     });
 
     expect(screen.getByText('At coordinates')).toBeInTheDocument();
+  });
+
+  it('accepts an HTMLElement directly as anchor', async () => {
+    function ElementAnchorPopover() {
+      const popover = usePopover();
+      return (
+        <button
+          data-testid="anchor-btn"
+          onClick={(e) => {
+            popover.open({
+              anchor: e.currentTarget as HTMLElement,
+              content: () => <span>From element anchor</span>,
+            });
+          }}
+        >
+          Open
+        </button>
+      );
+    }
+
+    render(
+      <PopoverProvider>
+        <ElementAnchorPopover />
+      </PopoverProvider>
+    );
+
+    await act(async () => {
+      screen.getByTestId('anchor-btn').click();
+    });
+
+    expect(screen.getByText('From element anchor')).toBeInTheDocument();
+  });
+
+  it('closes on outside click when dismissible (default)', async () => {
+    render(
+      <div>
+        <div data-testid="outside">outside</div>
+        <PopoverProvider>
+          <PopoverButton onResult={() => undefined} />
+        </PopoverProvider>
+      </div>
+    );
+
+    await act(async () => {
+      screen.getByText('Open Popover').click();
+    });
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.mouseDown(screen.getByTestId('outside'));
+    });
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('does not close on outside click when dismissible=false', async () => {
+    render(
+      <div>
+        <div data-testid="outside">outside</div>
+        <PopoverProvider>
+          <PopoverButton dismissible={false} onResult={() => undefined} />
+        </PopoverProvider>
+      </div>
+    );
+
+    await act(async () => {
+      screen.getByText('Open Popover').click();
+    });
+    await act(async () => {
+      fireEvent.mouseDown(screen.getByTestId('outside'));
+    });
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  it.each(['top', 'bottom', 'left', 'right'] as const)(
+    'positions on %s side',
+    async (side) => {
+      function SidePopover() {
+        const popover = usePopover();
+        const ref = React.useRef<HTMLButtonElement>(null);
+        return (
+          <button
+            ref={ref}
+            onClick={() => {
+              popover.open({
+                anchor: ref as React.RefObject<HTMLElement>,
+                side,
+                content: () => <span>{side}-content</span>,
+              });
+            }}
+          >
+            Open {side}
+          </button>
+        );
+      }
+
+      render(
+        <PopoverProvider>
+          <SidePopover />
+        </PopoverProvider>
+      );
+
+      await act(async () => {
+        screen.getByText(`Open ${side}`).click();
+      });
+
+      const panel = document.querySelector(`[data-side="${side}"]`);
+      expect(panel).not.toBeNull();
+    }
+  );
+
+  it.each(['start', 'center', 'end'] as const)(
+    'positions with align=%s',
+    async (align) => {
+      function AlignedPopover() {
+        const popover = usePopover();
+        const ref = React.useRef<HTMLButtonElement>(null);
+        return (
+          <button
+            ref={ref}
+            onClick={() => {
+              popover.open({
+                anchor: ref as React.RefObject<HTMLElement>,
+                align,
+                content: () => <span>{align}-aligned</span>,
+              });
+            }}
+          >
+            Open {align}
+          </button>
+        );
+      }
+
+      render(
+        <PopoverProvider>
+          <AlignedPopover />
+        </PopoverProvider>
+      );
+
+      await act(async () => {
+        screen.getByText(`Open ${align}`).click();
+      });
+
+      const panel = document.querySelector(`[data-align="${align}"]`);
+      expect(panel).not.toBeNull();
+    }
+  );
+
+  it('throws when usePopover is called outside PopoverProvider', () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    expect(() => {
+      render(<PopoverButton onResult={() => undefined} />);
+    }).toThrow(/PopoverProvider/);
+    spy.mockRestore();
+  });
+
+  it('resolves pending promises with null on provider unmount', async () => {
+    const results: unknown[] = [];
+
+    function App() {
+      const popover = usePopover();
+      const ref = React.useRef<HTMLButtonElement>(null);
+      return (
+        <button
+          ref={ref}
+          onClick={() => {
+            const handle = popover.open({
+              anchor: ref as React.RefObject<HTMLElement>,
+              content: () => <span>Body</span>,
+            });
+            handle.result.then((v) => results.push(v));
+          }}
+        >
+          Open
+        </button>
+      );
+    }
+
+    const { unmount } = render(
+      <PopoverProvider>
+        <App />
+      </PopoverProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open').click();
+    });
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    unmount();
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(results).toEqual([null]);
   });
 });

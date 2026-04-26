@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, act, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import {
   DrawerProvider,
   useDrawer,
@@ -184,5 +184,79 @@ describe('useDrawer', () => {
     });
 
     expect(screen.getAllByRole('dialog').length).toBe(2);
+  });
+
+  it('renders with the specified size', async () => {
+    function SizedDrawer() {
+      const drawer = useDrawer();
+      return (
+        <button
+          onClick={() =>
+            drawer.open({
+              size: 'lg',
+              content: () => <DrawerTitle>Big drawer</DrawerTitle>,
+            })
+          }
+        >
+          Open Big
+        </button>
+      );
+    }
+
+    render(
+      <DrawerProvider>
+        <SizedDrawer />
+      </DrawerProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open Big').click();
+    });
+
+    expect(screen.getByText('Big drawer')).toBeInTheDocument();
+  });
+
+  it('throws when useDrawer is called outside DrawerProvider', () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    expect(() => {
+      render(<DrawerButton onResult={() => undefined} />);
+    }).toThrow(/DrawerProvider/);
+    spy.mockRestore();
+  });
+
+  it('resolves pending promises with null on provider unmount', async () => {
+    const results: unknown[] = [];
+
+    function App() {
+      const drawer = useDrawer();
+      return (
+        <button
+          onClick={() => {
+            const handle = drawer.open({ content: () => <DrawerTitle>X</DrawerTitle> });
+            handle.result.then((v) => results.push(v));
+          }}
+        >
+          Open
+        </button>
+      );
+    }
+
+    const { unmount } = render(
+      <DrawerProvider>
+        <App />
+      </DrawerProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open').click();
+    });
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    unmount();
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(results).toEqual([null]);
   });
 });
