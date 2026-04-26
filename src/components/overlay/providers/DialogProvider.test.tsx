@@ -1,0 +1,485 @@
+import React from 'react';
+import { render, screen, act, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, afterEach, vi } from 'vitest';
+import { DialogProvider, useConfirm, usePrompt, useAlert, useDialog } from './DialogProvider';
+
+afterEach(() => {
+  document.querySelectorAll('[data-zenput-portal]').forEach((el) => el.remove());
+});
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function ConfirmButton({
+  options,
+  onResult,
+}: {
+  options?: Parameters<ReturnType<typeof useConfirm>>[0];
+  onResult: (v: boolean) => void;
+}) {
+  const confirm = useConfirm();
+  return (
+    <button
+      onClick={async () => {
+        const result = await confirm(options);
+        onResult(result);
+      }}
+    >
+      Open Confirm
+    </button>
+  );
+}
+
+function PromptButton({
+  options,
+  onResult,
+}: {
+  options?: Parameters<ReturnType<typeof usePrompt>>[0];
+  onResult: (v: string | null) => void;
+}) {
+  const prompt = usePrompt();
+  return (
+    <button
+      onClick={async () => {
+        const result = await prompt(options);
+        onResult(result);
+      }}
+    >
+      Open Prompt
+    </button>
+  );
+}
+
+function AlertButton({
+  options,
+  onResult,
+}: {
+  options?: Parameters<ReturnType<typeof useAlert>>[0];
+  onResult: () => void;
+}) {
+  const alert = useAlert();
+  return (
+    <button
+      onClick={async () => {
+        await alert(options);
+        onResult();
+      }}
+    >
+      Open Alert
+    </button>
+  );
+}
+
+function GenericDialogButton({
+  onResult,
+}: {
+  onResult: (v: unknown) => void;
+}) {
+  const dialog = useDialog();
+  return (
+    <button
+      onClick={() => {
+        const handle = dialog.open({
+          content: ({ close }) => (
+            <>
+              <button onClick={() => close('hello')}>Submit</button>
+              <button onClick={() => close()}>Cancel</button>
+            </>
+          ),
+        });
+        handle.result.then(onResult);
+      }}
+    >
+      Open Dialog
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// useConfirm tests
+// ---------------------------------------------------------------------------
+
+describe('useConfirm', () => {
+  it('renders a confirm dialog when invoked', async () => {
+    render(
+      <DialogProvider>
+        <ConfirmButton onResult={() => undefined} />
+      </DialogProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open Confirm').click();
+    });
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  it('resolves true when Confirm is clicked', async () => {
+    const results: boolean[] = [];
+    render(
+      <DialogProvider>
+        <ConfirmButton
+          options={{ title: 'Delete?', confirmLabel: 'Delete', cancelLabel: 'No' }}
+          onResult={(v) => results.push(v)}
+        />
+      </DialogProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open Confirm').click();
+    });
+    await act(async () => {
+      screen.getByText('Delete').click();
+    });
+
+    expect(results).toEqual([true]);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('resolves false when Cancel is clicked', async () => {
+    const results: boolean[] = [];
+    render(
+      <DialogProvider>
+        <ConfirmButton
+          options={{ confirmLabel: 'Yes', cancelLabel: 'No' }}
+          onResult={(v) => results.push(v)}
+        />
+      </DialogProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open Confirm').click();
+    });
+    await act(async () => {
+      screen.getByText('No').click();
+    });
+
+    expect(results).toEqual([false]);
+  });
+
+  it('resolves false on Escape when dismissible (default)', async () => {
+    const results: boolean[] = [];
+    render(
+      <DialogProvider>
+        <ConfirmButton onResult={(v) => results.push(v)} />
+      </DialogProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open Confirm').click();
+    });
+    await act(async () => {
+      fireEvent.keyDown(document, { key: 'Escape' });
+    });
+
+    expect(results).toEqual([false]);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('does not close on Escape when dismissible=false', async () => {
+    render(
+      <DialogProvider>
+        <ConfirmButton options={{ dismissible: false }} onResult={() => undefined} />
+      </DialogProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open Confirm').click();
+    });
+    await act(async () => {
+      fireEvent.keyDown(document, { key: 'Escape' });
+    });
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  it('uses danger variant for destructive confirm', async () => {
+    render(
+      <DialogProvider>
+        <ConfirmButton
+          options={{ destructive: true, confirmLabel: 'Delete' }}
+          onResult={() => undefined}
+        />
+      </DialogProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open Confirm').click();
+    });
+
+    const deleteBtn = screen.getByText('Delete');
+    expect(deleteBtn).toBeInTheDocument();
+  });
+
+  it('stacks two confirms on top of each other', async () => {
+    function NestedConfirm() {
+      const confirm = useConfirm();
+      return (
+        <button
+          onClick={async () => {
+            const first = confirm({ title: 'First Confirm' });
+            await confirm({ title: 'Second Confirm' });
+            await first;
+          }}
+        >
+          Start
+        </button>
+      );
+    }
+
+    render(
+      <DialogProvider>
+        <NestedConfirm />
+      </DialogProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Start').click();
+    });
+
+    const dialogs = screen.getAllByRole('dialog');
+    expect(dialogs.length).toBe(2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// usePrompt tests
+// ---------------------------------------------------------------------------
+
+describe('usePrompt', () => {
+  it('renders a prompt dialog when invoked', async () => {
+    render(
+      <DialogProvider>
+        <PromptButton onResult={() => undefined} />
+      </DialogProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open Prompt').click();
+    });
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByRole('textbox')).toBeInTheDocument();
+  });
+
+  it('resolves with the input value when OK is clicked', async () => {
+    const results: (string | null)[] = [];
+    render(
+      <DialogProvider>
+        <PromptButton
+          options={{ title: 'Rename', label: 'New name', defaultValue: 'file.txt' }}
+          onResult={(v) => results.push(v)}
+        />
+      </DialogProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open Prompt').click();
+    });
+    const input = screen.getByRole('textbox');
+    await act(async () => {
+      fireEvent.change(input, { target: { value: 'new-file.txt' } });
+    });
+    await act(async () => {
+      screen.getByText('OK').click();
+    });
+
+    expect(results).toEqual(['new-file.txt']);
+  });
+
+  it('resolves null when Cancel is clicked', async () => {
+    const results: (string | null)[] = [];
+    render(
+      <DialogProvider>
+        <PromptButton onResult={(v) => results.push(v)} />
+      </DialogProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open Prompt').click();
+    });
+    await act(async () => {
+      screen.getByText('Cancel').click();
+    });
+
+    expect(results).toEqual([null]);
+  });
+
+  it('shows validation error and does not close on invalid input', async () => {
+    const results: (string | null)[] = [];
+    render(
+      <DialogProvider>
+        <PromptButton
+          options={{
+            validate: (v) => v.length > 0 || 'Required',
+          }}
+          onResult={(v) => results.push(v)}
+        />
+      </DialogProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open Prompt').click();
+    });
+    const input = screen.getByRole('textbox');
+    await act(async () => {
+      fireEvent.change(input, { target: { value: '' } });
+    });
+    await act(async () => {
+      screen.getByText('OK').click();
+    });
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Required');
+    expect(results).toEqual([]);
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  it('submits on Enter keydown', async () => {
+    const results: (string | null)[] = [];
+    render(
+      <DialogProvider>
+        <PromptButton options={{ defaultValue: 'typed' }} onResult={(v) => results.push(v)} />
+      </DialogProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open Prompt').click();
+    });
+    const input = screen.getByRole('textbox');
+    await act(async () => {
+      fireEvent.keyDown(input, { key: 'Enter' });
+    });
+
+    expect(results).toEqual(['typed']);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// useAlert tests
+// ---------------------------------------------------------------------------
+
+describe('useAlert', () => {
+  it('renders an alert dialog and resolves on OK', async () => {
+    let resolved = false;
+    render(
+      <DialogProvider>
+        <AlertButton
+          options={{ title: 'Saved', description: 'Changes saved.' }}
+          onResult={() => {
+            resolved = true;
+          }}
+        />
+      </DialogProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open Alert').click();
+    });
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByText('Saved')).toBeInTheDocument();
+
+    await act(async () => {
+      screen.getByText('OK').click();
+    });
+
+    expect(resolved).toBe(true);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// useDialog tests
+// ---------------------------------------------------------------------------
+
+describe('useDialog', () => {
+  it('opens a generic dialog and resolves with the close value', async () => {
+    const results: unknown[] = [];
+    render(
+      <DialogProvider>
+        <GenericDialogButton onResult={(v) => results.push(v)} />
+      </DialogProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open Dialog').click();
+    });
+    await act(async () => {
+      screen.getByText('Submit').click();
+    });
+
+    await waitFor(() => expect(results).toEqual(['hello']));
+  });
+
+  it('resolves null when Cancel is clicked', async () => {
+    const results: unknown[] = [];
+    render(
+      <DialogProvider>
+        <GenericDialogButton onResult={(v) => results.push(v)} />
+      </DialogProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open Dialog').click();
+    });
+    await act(async () => {
+      screen.getByText('Cancel').click();
+    });
+
+    await waitFor(() => expect(results).toEqual([null]));
+  });
+
+  it('can be closed programmatically via handle.close()', async () => {
+    function HandleCloser() {
+      const dialog = useDialog();
+      const handleRef = React.useRef<ReturnType<typeof dialog.open> | null>(null);
+      return (
+        <>
+          <button
+            onClick={() => {
+              handleRef.current = dialog.open({ content: () => <span>Content</span> });
+            }}
+          >
+            Open
+          </button>
+          <button onClick={() => handleRef.current?.close()}>Close Handle</button>
+        </>
+      );
+    }
+
+    render(
+      <DialogProvider>
+        <HandleCloser />
+      </DialogProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open').click();
+    });
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    await act(async () => {
+      screen.getByText('Close Handle').click();
+    });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Provider error guard
+// ---------------------------------------------------------------------------
+
+describe('hook guard', () => {
+  it('throws when useConfirm is called outside DialogProvider', () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    expect(() => {
+      render(
+        <React.Suspense fallback={null}>
+          <ConfirmButton onResult={() => undefined} />
+        </React.Suspense>
+      );
+    }).toThrow();
+    spy.mockRestore();
+  });
+});

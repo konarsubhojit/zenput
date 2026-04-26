@@ -451,6 +451,164 @@ The following CSS custom properties are emitted by `ThemeProvider` and available
 | `wrapperClassName` | `string` | — | Class for the wrapper element |
 | `inputClassName` | `string` | — | Class for the input element |
 
+## Imperative overlays
+
+Zenput ships **provider-based imperative APIs** for Dialog, Drawer, and Popover. These are designed for "fire-and-forget" use cases where managing `open` state and JSX placement would be inconvenient — confirming navigation, prompting for input from a row-action callback, or surfacing errors from `fetch().catch()`.
+
+> **Anti-pattern guard** — providers are for *transient* / *imperative* flows. The declarative
+> `<Dialog open={x}>…</Dialog>` API remains the recommended primitive for dialogs whose content
+> is part of the page layout. Both APIs ship side-by-side.
+
+### Setup
+
+Wrap your application (or a subtree) with the providers once:
+
+```tsx
+import { DialogProvider, DrawerProvider, PopoverProvider } from 'zenput';
+
+<DialogProvider>
+  <DrawerProvider>
+    <PopoverProvider>
+      <App />
+    </PopoverProvider>
+  </DrawerProvider>
+</DialogProvider>
+```
+
+### `useConfirm`
+
+```tsx
+import { useConfirm } from 'zenput';
+
+function DeleteButton() {
+  const confirm = useConfirm();
+
+  const handleDelete = async () => {
+    const ok = await confirm({
+      title: 'Delete project?',
+      description: 'This cannot be undone.',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      destructive: true,   // uses the danger button variant
+      dismissible: true,   // Escape / backdrop resolves false (default)
+    });
+    if (ok) deleteProject();
+  };
+
+  return <button onClick={handleDelete}>Delete</button>;
+}
+```
+
+### `usePrompt`
+
+```tsx
+import { usePrompt } from 'zenput';
+
+const prompt = usePrompt();
+
+const newName = await prompt({
+  title: 'Rename file',
+  label: 'New name',
+  defaultValue: file.name,
+  validate: (v) => v.trim().length > 0 || 'Name is required',
+});
+if (newName) renameFile(newName);
+```
+
+### `useAlert`
+
+```tsx
+import { useAlert } from 'zenput';
+
+const alert = useAlert();
+
+// Works great inside async error handlers — no JSX needed at the call site.
+fetch('/api/save')
+  .catch(async (err) => {
+    await alert({ title: 'Save failed', description: err.message });
+  });
+```
+
+### `useDialog` — generic content
+
+```tsx
+import { useDialog } from 'zenput';
+
+const dialog = useDialog<string>();
+
+const handle = dialog.open({
+  size: 'md',
+  content: ({ close }) => (
+    <MyForm onSubmit={(v) => close(v)} onCancel={() => close()} />
+  ),
+});
+const result = await handle.result; // string | null
+handle.close();                     // programmatic close
+```
+
+### `useDrawer`
+
+Same shape as `useDialog` but anchored to an edge of the viewport.
+
+```tsx
+import { useDrawer, DrawerHeader, DrawerTitle, DrawerBody, DrawerFooter } from 'zenput';
+
+const drawer = useDrawer();
+
+drawer.open({
+  side: 'right',   // 'left' | 'right' | 'top' | 'bottom'
+  size: 'md',
+  content: ({ close }) => (
+    <>
+      <DrawerHeader><DrawerTitle>Details</DrawerTitle></DrawerHeader>
+      <DrawerBody>…</DrawerBody>
+      <DrawerFooter><button onClick={() => close()}>Done</button></DrawerFooter>
+    </>
+  ),
+});
+```
+
+### `usePopover`
+
+Anchor a popover to an element ref **or** `(x, y)` viewport coordinates.
+
+```tsx
+import { usePopover } from 'zenput';
+
+const popover = usePopover();
+const ref = useRef<HTMLButtonElement>(null);
+
+// Anchored to an element
+popover.open({
+  anchor: ref,
+  side: 'bottom',
+  content: ({ close }) => <Menu onSelect={(v) => close(v)} />,
+});
+
+// Anchored to cursor (context menu)
+const handleContextMenu = (e: React.MouseEvent) => {
+  e.preventDefault();
+  popover.open({ anchor: { x: e.clientX, y: e.clientY }, content: ... });
+};
+```
+
+### Promise resolution
+
+| Hook | Resolved value | Dismissed value |
+|------|---------------|-----------------|
+| `useConfirm` | `true` | `false` |
+| `usePrompt` | `string` | `null` |
+| `useAlert` | `void` | `void` |
+| `useDialog` | value passed to `close(value)` | `null` |
+| `useDrawer` | value passed to `close(value)` | `null` |
+| `usePopover` | value passed to `close(value)` | `null` |
+
+All promises resolve (never reject). When the provider unmounts with open dialogs, remaining promises are resolved with their dismissed value — no unhandled rejection warnings.
+
+### Stack support
+
+Opening a dialog (or confirm) from inside another dialog stacks them in DOM order — the most recently opened overlay is on top. Focus is trapped inside the topmost overlay and returns to the previous focus target on close.
+
 ## Development
 
 ```bash
