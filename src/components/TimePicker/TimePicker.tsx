@@ -271,13 +271,7 @@ export function TimePicker({
   labelStyle,
   helperTextClassName,
   helperTextStyle,
-}: TimePickerProps & {
-  wrapperStyle?: React.CSSProperties;
-  labelClassName?: string;
-  labelStyle?: React.CSSProperties;
-  helperTextClassName?: string;
-  helperTextStyle?: React.CSSProperties;
-}): React.ReactElement {
+}: TimePickerProps): React.ReactElement {
   const isControlled = controlledValue !== undefined;
   const [internalValue, setInternalValue] = useState<TimeValue | null>(
     defaultValue ?? null

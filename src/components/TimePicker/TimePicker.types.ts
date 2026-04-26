@@ -1,3 +1,5 @@
+import React from 'react';
+
 export interface TimeValue {
   hours: number;
   minutes: number;
@@ -55,4 +57,14 @@ export interface TimePickerProps {
   id?: string;
   /** Additional class on the wrapper. */
   wrapperClassName?: string;
+  /** Inline style on the wrapper element. */
+  wrapperStyle?: React.CSSProperties;
+  /** Additional class on the label. */
+  labelClassName?: string;
+  /** Inline style on the label element. */
+  labelStyle?: React.CSSProperties;
+  /** Additional class on the helper/error text. */
+  helperTextClassName?: string;
+  /** Inline style on the helper/error text. */
+  helperTextStyle?: React.CSSProperties;
 }

@@ -1,3 +1,4 @@
+import React from 'react';
 import { BaseInputProps } from '../../types';
 
 export interface DatePreset {
@@ -52,4 +53,14 @@ export interface DatePickerProps extends Omit<BaseInputProps, 'onChange'> {
   validationState?: 'default' | 'error' | 'success' | 'warning';
   /** Additional class on the wrapper. */
   wrapperClassName?: string;
+  /** Inline style on the wrapper element. */
+  wrapperStyle?: React.CSSProperties;
+  /** Additional class on the label. */
+  labelClassName?: string;
+  /** Inline style on the label element. */
+  labelStyle?: React.CSSProperties;
+  /** Additional class on the helper/error text. */
+  helperTextClassName?: string;
+  /** Inline style on the helper/error text. */
+  helperTextStyle?: React.CSSProperties;
 }
