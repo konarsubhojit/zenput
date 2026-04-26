@@ -10,6 +10,7 @@ import {
 import { classNames } from '../../utils';
 import styles from './DataTable.module.css';
 import { Pagination } from '../Pagination/Pagination';
+import { useLocale } from '../../locales/LocaleContext';
 
 const DEFAULT_SKELETON_ROW_COUNT = 5;
 
@@ -146,7 +147,7 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
   rowKey,
   className,
   style,
-  emptyMessage = 'No data available',
+  emptyMessage,
   emptyState,
   pagination,
   onSort,
@@ -220,6 +221,7 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
    * collide on label/input associations or checkbox `id`s.
    */
   const instanceId = useId();
+  const { t } = useLocale();
   const globalSearchId = `${instanceId}-global-search`;
   /** Sanitize a user-supplied key so it's safe to embed in an HTML `id`. */
   const sanitizeIdPart = useCallback((part: string) => part.replace(/[^a-zA-Z0-9_-]/g, '_'), []);
@@ -726,7 +728,7 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
             ) : filteredData.length === 0 ? (
               <tr>
                 <td colSpan={colSpan} className={styles.emptyCell}>
-                  {emptyState ?? emptyMessage}
+                  {emptyState ?? (emptyMessage ?? t('dataTable.noData'))}
                 </td>
               </tr>
             ) : (
@@ -824,8 +826,12 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
             <div className={styles.pagination}>
               <span className={styles.paginationInfo}>
                 {loading || pagination.totalCount === 0
-                  ? `0–0 of ${pagination.totalCount}`
-                  : `${rangeStart}–${rangeEnd} of ${pagination.totalCount}`}
+                  ? t('dataTable.paginationRange', { start: 0, end: 0, total: pagination.totalCount })
+                  : t('dataTable.paginationRange', {
+                      start: rangeStart,
+                      end: rangeEnd,
+                      total: pagination.totalCount,
+                    })}
               </span>
               <Pagination
                 currentPage={pagination.currentPage}

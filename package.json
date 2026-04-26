@@ -15,6 +15,11 @@
       "import": "./dist/esm/forms/index.js",
       "require": "./dist/cjs/forms/index.js",
       "types": "./dist/forms/index.d.ts"
+    },
+    "./locales": {
+      "import": "./dist/esm/locales/index.js",
+      "require": "./dist/cjs/locales/index.js",
+      "types": "./dist/locales/index.d.ts"
     }
   },
   "files": [

@@ -68,4 +68,28 @@ export default [
     plugins: [dts()],
     external: [/\.css$/, 'react-hook-form', '@hookform/resolvers/zod', 'zod'],
   },
+
+  // ---------------------------------------------------------------------------
+  // locales subpath – CJS
+  // ---------------------------------------------------------------------------
+  {
+    input: 'src/locales/index.ts',
+    output: { file: 'dist/cjs/locales/index.js', format: 'cjs', sourcemap: true },
+    plugins: basePlugins({ declaration: true, declarationDir: 'dist/cjs/locales/types' }),
+    external,
+  },
+  // locales subpath – ESM
+  {
+    input: 'src/locales/index.ts',
+    output: { file: 'dist/esm/locales/index.js', format: 'esm', sourcemap: true },
+    plugins: basePlugins({ declaration: false }),
+    external,
+  },
+  // locales subpath – DTS
+  {
+    input: 'dist/cjs/locales/types/locales/index.d.ts',
+    output: [{ file: 'dist/locales/index.d.ts', format: 'esm' }],
+    plugins: [dts()],
+    external: [/\.css$/, 'react', 'react-dom'],
+  },
 ];

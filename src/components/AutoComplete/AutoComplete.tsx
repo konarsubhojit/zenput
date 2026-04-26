@@ -7,6 +7,7 @@ import {
   DROPDOWN_BLUR_DELAY_MS,
 } from '../../utils';
 import { useFormField } from '../../hooks';
+import { useLocale } from '../../locales/LocaleContext';
 import styles from './AutoComplete.module.css';
 
 export const AutoComplete = forwardRef<HTMLInputElement, AutoCompleteProps>(
@@ -44,7 +45,7 @@ export const AutoComplete = forwardRef<HTMLInputElement, AutoCompleteProps>(
       onSelect,
       onSearch,
       loading,
-      noOptionsMessage = 'No options found',
+      noOptionsMessage,
       allowCustomValue,
       placeholder,
       onBlur,
@@ -55,6 +56,7 @@ export const AutoComplete = forwardRef<HTMLInputElement, AutoCompleteProps>(
   ) => {
     const generatedId = useId();
     const listboxId = `ac-listbox-${generatedId}`;
+    const { t } = useLocale();
 
     const { inputId, helperId, labelProps, inputAriaProps } = useFormField({
       id,
@@ -258,9 +260,9 @@ export const AutoComplete = forwardRef<HTMLInputElement, AutoCompleteProps>(
             aria-label={label ?? 'Suggestions'}
           >
             {loading ? (
-              <li className={styles.loading}>Loading…</li>
+              <li className={styles.loading}>{t('autoComplete.loading')}</li>
             ) : filteredOptions.length === 0 ? (
-              <li className={styles.noOptions}>{noOptionsMessage}</li>
+              <li className={styles.noOptions}>{noOptionsMessage ?? t('autoComplete.noOptions')}</li>
             ) : (
               filteredOptions.map((option, index) => (
                 <li

@@ -16,6 +16,7 @@ import {
   DROPDOWN_BLUR_DELAY_MS,
 } from '../../utils';
 import { useFormField } from '../../hooks';
+import { useLocale } from '../../locales/LocaleContext';
 import styles from './Combobox.module.css';
 
 const DEFAULT_DEBOUNCE_MS = 300;
@@ -72,6 +73,7 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
   ) => {
     const generatedId = useId();
     const listboxId = `cb-listbox-${generatedId}`;
+    const { t } = useLocale();
 
     const { inputId, helperId, labelProps, inputAriaProps } = useFormField({
       id,
@@ -359,11 +361,11 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
           >
             {isLoading ? (
               <li className={styles.loadingState} role="status">
-                {loadingState ?? 'Loading…'}
+                {loadingState ?? t('combobox.loading')}
               </li>
             ) : flatOptions.length === 0 ? (
               <li className={styles.emptyState}>
-                {emptyState ?? 'No options found'}
+                {emptyState ?? t('combobox.noOptions')}
               </li>
             ) : (
               Array.from(grouped.entries()).map(([group, opts]) => (
