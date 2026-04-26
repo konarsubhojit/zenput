@@ -36,4 +36,14 @@ module.exports = [
     limit: '50 KB',
     gzip: true,
   },
+  {
+    // zenput/forms subpath: react-hook-form adapter + zod wiring.
+    // react-hook-form and zod are external peers so only the adapter glue
+    // is measured here. Budget is set generously at 10 KB to absorb the
+    // Form + useZenputForm implementation with headroom for follow-ups.
+    name: 'forms subpath (dist/esm/forms/index.js, gzip)',
+    path: 'dist/esm/forms/index.js',
+    limit: '10 KB',
+    gzip: true,
+  },
 ];

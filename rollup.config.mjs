@@ -5,7 +5,7 @@ import postcss from 'rollup-plugin-postcss';
 import dts from 'rollup-plugin-dts';
 import peerDepsExternal from 'rollup-plugin-peer-deps-external';
 
-const basePlugins = ({ declaration }) => [
+const basePlugins = ({ declaration, declarationDir }) => [
   peerDepsExternal(),
   resolve(),
   commonjs(),
@@ -13,28 +13,59 @@ const basePlugins = ({ declaration }) => [
     tsconfig: './tsconfig.json',
     rootDir: 'src',
     declaration,
-    declarationDir: declaration ? 'dist/cjs/types' : undefined,
+    declarationDir: declaration ? declarationDir : undefined,
   }),
   postcss({ modules: true, extract: false }),
 ];
 
+const external = ['react', 'react-dom', 'react-hook-form', '@hookform/resolvers/zod', 'zod'];
+
 export default [
+  // ---------------------------------------------------------------------------
+  // Core entry – CJS
+  // ---------------------------------------------------------------------------
   {
     input: 'src/index.ts',
     output: { file: 'dist/cjs/index.js', format: 'cjs', sourcemap: true },
-    plugins: basePlugins({ declaration: true }),
-    external: ['react', 'react-dom'],
+    plugins: basePlugins({ declaration: true, declarationDir: 'dist/cjs/types' }),
+    external,
   },
+  // Core entry – ESM
   {
     input: 'src/index.ts',
     output: { file: 'dist/esm/index.js', format: 'esm', sourcemap: true },
     plugins: basePlugins({ declaration: false }),
-    external: ['react', 'react-dom'],
+    external,
   },
+  // Core entry – DTS
   {
     input: 'dist/cjs/types/index.d.ts',
     output: [{ file: 'dist/index.d.ts', format: 'esm' }],
     plugins: [dts()],
     external: [/\.css$/],
+  },
+
+  // ---------------------------------------------------------------------------
+  // forms subpath – CJS
+  // ---------------------------------------------------------------------------
+  {
+    input: 'src/forms/index.ts',
+    output: { file: 'dist/cjs/forms/index.js', format: 'cjs', sourcemap: true },
+    plugins: basePlugins({ declaration: true, declarationDir: 'dist/cjs/forms/types' }),
+    external,
+  },
+  // forms subpath – ESM
+  {
+    input: 'src/forms/index.ts',
+    output: { file: 'dist/esm/forms/index.js', format: 'esm', sourcemap: true },
+    plugins: basePlugins({ declaration: false }),
+    external,
+  },
+  // forms subpath – DTS
+  {
+    input: 'dist/cjs/forms/types/forms/index.d.ts',
+    output: [{ file: 'dist/forms/index.d.ts', format: 'esm' }],
+    plugins: [dts()],
+    external: [/\.css$/, 'react-hook-form', '@hookform/resolvers/zod', 'zod'],
   },
 ];
