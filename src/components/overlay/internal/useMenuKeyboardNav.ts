@@ -62,23 +62,27 @@ export function useMenuKeyboardNav({
       switch (e.key) {
         case 'ArrowDown': {
           e.preventDefault();
+          e.stopPropagation();
           const next = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
           items[next]?.focus();
           break;
         }
         case 'ArrowUp': {
           e.preventDefault();
+          e.stopPropagation();
           const prev = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
           items[prev]?.focus();
           break;
         }
         case 'Home': {
           e.preventDefault();
+          e.stopPropagation();
           items[0]?.focus();
           break;
         }
         case 'End': {
           e.preventDefault();
+          e.stopPropagation();
           items[items.length - 1]?.focus();
           break;
         }
