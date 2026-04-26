@@ -155,6 +155,13 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
       return flat;
     }, [grouped]);
 
+    // O(1) lookup index for flatOptions by value (avoids O(n²) findIndex per render)
+    const flatIndexByValue = useMemo(() => {
+      const map = new Map<string, number>();
+      flatOptions.forEach((o, i) => map.set(o.value, i));
+      return map;
+    }, [flatOptions]);
+
     const showDropdown = isOpen && !disabled && !readOnly;
 
     // ── Handlers ──────────────────────────────────────────────────────────────
@@ -296,7 +303,7 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
 
         <div className={styles.inputWrapper}>
           <input
-            {...(rest as React.InputHTMLAttributes<HTMLInputElement>)}
+            {...rest}
             {...inputAriaProps}
             ref={ref}
             id={inputId}
@@ -371,7 +378,7 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
                     </li>
                   )}
                   {opts.map((opt) => {
-                    const flatIdx = flatOptions.findIndex((f) => f.value === opt.value);
+                    const flatIdx = flatIndexByValue.get(opt.value) ?? -1;
                     const isSelected = selectedValue?.value === opt.value;
 
                     return (

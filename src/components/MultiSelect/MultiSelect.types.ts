@@ -11,8 +11,8 @@ export interface MultiSelectOption {
 
 export interface MultiSelectProps
   extends Omit<
-    React.HTMLAttributes<HTMLDivElement>,
-    'onChange' | 'defaultValue' | 'value'
+    React.InputHTMLAttributes<HTMLInputElement>,
+    'size' | 'onChange' | 'defaultValue' | 'value' | 'children' | 'dangerouslySetInnerHTML'
   >,
     BaseInputProps {
   /** Static list of options */

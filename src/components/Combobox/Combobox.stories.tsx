@@ -64,29 +64,31 @@ export const CustomFilter: Story = {
   },
 };
 
-export const Async: Story = {
-  render: () => {
-    const [value, setValue] = useState<ComboboxOption | null>(null);
+const AsyncCombobox = () => {
+  const [value, setValue] = useState<ComboboxOption | null>(null);
 
-    const loadOptions = async (query: string): Promise<ComboboxOption[]> => {
-      await new Promise((r) => setTimeout(r, 600));
-      return FRAMEWORK_OPTIONS.filter((o) =>
-        o.label.toLowerCase().includes(query.toLowerCase())
-      );
-    };
-
-    return (
-      <Combobox
-        label="Async search"
-        loadOptions={loadOptions}
-        value={value}
-        onChange={setValue}
-        placeholder="Type to search…"
-        loadingState={<span>Fetching results…</span>}
-        helperText="Options loaded asynchronously with 600ms delay"
-      />
+  const loadOptions = async (query: string): Promise<ComboboxOption[]> => {
+    await new Promise((r) => setTimeout(r, 600));
+    return FRAMEWORK_OPTIONS.filter((o) =>
+      o.label.toLowerCase().includes(query.toLowerCase())
     );
-  },
+  };
+
+  return (
+    <Combobox
+      label="Async search"
+      loadOptions={loadOptions}
+      value={value}
+      onChange={setValue}
+      placeholder="Type to search…"
+      loadingState={<span>Fetching results…</span>}
+      helperText="Options loaded asynchronously with 600ms delay"
+    />
+  );
+};
+
+export const Async: Story = {
+  render: () => <AsyncCombobox />,
 };
 
 export const ValidationStates: Story = {

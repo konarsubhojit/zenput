@@ -297,9 +297,14 @@ describe('MultiSelect', () => {
         options={OPTIONS}
         value={[OPTIONS[0]]}
         renderTag={(opt, onRemove) => (
-          <span key={opt.value} data-testid="custom-tag" onClick={onRemove}>
+          <button
+            key={opt.value}
+            type="button"
+            data-testid="custom-tag"
+            onClick={onRemove}
+          >
             {opt.label}
-          </span>
+          </button>
         )}
       />
     );

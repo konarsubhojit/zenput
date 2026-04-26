@@ -80,28 +80,30 @@ export const Grouped: Story = {
   },
 };
 
-export const Async: Story = {
-  render: () => {
-    const [selected, setSelected] = useState<MultiSelectOption[]>([]);
+const AsyncMultiSelect = () => {
+  const [selected, setSelected] = useState<MultiSelectOption[]>([]);
 
-    const loadOptions = async (query: string): Promise<MultiSelectOption[]> => {
-      await new Promise((r) => setTimeout(r, 500));
-      return FRAMEWORK_OPTIONS.filter((o) =>
-        o.label.toLowerCase().includes(query.toLowerCase())
-      );
-    };
-
-    return (
-      <MultiSelect
-        label="Async search"
-        loadOptions={loadOptions}
-        value={selected}
-        onChange={setSelected}
-        placeholder="Type to search…"
-        helperText="Options loaded asynchronously with 500ms delay"
-      />
+  const loadOptions = async (query: string): Promise<MultiSelectOption[]> => {
+    await new Promise((r) => setTimeout(r, 500));
+    return FRAMEWORK_OPTIONS.filter((o) =>
+      o.label.toLowerCase().includes(query.toLowerCase())
     );
-  },
+  };
+
+  return (
+    <MultiSelect
+      label="Async search"
+      loadOptions={loadOptions}
+      value={selected}
+      onChange={setSelected}
+      placeholder="Type to search…"
+      helperText="Options loaded asynchronously with 500ms delay"
+    />
+  );
+};
+
+export const Async: Story = {
+  render: () => <AsyncMultiSelect />,
 };
 
 export const ValidationStates: Story = {

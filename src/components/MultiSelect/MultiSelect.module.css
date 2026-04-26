@@ -72,7 +72,7 @@
 .outlined .control {
   border: 1px solid var(--input-border-color);
 }
-.outlined .control:hover:not(.disabled) {
+.outlined:not(.disabled) .control:hover {
   border-color: var(--input-primary-color);
 }
 .outlined.focused .control {
@@ -85,7 +85,7 @@
   border: 1px solid transparent;
   background-color: #f3f4f6;
 }
-.filled .control:hover:not(.disabled) {
+.filled:not(.disabled) .control:hover {
   background-color: #e5e7eb;
 }
 .filled.focused .control {

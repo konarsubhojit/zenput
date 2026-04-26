@@ -162,18 +162,19 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
       return baseOptions.filter((o) => o.label.toLowerCase().includes(query.toLowerCase()));
     }, [baseOptions, query, loadOptions]);
 
-    const canCreate =
-      creatable &&
-      query.trim().length > 0 &&
-      isValidNewOption(query, selectedValues) &&
-      !filteredOptions.some((o) => o.label.toLowerCase() === query.trim().toLowerCase());
-
-    const allVisible: Array<MultiSelectOption & { _isCreate?: boolean }> = canCreate
-      ? [
-          ...filteredOptions,
-          { value: `__create__${query}`, label: query, _isCreate: true },
-        ]
-      : filteredOptions;
+    const allVisible = useMemo<Array<MultiSelectOption & { _isCreate?: boolean }>>(() => {
+      const canCreate =
+        creatable &&
+        query.trim().length > 0 &&
+        isValidNewOption(query, selectedValues) &&
+        !filteredOptions.some((o) => o.label.toLowerCase() === query.trim().toLowerCase());
+      return canCreate
+        ? [
+            ...filteredOptions,
+            { value: `__create__${query}`, label: query, _isCreate: true },
+          ]
+        : filteredOptions;
+    }, [creatable, query, isValidNewOption, selectedValues, filteredOptions]);
 
     // ── Group handling ───────────────────────────────────────────────────────
     const grouped = useMemo<Map<string, MultiSelectOption[]>>(() => {
@@ -195,6 +196,13 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
       }
       return flat;
     }, [grouped]);
+
+    // O(1) lookup index for flatOptions by value (avoids O(n²) findIndex per render)
+    const flatIndexByValue = useMemo(() => {
+      const map = new Map<string, number>();
+      flatOptions.forEach((o, i) => map.set(o.value, i));
+      return map;
+    }, [flatOptions]);
 
     const showDropdown = isOpen && !disabled && !readOnly;
 
@@ -398,7 +406,9 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
         >
           {selectedValues.map((opt) =>
             renderTag ? (
-              renderTag(opt, () => removeTag(opt.value))
+              <React.Fragment key={opt.value}>
+                {renderTag(opt, () => removeTag(opt.value))}
+              </React.Fragment>
             ) : (
               <span key={opt.value} className={styles.tag}>
                 <span className={styles.tagLabel}>{opt.label}</span>
@@ -421,7 +431,7 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
           )}
 
           <input
-            {...(rest as React.InputHTMLAttributes<HTMLInputElement>)}
+            {...rest}
             {...inputAriaProps}
             ref={handleRef}
             id={inputId}
@@ -431,11 +441,10 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
             aria-controls={listboxId}
             aria-autocomplete="list"
             aria-activedescendant={activeDescendant}
-            aria-multiselectable="true"
             autoComplete="off"
             disabled={disabled}
             readOnly={!searchable || readOnly}
-            required={required}
+            required={required && selectedValues.length === 0}
             placeholder={selectedValues.length === 0 ? placeholder : undefined}
             value={query}
             onChange={handleInputChange}
@@ -487,7 +496,7 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
                 <React.Fragment key={group || '__ungrouped'}>
                   {group && <li className={styles.groupHeader} role="presentation" aria-hidden="true">{group}</li>}
                   {opts.map((opt) => {
-                    const flatIdx = flatOptions.findIndex((f) => f.value === opt.value);
+                    const flatIdx = flatIndexByValue.get(opt.value) ?? -1;
                     const isSelected = selectedValues.some((s) => s.value === opt.value);
                     const isCreate = (opt as MultiSelectOption & { _isCreate?: boolean })._isCreate;
 
