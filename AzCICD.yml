@@ -26,9 +26,12 @@
 #   Pool:          "Default" (self-hosted). Adjust `pool.name` below if yours
 #                  is named differently.
 #   OS:            Linux ARM64 / aarch64 (Oracle Cloud Ampere A1).
-#   Pre-installed: git, Node 20.x, npm 10+. Playwright Chromium browsers
+#   Pre-installed: git, npm 10+. Playwright Chromium browsers
 #                  are in `/home/ubuntu/.cache/ms-playwright`. Vercel CLI and
 #                  http-server are installed globally on the agent.
+#                  Node is pinned via NodeTool@0 below (do not rely on the
+#                  agent's pre-installed Node — vitest 4 / rolldown require
+#                  Node ^20.19.0 || >=22.12.0).
 #
 # ── Pipeline variables / service connections ────────────────────────────────
 #   SonarCloud service connection : "SonarCloud"
@@ -100,6 +103,12 @@ stages:
           - checkout: self
             clean: false       # keep node_modules/checkout between runs for speed
             fetchDepth: 1
+
+          # ── Node toolchain (pin to a vitest 4 / rolldown-compatible version) ─
+          - task: NodeTool@0
+            displayName: 'Use Node 24.x'
+            inputs:
+              versionSpec: '24.x'
 
           # ── Toolchain verification ──────────────────────────────────────
           - script: |
@@ -258,6 +267,10 @@ stages:
               steps:
                 - checkout: self
                   clean: false
+                - task: NodeTool@0
+                  displayName: 'Use Node 24.x'
+                  inputs:
+                    versionSpec: '24.x'
                 - script: npm ci --prefer-offline --no-audit --fund=false
                   displayName: 'npm ci'
                 - script: npm run build
