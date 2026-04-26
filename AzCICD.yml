@@ -53,6 +53,9 @@ trigger:
       - master
       - release/*
 
+# Do not trigger the pipeline for pull requests — CI coverage for PRs is
+# handled by the GitHub Actions workflow (.github/workflows/ci.yml).
+pr: none
 
 # Weekly "clean" run — guards against stale state on a long-lived self-hosted
 # agent. Regular CI runs skip the nuke (see `workspace.clean` below).
@@ -229,7 +232,6 @@ stages:
               npx test-storybook --url http://127.0.0.1:6006
               kill "$SERVER_PID" || true
             displayName: 'Storybook a11y (axe)'
-            continueOnError: true
 
   # ───────────────────────────────────────────────────────────────────────────
   # Deploy the demo site (demo/) to Vercel.
