@@ -96,4 +96,3 @@ export const Slot = React.forwardRef<HTMLElement, SlotProps>(function Slot(
 });
 
 Slot.displayName = 'Slot';
-
