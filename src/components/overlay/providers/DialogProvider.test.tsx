@@ -608,7 +608,7 @@ describe('useAlert - branch coverage', () => {
 });
 
 describe('DialogProvider - unmount cleanup', () => {
-  it('resolves pending promises with null on provider unmount', async () => {
+  it('resolves useDialog pending promise with null on provider unmount', async () => {
     const results: unknown[] = [];
 
     function App() {
@@ -645,7 +645,84 @@ describe('DialogProvider - unmount cleanup', () => {
       await Promise.resolve();
     });
 
+    // useDialog default dismissed value is null.
     expect(results).toEqual([null]);
+  });
+
+  it('resolves useAlert pending promise with undefined on provider unmount', async () => {
+    let resolved: unknown = 'NOT_CALLED';
+
+    function App() {
+      const alert = useAlert();
+      return (
+        <button
+          onClick={() => {
+            alert({ title: 'Wait' }).then((v) => {
+              resolved = v;
+            });
+          }}
+        >
+          Open
+        </button>
+      );
+    }
+
+    const { unmount } = render(
+      <DialogProvider>
+        <App />
+      </DialogProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open').click();
+    });
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    unmount();
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    // useAlert dismissed value is undefined (void), not null.
+    expect(resolved).toBeUndefined();
+  });
+
+  it('resolves useConfirm pending promise with false on provider unmount', async () => {
+    const results: boolean[] = [];
+
+    function App() {
+      const confirm = useConfirm();
+      return (
+        <button
+          onClick={() => {
+            confirm({ title: 'Are you sure?' }).then((v) => results.push(v));
+          }}
+        >
+          Open
+        </button>
+      );
+    }
+
+    const { unmount } = render(
+      <DialogProvider>
+        <App />
+      </DialogProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open').click();
+    });
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    unmount();
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    // useConfirm dismissed value is false.
+    expect(results).toEqual([false]);
   });
 });
 

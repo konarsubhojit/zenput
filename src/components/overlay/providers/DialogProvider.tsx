@@ -28,13 +28,19 @@ function genId(): string {
   return `zdlg-${++_idCounter}`;
 }
 
+/**
+ * Sentinel used internally by `close()` to detect "called with no argument"
+ * vs "called with explicit `undefined`". Never exported.
+ */
+const _CLOSE_DEFAULT = Symbol('close-default');
+
 interface StackEntry {
   id: string;
   size: DialogSize;
   dismissible: boolean;
   /** Default value resolved when the dialog is dismissed via Escape/backdrop. */
   defaultCloseValue: unknown;
-  renderContent: (close: (value: unknown) => void) => React.ReactNode;
+  renderContent: (close: (value?: unknown) => void) => React.ReactNode;
   /** Pre-built close function — used directly in render without accessing refs. */
   close: (value?: unknown) => void;
 }
@@ -44,7 +50,7 @@ interface ProviderContextValue {
     size?: DialogSize;
     dismissible?: boolean;
     defaultCloseValue?: unknown;
-    content: (close: (value: unknown) => void) => React.ReactNode;
+    content: (close: (value?: unknown) => void) => React.ReactNode;
   }) => { result: Promise<unknown>; close: (value?: unknown) => void };
 }
 
@@ -77,18 +83,22 @@ export interface DialogProviderProps {
 export function DialogProvider({ children }: DialogProviderProps): React.ReactElement {
   const [stack, setStack] = useState<StackEntry[]>([]);
 
-  // Track close functions keyed by id for unmount cleanup.
-  const pendingRef = useRef(new Map<string, (value?: unknown) => void>());
+  // Track {resolve, defaultCloseValue} keyed by id for unmount cleanup.
+  const pendingRef = useRef(
+    new Map<string, { resolve: (v: unknown) => void; defaultCloseValue: unknown }>()
+  );
 
   useEffect(() => {
     // Capture the Map reference at effect-registration time so the
     // cleanup closure always points to the same object.
     const pending = pendingRef.current;
     return () => {
-      // Resolve all pending promises with null when the provider unmounts.
-      pending.forEach((close) => {
+      // Resolve each pending promise with its own dismissed value when the
+      // provider unmounts — avoids calling setStack (state update warning) and
+      // correctly honours per-hook contracts (confirm → false, alert → void, …).
+      pending.forEach(({ resolve, defaultCloseValue }) => {
         try {
-          close(null);
+          resolve(defaultCloseValue);
         } catch {
           /* swallow */
         }
@@ -102,7 +112,7 @@ export function DialogProvider({ children }: DialogProviderProps): React.ReactEl
       size?: DialogSize;
       dismissible?: boolean;
       defaultCloseValue?: unknown;
-      content: (close: (value: unknown) => void) => React.ReactNode;
+      content: (close: (value?: unknown) => void) => React.ReactNode;
     }) => {
       const id = genId();
       const returnFocusEl =
@@ -113,22 +123,29 @@ export function DialogProvider({ children }: DialogProviderProps): React.ReactEl
         resolveFn = res;
       });
 
-      const close = (value?: unknown): void => {
+      // Use key-presence to allow deliberate `undefined` as a dismissed value
+      // (e.g. useAlert passes defaultCloseValue: undefined).
+      const defaultCloseValue = 'defaultCloseValue' in opts ? opts.defaultCloseValue : null;
+
+      const close = (value: unknown = _CLOSE_DEFAULT): void => {
         setStack((prev) => prev.filter((e) => e.id !== id));
         pendingRef.current.delete(id);
-        resolveFn(value !== undefined ? value : null);
+        // When called with no argument, resolve to the hook-specific dismissed
+        // value (e.g. false for confirm, null for prompt, undefined for alert).
+        // An explicit argument — even `undefined` — is forwarded as-is.
+        resolveFn(value === _CLOSE_DEFAULT ? defaultCloseValue : value);
         requestAnimationFrame(() => {
           if (returnFocusEl instanceof HTMLElement) returnFocusEl.focus();
         });
       };
 
-      pendingRef.current.set(id, close);
+      pendingRef.current.set(id, { resolve: resolveFn, defaultCloseValue });
 
       const entry: StackEntry = {
         id,
         size: opts.size ?? 'md',
         dismissible: opts.dismissible ?? true,
-        defaultCloseValue: opts.defaultCloseValue !== undefined ? opts.defaultCloseValue : null,
+        defaultCloseValue,
         renderContent: opts.content,
         close,
       };
@@ -306,7 +323,7 @@ export interface PromptOptions {
   defaultValue?: string;
   /**
    * Optional validation function. Return `true` to pass, a string to show
-   * as an error, or `false` to block submission without a message.
+   * as an error, or `false` to block submission with a generic error message.
    */
   validate?: (value: string) => boolean | string;
   /** Submit button label. Default: `'OK'`. */
@@ -340,6 +357,7 @@ function PromptDialogBody({
   const inputRef = useRef<HTMLInputElement>(null);
   const reactId = useId();
   const inputId = `zdp-prompt-input-${reactId}`;
+  const errorId = `zdp-prompt-error-${reactId}`;
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -377,6 +395,9 @@ function PromptDialogBody({
             id={inputId}
             type="text"
             value={value}
+            aria-label={label ? undefined : 'Value'}
+            aria-invalid={!!error}
+            aria-describedby={error ? errorId : undefined}
             onChange={(e) => {
               setValue(e.target.value);
               setError('');
@@ -398,6 +419,7 @@ function PromptDialogBody({
           />
           {error && (
             <span
+              id={errorId}
               role="alert"
               style={{ fontSize: 'var(--zp-font-size-xs)', color: 'var(--zp-color-error)' }}
             >
@@ -505,7 +527,7 @@ export function useAlert(): (options?: AlertOptions) => Promise<void> {
               {description && <DialogDescription>{description}</DialogDescription>}
             </DialogHeader>
             <DialogFooter>
-              <Button onClick={() => close(undefined)}>{confirmLabel}</Button>
+              <Button onClick={() => close()}>{confirmLabel}</Button>
             </DialogFooter>
           </>
         ),
