@@ -39,7 +39,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
       - run: npm ci --ignore-scripts
       - run: npm run lint
@@ -51,7 +51,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
       - run: npm ci --ignore-scripts
       - run: npm run type-check
@@ -64,8 +64,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Run Node 20 + 22 on branch pushes; PRs only need Node 20 (faster feedback).
-        node: ${{ github.event_name == 'push' && fromJSON('["20","22"]') || fromJSON('["20"]') }}
+        # Run Node 22 + 24 on branch pushes; PRs only need Node 24 (faster feedback).
+        # Node ≥ 20.19 / ≥ 22.12 is required by vitest 4 / rolldown (uses node:util styleText).
+        node: ${{ github.event_name == 'push' && fromJSON('["22","24"]') || fromJSON('["24"]') }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -77,21 +78,21 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm run test:ci
       - name: Upload coverage artifact
-        if: matrix.node == '20'
+        if: matrix.node == '24'
         uses: actions/upload-artifact@v4
         with:
           name: coverage
           path: coverage/
           if-no-files-found: warn
       - name: Upload JUnit results
-        if: matrix.node == '20'
+        if: matrix.node == '24'
         uses: actions/upload-artifact@v4
         with:
           name: junit
           path: reports/junit.xml
           if-no-files-found: warn
       - name: SonarQube / SonarCloud scan
-        if: matrix.node == '20' && env.SONAR_TOKEN != ''
+        if: matrix.node == '24' && env.SONAR_TOKEN != ''
         uses: SonarSource/sonarqube-scan-action@299e4b793aaa83bf2aba7c9c14bedbb485688ec4 # v7.1.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -104,7 +105,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
       - run: npm ci --ignore-scripts
       - run: npm run build
@@ -121,7 +122,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
       - run: npm ci --ignore-scripts
       - run: npm run build-storybook
@@ -139,7 +140,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
       - run: npm ci --ignore-scripts
       - uses: actions/download-artifact@v8
@@ -173,7 +174,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
           cache: 'npm'
       - run: npm ci --ignore-scripts
