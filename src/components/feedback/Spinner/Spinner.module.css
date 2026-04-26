@@ -4,7 +4,7 @@
   border-color: currentcolor;
   border-top-color: transparent;
   border-radius: 50%;
-  animation: zp-spin var(--zp-duration-normal, 200ms) linear infinite;
+  animation: zp-spin var(--zp-duration-spin, 600ms) linear infinite;
   flex-shrink: 0;
 }
 

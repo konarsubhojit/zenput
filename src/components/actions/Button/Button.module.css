@@ -168,7 +168,3 @@
   white-space: nowrap;
   border: 0;
 }
-
-@media (prefers-reduced-motion: reduce) {
-  /* reduced-motion handled by Spinner component */
-}

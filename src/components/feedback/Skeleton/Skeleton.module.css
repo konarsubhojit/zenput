@@ -58,7 +58,7 @@
 
 /* Variants */
 .variant-text {
-  border-radius: var(--zp-radius-sm, 4px);
+  border-radius: var(--zp-component-skeleton-radius, var(--zp-radius-sm, 4px));
 }
 
 .variant-rect {

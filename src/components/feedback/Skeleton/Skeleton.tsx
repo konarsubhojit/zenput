@@ -64,6 +64,7 @@ export function Skeleton({
 
   return (
     <Tag
+      {...rest}
       aria-hidden="true"
       className={classNames(
         styles.skeleton,
@@ -73,20 +74,17 @@ export function Skeleton({
         className
       )}
       style={inlineStyle}
-      {...rest}
     />
   );
 }
 
-export interface SkeletonTextProps {
+export interface SkeletonTextProps extends React.HTMLAttributes<HTMLSpanElement> {
   /** Number of text lines to render. Default: `3`. */
   lines?: number;
   /** Animation style. Default: `'shimmer'`. */
   animation?: SkeletonAnimation;
   /** Width of the last line as a fraction of the container (0–1). Default: `0.6`. */
   lastLineWidth?: number;
-  className?: string;
-  style?: React.CSSProperties;
 }
 
 /**
@@ -98,9 +96,11 @@ export function SkeletonText({
   lastLineWidth = 0.6,
   className,
   style,
+  ...rest
 }: SkeletonTextProps): React.ReactElement {
   return (
     <span
+      {...rest}
       style={{ display: 'flex', flexDirection: 'column', gap: '0.5em', ...style }}
       aria-hidden="true"
       className={className}

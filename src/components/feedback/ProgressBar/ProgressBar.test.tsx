@@ -66,7 +66,17 @@ describe('ProgressBar', () => {
 
   it('handles max of 0 by reporting 0%', () => {
     render(<ProgressBar value={5} max={0} aria-label="empty" />);
-    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuetext', '0%');
+    const bar = screen.getByRole('progressbar');
+    expect(bar).toHaveAttribute('aria-valuetext', '0%');
+    expect(bar).toHaveAttribute('aria-valuemax', '0');
+  });
+
+  it('normalizes a negative max to 0 to keep ARIA values valid', () => {
+    render(<ProgressBar value={5} max={-10} aria-label="bad" />);
+    const bar = screen.getByRole('progressbar');
+    expect(bar).toHaveAttribute('aria-valuemax', '0');
+    expect(bar).toHaveAttribute('aria-valuenow', '0');
+    expect(bar).toHaveAttribute('aria-valuetext', '0%');
   });
 
   it('forwards aria-label from props onto the progressbar element', () => {

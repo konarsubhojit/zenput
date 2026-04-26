@@ -49,8 +49,11 @@ export function ProgressBar({
   'aria-labelledby': ariaLabelledBy,
   ...rest
 }: ProgressBarProps): React.ReactElement {
-  const clampedValue = Math.min(Math.max(value, 0), max);
-  const percentage = max > 0 ? (clampedValue / max) * 100 : 0;
+  // Normalize `max` to a non-negative number so consumers can't produce
+  // invalid ARIA values (e.g. aria-valuemin=0 with a negative aria-valuenow).
+  const safeMax = Math.max(max, 0);
+  const clampedValue = Math.min(Math.max(value, 0), safeMax);
+  const percentage = safeMax > 0 ? (clampedValue / safeMax) * 100 : 0;
   // Prefer an explicit `aria-label`/`aria-labelledby` passed by the consumer;
   // fall back to the `label` prop so the progressbar always has an accessible name.
   const accessibleLabel = ariaLabel ?? label;
@@ -79,7 +82,7 @@ export function ProgressBar({
         role="progressbar"
         aria-valuenow={indeterminate ? undefined : clampedValue}
         aria-valuemin={0}
-        aria-valuemax={max}
+        aria-valuemax={safeMax}
         aria-valuetext={indeterminate ? undefined : `${Math.round(percentage)}%`}
         aria-label={accessibleLabel}
         aria-labelledby={ariaLabelledBy}

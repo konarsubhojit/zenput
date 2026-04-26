@@ -14,17 +14,21 @@ const style: React.CSSProperties = {
 
 /**
  * Visually hides content while keeping it accessible to screen readers.
+ *
+ * The hiding styles are applied last so a consumer-supplied `style` prop
+ * cannot accidentally make the content visible.
  */
 export function VisuallyHidden({
   children,
   as: Tag = 'span',
+  style: consumerStyle,
   ...rest
 }: {
   children: React.ReactNode;
   as?: React.ElementType;
 } & React.HTMLAttributes<HTMLElement>): React.ReactElement {
   return (
-    <Tag style={style} {...rest}>
+    <Tag {...rest} style={{ ...consumerStyle, ...style }}>
       {children}
     </Tag>
   );

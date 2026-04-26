@@ -8,6 +8,7 @@ export const durations = {
   slow: '300ms',
   slower: '500ms',
   shimmer: '1500ms',
+  spin: '600ms',
 } as const;
 
 export type DurationToken = keyof typeof durations;
