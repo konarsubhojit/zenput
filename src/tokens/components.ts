@@ -313,6 +313,16 @@ export const defaultComponentTokens = {
     heightLg: '12px',
     radius: 'var(--zp-radius-full)',
   } satisfies ProgressTokens,
+
+  calendar: {
+    cellSize: '2rem',
+    cellRadius: 'var(--zp-radius-full)',
+    todayRing: '2px solid var(--zp-color-brand)',
+    selectedBg: 'var(--zp-color-brand)',
+    rangeBg: 'var(--zp-color-brand-subtle)',
+    rangeEdgeBg: 'var(--zp-color-brand)',
+    weekdayColor: 'var(--zp-color-text-secondary)',
+  } satisfies CalendarTokens,
 };
 
 /**
@@ -338,6 +348,26 @@ export interface ProgressTokens {
 }
 
 /**
+ * Calendar component tokens
+ */
+export interface CalendarTokens {
+  /** Size (width & height) of each day cell. Default: `'2rem'`. */
+  cellSize?: string;
+  /** Border radius of each day cell. Default: `'9999px'` (full). */
+  cellRadius?: string;
+  /** CSS box-shadow used to indicate today. Default: `'2px solid var(--zp-color-brand)'`. */
+  todayRing?: string;
+  /** Background of the selected day. Default: `var(--zp-color-brand)`. */
+  selectedBg?: string;
+  /** Background for dates inside a selected range. Default: `var(--zp-color-brand-subtle)`. */
+  rangeBg?: string;
+  /** Background for the range start/end edges. Default: `var(--zp-color-brand)`. */
+  rangeEdgeBg?: string;
+  /** Color of the weekday header labels. Default: `var(--zp-color-text-secondary)`. */
+  weekdayColor?: string;
+}
+
+/**
  * All component token types
  */
 export interface ComponentTokensMap {
@@ -351,6 +381,7 @@ export interface ComponentTokensMap {
   toast?: Partial<ToastTokens>;
   skeleton?: Partial<SkeletonTokens>;
   progress?: Partial<ProgressTokens>;
+  calendar?: Partial<CalendarTokens>;
 }
 
 export type ComponentName = keyof ComponentTokensMap;

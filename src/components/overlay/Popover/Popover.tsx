@@ -20,7 +20,7 @@ import styles from './Popover.module.css';
 export type PopoverSide = 'top' | 'bottom' | 'left' | 'right';
 export type PopoverAlign = 'start' | 'center' | 'end';
 
-interface PopoverContextValue {
+export interface PopoverContextValue {
   open: boolean;
   setOpen: (next: boolean) => void;
   triggerRef: React.RefObject<HTMLElement | null>;
@@ -30,12 +30,17 @@ interface PopoverContextValue {
   contentId: string;
 }
 
-const PopoverContext = createContext<PopoverContextValue | null>(null);
+export const PopoverContext = createContext<PopoverContextValue | null>(null);
 
 function usePopoverContext(component: string): PopoverContextValue {
   const ctx = useContext(PopoverContext);
   if (!ctx) throw new Error(`<${component}> must be used inside <Popover>.`);
   return ctx;
+}
+
+/** Hook for descendant components to read and control the nearest Popover state. */
+export function usePopoverState(): PopoverContextValue {
+  return usePopoverContext('usePopoverState');
 }
 
 export interface PopoverProps {
