@@ -64,6 +64,13 @@ interface ToastItem {
   icon?: React.ReactNode;
   /** Whether the toast is in its exit animation phase. */
   exiting: boolean;
+  /**
+   * Tracks whether `onClose` has already been invoked for this toast.
+   * Guarantees the callback runs at most once across all dismissal paths
+   * (close button, Escape, swipe, auto-timer, programmatic `dismiss()`,
+   * and `max`-overflow eviction).
+   */
+  closed: boolean;
 }
 
 export interface ToastHandle {
@@ -226,19 +233,12 @@ function ToastItemComponent({
   const timerStartRef = useRef<number | null>(null);
   const remainingRef = useRef<number | null>(toast.duration);
 
-  // Guard that ensures onDismiss (and therefore onClose) fires at most once,
-  // even if the auto-dismiss timer and a user gesture race each other.
-  const closedRef = useRef(false);
-  const safeDismiss = useCallback(() => {
-    if (closedRef.current) return;
-    closedRef.current = true;
-    onDismiss();
-  }, [onDismiss]);
-
-  // Keep a stable ref to safeDismiss so timer callbacks don't go stale.
-  const safeDismissRef = useRef(safeDismiss);
+  // Keep a stable ref to onDismiss so timer callbacks don't go stale.
+  // The provider's `dismiss()` is itself idempotent (guarded by the toast's
+  // `closed` flag), so we can call it freely from racing handlers.
+  const onDismissRef = useRef(onDismiss);
   useEffect(() => {
-    safeDismissRef.current = safeDismiss;
+    onDismissRef.current = onDismiss;
   });
 
   const clearTimer = useCallback(() => {
@@ -254,7 +254,7 @@ function ToastItemComponent({
     clearTimer();
     timerStartRef.current = Date.now();
     timerIdRef.current = setTimeout(() => {
-      safeDismissRef.current();
+      onDismissRef.current();
     }, remaining);
   }, [clearTimer]);
 
