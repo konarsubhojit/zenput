@@ -828,7 +828,7 @@ Render-prop component. The child function receives `{ props, invalid, errorMessa
 
 #### `<Form.Submit>` / `<Form.Reset>`
 
-Pre-wired `<button type="submit">` and `<button type="reset">`. Both are automatically disabled while the form is submitting.
+Pre-wired `<button type="submit">` and `<button type="button">` (Reset wires to RHF's `reset()` to ensure controlled fields are cleared). Both are automatically disabled while the form is submitting.
 
 #### `<Form.ErrorSummary>`
 

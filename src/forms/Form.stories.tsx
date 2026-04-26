@@ -5,7 +5,6 @@ import { Form } from './Form';
 import { useZenputForm } from './useZenputForm';
 import { TextInput } from '../components/TextInput/TextInput';
 import { PasswordInput } from '../components/PasswordInput/PasswordInput';
-import { Button } from '../components/actions/Button/Button';
 
 const meta: Meta = {
   title: 'Forms/Form (react-hook-form + zod)',
@@ -76,15 +75,9 @@ function LoginFormExample() {
         </Form.Field>
         <div style={{ display: 'flex', gap: 8 }}>
           <Form.Submit>
-            <Button type="submit" loading={form.formState.isSubmitting} fullWidth>
-              Sign in
-            </Button>
+            {form.formState.isSubmitting ? 'Signing in…' : 'Sign in'}
           </Form.Submit>
-          <Form.Reset>
-            <Button type="reset" variant="outline">
-              Clear
-            </Button>
-          </Form.Reset>
+          <Form.Reset>Clear</Form.Reset>
         </div>
       </Form>
       {submitted && (

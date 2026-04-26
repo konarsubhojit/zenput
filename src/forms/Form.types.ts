@@ -5,17 +5,27 @@ import type {
   SubmitHandler,
   SubmitErrorHandler,
   Path,
+  DefaultValues,
 } from 'react-hook-form';
+import type { ZodType } from 'zod';
 
 // ---------------------------------------------------------------------------
 // useZenputForm
 // ---------------------------------------------------------------------------
 
 export interface UseZenputFormOptions<TFieldValues extends FieldValues = FieldValues> {
-  /** Zod schema (or any resolver-compatible schema) used for validation. */
-  schema?: unknown;
-  /** Initial values for the form fields. */
-  defaultValues?: Partial<TFieldValues>;
+  /**
+   * Zod schema used for validation.
+   * Accepts any Zod 3 or Zod 4 schema; resolved at runtime via
+   * `@hookform/resolvers/zod`.
+   */
+  schema?: ZodType;
+  /**
+   * Initial values for the form fields.
+   * Uses react-hook-form's `DefaultValues` type which is a deep partial,
+   * supporting nested/array structures.
+   */
+  defaultValues?: DefaultValues<TFieldValues>;
   /** react-hook-form mode. Default: `'onBlur'`. */
   mode?: 'onBlur' | 'onChange' | 'onSubmit' | 'onTouched' | 'all';
 }

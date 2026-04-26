@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef } from 'react';
 import { Controller, FormProvider, useFormContext, useFormState } from 'react-hook-form';
-import type { FieldValues } from 'react-hook-form';
+import type { FieldErrors, FieldValues, Path } from 'react-hook-form';
+import { classNames } from '../utils';
 import type {
   FormProps,
   FormFieldProps,
@@ -43,12 +44,12 @@ function FormRoot<TFieldValues extends FieldValues = FieldValues>({
     <FormProvider {...form}>
       <FormInternalContext.Provider value={{ disabled: formState.isSubmitting }}>
         <form
-          className={className}
+          {...rest}
+          className={classNames(styles.form, className)}
           style={style}
           onSubmit={handleSubmit(onSubmit, onError)}
           noValidate
           aria-busy={formState.isSubmitting || undefined}
-          {...rest}
         >
           {children}
         </form>
@@ -80,12 +81,11 @@ function FormField<TFieldValues extends FieldValues = FieldValues>({
       render={({ field, fieldState }) => {
         const hasError = Boolean(fieldState.error);
         const errorMessage = fieldState.error?.message;
-        const describedBy = [
-          descriptionId,
-          hasError ? `${String(name)}-error` : undefined,
-        ]
-          .filter(Boolean)
-          .join(' ') || undefined;
+        // Only inject the consumer-provided `descriptionId`.
+        // Zenput inputs compute their own `aria-describedby` for the helper
+        // text element (via `useFormField`), so we don't fabricate an error
+        // id here that would point to a non-existent element.
+        const describedBy = descriptionId || undefined;
 
         return (
           <>
@@ -124,11 +124,11 @@ function FormSubmit({ children = 'Submit', className, ...rest }: FormSubmitProps
 
   return (
     <button
+      {...rest}
       type="submit"
       disabled={isSubmitting || formDisabled}
       aria-busy={isSubmitting || undefined}
       className={className ?? styles.submitButton}
-      {...rest}
     >
       {children}
     </button>
@@ -141,16 +141,35 @@ FormSubmit.displayName = 'Form.Submit';
 // Form.Reset
 // ---------------------------------------------------------------------------
 
-function FormReset({ children = 'Reset', className, ...rest }: FormResetProps): React.ReactElement {
+function FormReset({
+  children = 'Reset',
+  className,
+  onClick,
+  ...rest
+}: FormResetProps): React.ReactElement {
   const { disabled: formDisabled } = useFormInternal();
   const { isSubmitting } = useFormState();
+  // With react-hook-form's Controller, inputs are controlled by RHF state, so
+  // a native form reset won't clear values/errors. Wire the click to RHF's
+  // `reset()` (from `useFormContext`) so the form is reset reliably.
+  const { reset } = useFormContext<FieldValues>();
+
+  const handleClick = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
+    (event) => {
+      onClick?.(event);
+      if (event.defaultPrevented) return;
+      reset();
+    },
+    [onClick, reset]
+  );
 
   return (
     <button
-      type="reset"
+      {...rest}
+      type="button"
       disabled={isSubmitting || formDisabled}
       className={className ?? styles.resetButton}
-      {...rest}
+      onClick={handleClick}
     >
       {children}
     </button>
@@ -163,20 +182,54 @@ FormReset.displayName = 'Form.Reset';
 // Form.ErrorSummary
 // ---------------------------------------------------------------------------
 
+interface FlatError {
+  /** Full dot/bracket path of the field (e.g. `address.street`, `items.0.name`). */
+  path: string;
+  /** Human-readable error message. */
+  message: string;
+}
+
+/**
+ * Recursively flatten react-hook-form's nested `FieldErrors` tree into a flat
+ * list of leaf errors. Preserves the full dotted path for nested objects and
+ * `array.<index>` for arrays.
+ */
+function flattenErrors(
+  errors: FieldErrors | undefined,
+  prefix = ''
+): FlatError[] {
+  if (!errors) return [];
+  const result: FlatError[] = [];
+  for (const [key, value] of Object.entries(errors)) {
+    if (value == null) continue;
+    const path = prefix ? `${prefix}.${key}` : key;
+    // Leaf error: has a `message` and/or `type` property and no further nested
+    // field-shaped children.
+    const v = value as { message?: string; type?: string | number } & Record<string, unknown>;
+    if (typeof v.message === 'string' || typeof v.type !== 'undefined') {
+      result.push({ path, message: v.message ?? `${path} is invalid` });
+    } else if (Array.isArray(value)) {
+      value.forEach((entry, index) => {
+        result.push(...flattenErrors(entry as FieldErrors, `${path}.${index}`));
+      });
+    } else if (typeof value === 'object') {
+      result.push(...flattenErrors(value as FieldErrors, path));
+    }
+  }
+  return result;
+}
+
 function FormErrorSummary({
   heading = 'Please fix the following errors:',
   className,
   style,
 }: FormErrorSummaryProps): React.ReactElement | null {
   const { errors } = useFormState();
+  const { setFocus } = useFormContext<FieldValues>();
   const containerRef = useRef<HTMLDivElement>(null);
   const prevHadErrors = useRef(false);
 
-  const flatErrors = Object.entries(errors).map(([field, error]) => ({
-    field,
-    message: (error as { message?: string })?.message ?? `${field} is invalid`,
-  }));
-
+  const flatErrors = flattenErrors(errors);
   const hasErrors = flatErrors.length > 0;
 
   // Focus the container when errors first appear (e.g., after submit).
@@ -187,11 +240,24 @@ function FormErrorSummary({
     prevHadErrors.current = hasErrors;
   }, [hasErrors]);
 
-  // Jump focus to the input for that field name.
-  const focusField = useCallback((fieldName: string) => {
-    const el = document.querySelector<HTMLElement>(`[name="${fieldName}"], #${fieldName}`);
-    el?.focus();
-  }, []);
+  // Use react-hook-form's `setFocus` so that nested paths and special
+  // characters in field names are handled correctly.
+  const focusField = useCallback(
+    (fieldPath: string) => {
+      try {
+        setFocus(fieldPath as Path<FieldValues>);
+      } catch {
+        // Fallback: locate the input by its escaped name attribute.
+        if (typeof window !== 'undefined' && typeof CSS !== 'undefined' && CSS.escape) {
+          const el = document.querySelector<HTMLElement>(
+            `[name="${CSS.escape(fieldPath)}"]`
+          );
+          el?.focus();
+        }
+      }
+    },
+    [setFocus]
+  );
 
   if (!hasErrors) return null;
 
@@ -199,7 +265,6 @@ function FormErrorSummary({
     <div
       ref={containerRef}
       role="alert"
-      aria-live="polite"
       aria-atomic="true"
       tabIndex={-1}
       className={className ?? styles.errorSummary}
@@ -207,12 +272,12 @@ function FormErrorSummary({
     >
       <p className={styles.errorSummaryHeading}>{heading}</p>
       <ul className={styles.errorSummaryList}>
-        {flatErrors.map(({ field, message }) => (
-          <li key={field}>
+        {flatErrors.map(({ path, message }) => (
+          <li key={path}>
             <button
               type="button"
               className={styles.errorSummaryItem}
-              onClick={() => focusField(field)}
+              onClick={() => focusField(path)}
             >
               {message}
             </button>

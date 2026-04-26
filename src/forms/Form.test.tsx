@@ -175,9 +175,20 @@ describe('Form.Submit', () => {
 // ---------------------------------------------------------------------------
 
 describe('Form.Reset', () => {
-  it('has type="reset"', () => {
+  it('has type="button" (RHF reset() is wired up; native form reset would not clear controlled inputs)', () => {
     render(<TestForm />);
-    expect(screen.getByRole('button', { name: 'Reset' })).toHaveAttribute('type', 'reset');
+    expect(screen.getByRole('button', { name: 'Reset' })).toHaveAttribute('type', 'button');
+  });
+
+  it('clears form values via RHF reset() when clicked', async () => {
+    const user = userEvent.setup();
+    render(<TestForm defaultValues={{ email: '', name: '' }} />);
+
+    await user.type(screen.getByTestId('email-input'), 'test@example.com');
+    expect(screen.getByTestId('email-input')).toHaveValue('test@example.com');
+
+    await user.click(screen.getByRole('button', { name: 'Reset' }));
+    expect(screen.getByTestId('email-input')).toHaveValue('');
   });
 });
 
@@ -203,13 +214,17 @@ describe('Form.ErrorSummary', () => {
     });
   });
 
-  it('has aria-live="polite" for screen readers', async () => {
+  it('uses role="alert" (implicitly assertive, no aria-live needed)', async () => {
     render(<TestForm />);
     fireEvent.submit(document.querySelector('form')!);
 
     await waitFor(() => {
       const alert = screen.getByRole('alert');
-      expect(alert).toHaveAttribute('aria-live', 'polite');
+      expect(alert).toHaveAttribute('role', 'alert');
+      // We deliberately do NOT add aria-live="polite": role="alert" is already
+      // implicitly assertive per ARIA semantics, and adding aria-live="polite"
+      // would conflict with that assertiveness.
+      expect(alert).not.toHaveAttribute('aria-live');
     });
   });
 });

@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { UseFormReturn, FieldValues, DefaultValues, Resolver } from 'react-hook-form';
+import type { UseFormReturn, FieldValues, Resolver } from 'react-hook-form';
 import type { UseZenputFormOptions } from './Form.types';
 
 /**
@@ -54,7 +54,7 @@ export function useZenputForm<TFieldValues extends FieldValues = FieldValues>({
 
   return useForm<TFieldValues>({
     resolver,
-    defaultValues: defaultValues as DefaultValues<TFieldValues>,
+    defaultValues,
     mode,
   });
 }
