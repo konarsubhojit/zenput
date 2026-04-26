@@ -5,3 +5,4 @@ export * from './Tooltip';
 export * from './Toast';
 export * from './Menu';
 export * from './ContextMenu';
+export * from './providers';

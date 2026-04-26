@@ -64,7 +64,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ['20', '22']
+        # Run Node 20 + 22 on branch pushes; PRs only need Node 20 (faster feedback).
+        node: ${{ github.event_name == 'push' && fromJSON('["20","22"]') || fromJSON('["20"]') }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -161,7 +162,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────────────
   publish:
     name: Publish to npm
-    needs: [lint, type-check, test, build]
+    needs: [lint, type-check, test, build, a11y]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/release/')
     environment: npm-publish
