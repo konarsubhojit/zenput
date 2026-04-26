@@ -291,55 +291,53 @@ export function ToggleGroup(props: ToggleGroupProps): React.ReactElement {
   const groupRef = useRef<HTMLDivElement>(null);
 
   // Single mode state
-  const isSingleControlled =
-    type === 'single' && (props as ToggleGroupSingleProps).value !== undefined;
+  const singleProps = type === 'single' ? (props as ToggleGroupSingleProps) : null;
+  const multipleProps = type === 'multiple' ? (props as ToggleGroupMultipleProps) : null;
+
+  const isSingleControlled = singleProps?.value !== undefined;
+  const isMultipleControlled = multipleProps?.value !== undefined;
+
   const [singleInternal, setSingleInternal] = useState<string>(
-    type === 'single' ? ((props as ToggleGroupSingleProps).defaultValue ?? '') : ''
+    singleProps?.defaultValue ?? ''
+  );
+  const [multipleInternal, setMultipleInternal] = useState<string[]>(
+    multipleProps?.defaultValue ?? []
   );
 
-  // Multiple mode state
-  const isMultipleControlled =
-    type === 'multiple' && (props as ToggleGroupMultipleProps).value !== undefined;
-  const [multipleInternal, setMultipleInternal] = useState<string[]>(
-    type === 'multiple' ? ((props as ToggleGroupMultipleProps).defaultValue ?? []) : []
-  );
+  // Extract controlled values for use in callbacks
+  const singleControlledValue = singleProps?.value;
+  const multipleControlledValue = multipleProps?.value;
+  const singleOnValueChange = singleProps?.onValueChange;
+  const multipleOnValueChange = multipleProps?.onValueChange;
 
   const isSelected = useCallback(
     (value: string) => {
       if (type === 'single') {
-        const current = isSingleControlled
-          ? (props as ToggleGroupSingleProps).value!
-          : singleInternal;
+        const current = isSingleControlled ? singleControlledValue! : singleInternal;
         return current === value;
       } else {
-        const current = isMultipleControlled
-          ? (props as ToggleGroupMultipleProps).value!
-          : multipleInternal;
+        const current = isMultipleControlled ? multipleControlledValue! : multipleInternal;
         return current.includes(value);
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [type, isSingleControlled, isMultipleControlled, singleInternal, multipleInternal, props]
+    [type, isSingleControlled, singleControlledValue, singleInternal, isMultipleControlled, multipleControlledValue, multipleInternal]
   );
 
   const toggle = useCallback(
     (value: string) => {
       if (type === 'single') {
-        const p = props as ToggleGroupSingleProps;
         if (!isSingleControlled) setSingleInternal(value);
-        p.onValueChange?.(value);
+        singleOnValueChange?.(value);
       } else {
-        const p = props as ToggleGroupMultipleProps;
-        const current = isMultipleControlled ? p.value! : multipleInternal;
+        const current = isMultipleControlled ? multipleControlledValue! : multipleInternal;
         const next = current.includes(value)
           ? current.filter((v) => v !== value)
           : [...current, value];
         if (!isMultipleControlled) setMultipleInternal(next);
-        p.onValueChange?.(next);
+        multipleOnValueChange?.(next);
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [type, isSingleControlled, isMultipleControlled, multipleInternal, props]
+    [type, isSingleControlled, singleOnValueChange, isMultipleControlled, multipleControlledValue, multipleInternal, multipleOnValueChange]
   );
 
   // Collect item values for keyboard navigation

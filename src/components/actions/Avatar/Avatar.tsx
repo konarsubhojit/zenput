@@ -141,6 +141,10 @@ export interface AvatarGroupProps {
   children: React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
+  /** Accessible label for the group. Default: `'Avatar group'`. */
+  'aria-label'?: string;
+  /** ID of the element that labels the group. */
+  'aria-labelledby'?: string;
 }
 
 /**
@@ -153,6 +157,8 @@ export function AvatarGroup({
   children,
   className,
   style,
+  'aria-label': ariaLabel = 'Avatar group',
+  'aria-labelledby': ariaLabelledBy,
 }: AvatarGroupProps): React.ReactElement {
   const childArray = React.Children.toArray(children);
   const visible = max !== undefined ? childArray.slice(0, max) : childArray;
@@ -163,7 +169,8 @@ export function AvatarGroup({
       className={classNames(styles.group, className)}
       style={style}
       role="group"
-      aria-label="Avatar group"
+      aria-label={ariaLabelledBy ? undefined : ariaLabel}
+      aria-labelledby={ariaLabelledBy}
     >
       {visible.map((child, idx) => {
         if (!React.isValidElement(child)) return child;
