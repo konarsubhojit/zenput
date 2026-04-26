@@ -24,7 +24,7 @@ import { Button } from '../../actions/Button';
 
 let _idCounter = 0;
 function genId(): string {
-  return `zdp-${++_idCounter}`;
+  return `zdlg-${++_idCounter}`;
 }
 
 interface StackEntry {

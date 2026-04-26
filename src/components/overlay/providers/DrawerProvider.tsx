@@ -22,7 +22,7 @@ import type { DrawerSide, DrawerSize } from '../Drawer';
 
 let _idCounter = 0;
 function genId(): string {
-  return `zwp-${++_idCounter}`;
+  return `zdwr-${++_idCounter}`;
 }
 
 interface DrawerStackEntry {
