@@ -4,8 +4,8 @@
   z-index: var(--zp-z-toast);
   display: flex;
   flex-direction: column;
-  gap: var(--zp-space-2);
-  width: 380px;
+  gap: var(--zp-component-toast-gap, var(--zp-space-2));
+  width: var(--zp-component-toast-max-width, 380px);
   max-width: calc(100vw - var(--zp-space-8));
   pointer-events: none;
 }
@@ -81,14 +81,15 @@
   display: flex;
   align-items: flex-start;
   gap: var(--zp-space-3);
-  padding: var(--zp-space-3) var(--zp-space-4);
-  border-radius: var(--zp-radius-lg);
-  box-shadow: var(--zp-shadow-lg);
-  background-color: var(--zp-color-surface);
-  color: var(--zp-color-text-primary);
-  border: var(--zp-border-width-1) solid var(--zp-color-border-subtle);
+  padding: var(--zp-component-toast-padding, var(--zp-space-3) var(--zp-space-4));
+  border-radius: var(--zp-component-toast-border-radius, var(--zp-radius-lg));
+  box-shadow: var(--zp-component-toast-shadow, var(--zp-shadow-lg));
+  background-color: var(--zp-component-toast-bg, var(--zp-color-surface));
+  color: var(--zp-component-toast-text, var(--zp-color-text-primary));
+  border: var(--zp-component-toast-border-width, var(--zp-border-width-1)) solid
+    var(--zp-component-toast-border, var(--zp-color-border-subtle));
   width: 100%;
-  max-width: 380px;
+  max-width: var(--zp-component-toast-max-width, 380px);
   pointer-events: auto;
   outline: none;
   animation: toast-enter 200ms var(--zp-easing-ease-out) both;
@@ -149,7 +150,7 @@
 .title {
   font-size: var(--zp-font-size-sm);
   font-weight: var(--zp-font-weight-semibold);
-  color: var(--zp-color-text-primary);
+  color: var(--zp-component-toast-text, var(--zp-color-text-primary));
   line-height: var(--zp-line-height-tight);
 }
 

@@ -226,10 +226,19 @@ function ToastItemComponent({
   const timerStartRef = useRef<number | null>(null);
   const remainingRef = useRef<number | null>(toast.duration);
 
-  // Keep a stable ref to onDismiss so timer callbacks don't go stale
-  const onDismissRef = useRef(onDismiss);
+  // Guard that ensures onDismiss (and therefore onClose) fires at most once,
+  // even if the auto-dismiss timer and a user gesture race each other.
+  const closedRef = useRef(false);
+  const safeDismiss = useCallback(() => {
+    if (closedRef.current) return;
+    closedRef.current = true;
+    onDismiss();
+  }, [onDismiss]);
+
+  // Keep a stable ref to safeDismiss so timer callbacks don't go stale.
+  const safeDismissRef = useRef(safeDismiss);
   useEffect(() => {
-    onDismissRef.current = onDismiss;
+    safeDismissRef.current = safeDismiss;
   });
 
   const clearTimer = useCallback(() => {
@@ -245,7 +254,7 @@ function ToastItemComponent({
     clearTimer();
     timerStartRef.current = Date.now();
     timerIdRef.current = setTimeout(() => {
-      onDismissRef.current();
+      safeDismissRef.current();
     }, remaining);
   }, [clearTimer]);
 
@@ -292,10 +301,10 @@ function ToastItemComponent({
     (e: React.KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.stopPropagation();
-        onDismiss();
+        safeDismiss();
       }
     },
-    [onDismiss]
+    [safeDismiss]
   );
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -316,13 +325,13 @@ function ToastItemComponent({
 
   const handleTouchEnd = useCallback(() => {
     if (isSwiping && Math.abs(swipeOffset) > 80) {
-      onDismiss();
+      safeDismiss();
     } else {
       setSwipeOffset(0);
       setIsSwiping(false);
     }
     touchStartRef.current = null;
-  }, [isSwiping, swipeOffset, onDismiss]);
+  }, [isSwiping, swipeOffset, safeDismiss]);
 
   // When exit animation completes, notify parent to remove from state
   const handleAnimationEnd = useCallback(
@@ -382,7 +391,7 @@ function ToastItemComponent({
       <button
         type="button"
         className={styles.closeButton}
-        onClick={onDismiss}
+        onClick={safeDismiss}
         aria-label="Dismiss notification"
       >
         <svg

@@ -221,6 +221,35 @@ describe('ToastProvider / useToast', () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
+  it('calls onClose exactly once even when close button is clicked multiple times', async () => {
+    const onClose = vi.fn();
+    function App() {
+      const toast = useToast();
+      return (
+        <Trigger
+          onClick={() =>
+            toast.show({ title: 'Once toast', status: 'info', duration: null, onClose })
+          }
+        />
+      );
+    }
+    render(
+      <ToastProvider>
+        <App />
+      </ToastProvider>
+    );
+    act(() => screen.getByRole('button', { name: 'Show toast' }).click());
+    await waitFor(() => expect(screen.getByText('Once toast')).toBeInTheDocument());
+
+    act(() => {
+      const closeBtn = screen.getByRole('button', { name: 'Dismiss notification' });
+      closeBtn.click();
+      closeBtn.click(); // second click should be a no-op
+    });
+
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
   it('dismisses via Escape key when focused', async () => {
     function App() {
       const toast = useToast();
