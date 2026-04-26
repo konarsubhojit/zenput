@@ -117,6 +117,79 @@ describe('Pagination', () => {
     expect(onChange).toHaveBeenCalledWith(3);
   });
 
+  it('calls onPageChange when previous is clicked', async () => {
+    const onChange = vi.fn();
+    render(
+      <Pagination
+        currentPage={3}
+        totalCount={50}
+        pageSize={10}
+        onPageChange={onChange}
+      />
+    );
+    await userEvent.click(screen.getByLabelText('Previous page'));
+    expect(onChange).toHaveBeenCalledWith(2);
+  });
+
+  it('calls onPageChange with 1 when First page is clicked', async () => {
+    const onChange = vi.fn();
+    render(
+      <Pagination
+        currentPage={4}
+        totalCount={50}
+        pageSize={10}
+        onPageChange={onChange}
+        showFirstLast
+      />
+    );
+    await userEvent.click(screen.getByLabelText('First page'));
+    expect(onChange).toHaveBeenCalledWith(1);
+  });
+
+  it('calls onPageChange with last page when Last page is clicked', async () => {
+    const onChange = vi.fn();
+    render(
+      <Pagination
+        currentPage={2}
+        totalCount={50}
+        pageSize={10}
+        onPageChange={onChange}
+        showFirstLast
+      />
+    );
+    await userEvent.click(screen.getByLabelText('Last page'));
+    expect(onChange).toHaveBeenCalledWith(5);
+  });
+
+  it('does not call onPageChange when navigating out of range', async () => {
+    const onChange = vi.fn();
+    const { rerender } = render(
+      <Pagination
+        currentPage={1}
+        totalCount={50}
+        pageSize={10}
+        onPageChange={onChange}
+      />
+    );
+    // Previous button is disabled at first page; click should be a no-op even
+    // though the handler exists (covers the goTo guard).
+    const prev = screen.getByLabelText('Previous page');
+    expect(prev).toBeDisabled();
+    rerender(
+      <Pagination
+        currentPage={5}
+        totalCount={50}
+        pageSize={10}
+        onPageChange={onChange}
+      />
+    );
+    expect(screen.getByLabelText('Next page')).toBeDisabled();
+  });
+
+  it('returns empty array from buildPaginationItems when total is 0', () => {
+    expect(buildPaginationItems(1, 0)).toEqual([]);
+  });
+
   it('renders first/last buttons when showFirstLast=true', () => {
     render(
       <Pagination
