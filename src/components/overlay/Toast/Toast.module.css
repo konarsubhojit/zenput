@@ -1,0 +1,268 @@
+/* Toast container — fixed, renders into a Portal */
+.container {
+  position: fixed;
+  z-index: var(--zp-z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--zp-component-toast-gap, var(--zp-space-2));
+  width: var(--zp-component-toast-max-width, 380px);
+  max-width: calc(100vw - var(--zp-space-8));
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* Placement variants                                                   */
+/* ------------------------------------------------------------------ */
+
+.placement-top-left {
+  top: var(--zp-space-4);
+  left: var(--zp-space-4);
+  align-items: flex-start;
+}
+
+.placement-top-center {
+  top: var(--zp-space-4);
+  left: 50%;
+  transform: translateX(-50%);
+  align-items: center;
+}
+
+.placement-top-right {
+  top: var(--zp-space-4);
+  right: var(--zp-space-4);
+  align-items: flex-end;
+}
+
+.placement-middle-left {
+  top: 50%;
+  left: var(--zp-space-4);
+  transform: translateY(-50%);
+  align-items: flex-start;
+}
+
+.placement-middle-center {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  align-items: center;
+}
+
+.placement-middle-right {
+  top: 50%;
+  right: var(--zp-space-4);
+  transform: translateY(-50%);
+  align-items: flex-end;
+}
+
+.placement-bottom-left {
+  bottom: var(--zp-space-4);
+  left: var(--zp-space-4);
+  align-items: flex-start;
+}
+
+.placement-bottom-center {
+  bottom: var(--zp-space-4);
+  left: 50%;
+  transform: translateX(-50%);
+  align-items: center;
+}
+
+.placement-bottom-right {
+  bottom: var(--zp-space-4);
+  right: var(--zp-space-4);
+  align-items: flex-end;
+}
+
+/* ------------------------------------------------------------------ */
+/* Individual toast                                                      */
+/* ------------------------------------------------------------------ */
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--zp-space-3);
+  padding: var(--zp-component-toast-padding, var(--zp-space-3) var(--zp-space-4));
+  border-radius: var(--zp-component-toast-border-radius, var(--zp-radius-lg));
+  box-shadow: var(--zp-component-toast-shadow, var(--zp-shadow-lg));
+  background-color: var(--zp-component-toast-bg, var(--zp-color-surface));
+  color: var(--zp-component-toast-text, var(--zp-color-text-primary));
+  border: var(--zp-component-toast-border-width, var(--zp-border-width-1)) solid
+    var(--zp-component-toast-border, var(--zp-color-border-subtle));
+  width: 100%;
+  max-width: var(--zp-component-toast-max-width, 380px);
+  pointer-events: auto;
+  outline: none;
+  animation: toast-enter 200ms var(--zp-easing-ease-out) both;
+}
+
+.toast:focus-visible {
+  outline: 2px solid var(--zp-color-focus-ring);
+  outline-offset: 2px;
+}
+
+.toastExiting {
+  animation: toast-exit 150ms var(--zp-easing-ease-in) both;
+}
+
+/* ------------------------------------------------------------------ */
+/* Status variants                                                       */
+/* ------------------------------------------------------------------ */
+
+.status-info .icon {
+  color: var(--zp-color-info, var(--zp-color-brand));
+}
+
+.status-success .icon {
+  color: var(--zp-color-success);
+}
+
+.status-warning .icon {
+  color: var(--zp-color-warning);
+}
+
+.status-error .icon {
+  color: var(--zp-color-error);
+}
+
+.status-loading .icon {
+  color: var(--zp-color-brand);
+}
+
+/* ------------------------------------------------------------------ */
+/* Inner layout                                                          */
+/* ------------------------------------------------------------------ */
+
+.icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding-top: 2px;
+}
+
+.body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--zp-space-1);
+  min-width: 0;
+}
+
+.title {
+  font-size: var(--zp-font-size-sm);
+  font-weight: var(--zp-font-weight-semibold);
+  color: var(--zp-component-toast-text, var(--zp-color-text-primary));
+  line-height: var(--zp-line-height-tight);
+}
+
+.description {
+  font-size: var(--zp-font-size-sm);
+  color: var(--zp-color-text-secondary);
+  line-height: var(--zp-line-height-normal);
+}
+
+.actionButton {
+  all: unset;
+  cursor: pointer;
+  font-size: var(--zp-font-size-sm);
+  font-weight: var(--zp-font-weight-semibold);
+  color: var(--zp-color-brand);
+  margin-top: var(--zp-space-1);
+  padding: 0;
+  line-height: var(--zp-line-height-tight);
+}
+
+.actionButton:hover {
+  text-decoration: underline;
+}
+
+.actionButton:focus-visible {
+  outline: 2px solid var(--zp-color-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--zp-radius-sm);
+}
+
+.closeButton {
+  all: unset;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: var(--zp-radius-sm);
+  color: var(--zp-color-text-secondary);
+  margin-top: -2px;
+  margin-right: -4px;
+}
+
+.closeButton:hover {
+  background-color: var(--zp-color-surface-raised);
+  color: var(--zp-color-text-primary);
+}
+
+.closeButton:focus-visible {
+  outline: 2px solid var(--zp-color-focus-ring);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Spin animation for loading icon                                       */
+/* ------------------------------------------------------------------ */
+
+.spinIcon {
+  animation: toast-spin 1s linear infinite;
+}
+
+/* ------------------------------------------------------------------ */
+/* Keyframes                                                             */
+/* ------------------------------------------------------------------ */
+
+@keyframes toast-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(4px) scale(0.96);
+  }
+}
+
+@keyframes toast-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Reduced motion                                                        */
+/* ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
+
+  .toastExiting {
+    animation: none;
+  }
+
+  .spinIcon {
+    animation: none;
+  }
+}

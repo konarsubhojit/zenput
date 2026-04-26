@@ -232,7 +232,47 @@ export const defaultComponentTokens = {
     rowBgSelected: 'var(--zp-color-brand-subtle)',
     rowBgAlt: 'var(--zp-color-surface)',
   } satisfies DataTableTokens,
+
+  toast: {
+    padding: 'var(--zp-space-3) var(--zp-space-4)',
+    gap: 'var(--zp-space-2)',
+    maxWidth: '380px',
+    borderRadius: 'var(--zp-radius-lg)',
+    borderWidth: 'var(--zp-border-width-1)',
+    bg: 'var(--zp-color-surface)',
+    text: 'var(--zp-color-text-primary)',
+    border: 'var(--zp-color-border-subtle)',
+    shadow: 'var(--zp-shadow-lg)',
+  } satisfies ToastTokens,
 };
+
+/**
+ * Toast component tokens
+ */
+export interface ToastTokens {
+  // Layout
+  padding?: string;
+  gap?: string;
+  maxWidth?: string;
+  // Border
+  borderRadius?: string;
+  borderWidth?: string;
+  // Colors (base)
+  bg?: string;
+  text?: string;
+  border?: string;
+  // Colors (per status)
+  infoBg?: string;
+  infoBorder?: string;
+  successBg?: string;
+  successBorder?: string;
+  warningBg?: string;
+  warningBorder?: string;
+  errorBg?: string;
+  errorBorder?: string;
+  // Shadow
+  shadow?: string;
+}
 
 /**
  * All component token types
@@ -244,6 +284,7 @@ export interface ComponentTokensMap {
   dialog?: Partial<DialogTokens>;
   tooltip?: Partial<TooltipTokens>;
   dataTable?: Partial<DataTableTokens>;
+  toast?: Partial<ToastTokens>;
 }
 
 export type ComponentName = keyof ComponentTokensMap;

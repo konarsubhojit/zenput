@@ -24,6 +24,7 @@ import {
   AutoCompleteSection,
   MoneyInputSection,
   DataTableSection,
+  ToastSection,
 } from './sections';
 
 const THEMES: Record<string, Theme> = {
@@ -101,6 +102,10 @@ const NAV_GROUPS: Array<{ title: string; items: Array<{ id: string; name: string
   {
     title: 'Data display',
     items: [{ id: 'data-table', name: 'DataTable' }],
+  },
+  {
+    title: 'Overlay',
+    items: [{ id: 'toast', name: 'Toast' }],
   },
 ];
 
@@ -190,6 +195,7 @@ export function App() {
             <AutoCompleteSection />
             <MoneyInputSection />
             <DataTableSection />
+            <ToastSection />
           </main>
         </div>
       </div>
