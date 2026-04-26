@@ -275,7 +275,7 @@ export function ThemeProvider({
 
   // ── Determine the initial color mode ──────────────────────────────
   // Priority: stored value → theme.mode prop → inherited from parent → 'light'
-  const getInitialMode = useCallback((): ColorMode => {
+  const [colorMode, setColorModeState] = useState<ColorMode>(() => {
     if (storageKey) {
       const stored = getStorageApi(storage)?.getItem(storageKey);
       if (stored && isValidColorMode(stored)) return stored;
@@ -287,9 +287,7 @@ export function ThemeProvider({
       return parentCtx.mode;
     }
     return 'light';
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps — intentionally stable init
-
-  const [colorMode, setColorModeState] = useState<ColorMode>(getInitialMode);
+  });
 
   // ── System preference detection ────────────────────────────────────
   const [systemDark, setSystemDark] = useState<boolean>(matchesDarkScheme);

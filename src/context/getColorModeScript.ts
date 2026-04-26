@@ -65,7 +65,12 @@ export function getColorModeScript({
   return `(function(){
   var validModes=${validModesJson};
   var stored;
-  try { stored = window.${storage} && window.${storage}.getItem(${JSON.stringify(storageKey)}); } catch(e){}
+  try {
+    if (window.${storage}) {
+      var s = window.${storage}.getItem(${JSON.stringify(storageKey)});
+      if (s) { stored = s; }
+    }
+  } catch(e){}
   var mode = (stored && validModes.indexOf(stored) !== -1) ? stored : ${JSON.stringify(defaultMode)};
   var resolved = mode;
   if (mode === 'system') {
