@@ -260,3 +260,81 @@ describe('useDrawer', () => {
     expect(results).toEqual([null]);
   });
 });
+
+describe('DrawerProvider - stacked dismissal', () => {
+  it('dismisses only the topmost stacked drawer on Escape', async () => {
+    function StackedDrawer() {
+      const drawer = useDrawer();
+      return (
+        <button
+          onClick={() => {
+            drawer.open({ content: () => <DrawerTitle>First drawer</DrawerTitle> });
+            drawer.open({ content: () => <DrawerTitle>Second drawer</DrawerTitle> });
+          }}
+        >
+          Open Both
+        </button>
+      );
+    }
+
+    render(
+      <DrawerProvider>
+        <StackedDrawer />
+      </DrawerProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open Both').click();
+    });
+
+    expect(screen.getAllByRole('dialog')).toHaveLength(2);
+
+    await act(async () => {
+      fireEvent.keyDown(document, { key: 'Escape' });
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText('Second drawer')).not.toBeInTheDocument();
+    });
+    expect(screen.getByText('First drawer')).toBeInTheDocument();
+  });
+
+  it('does not dismiss the underlying drawer when topmost is non-dismissible', async () => {
+    function StackedDrawer() {
+      const drawer = useDrawer();
+      return (
+        <button
+          onClick={() => {
+            drawer.open({ content: () => <DrawerTitle>First drawer</DrawerTitle> });
+            drawer.open({
+              dismissible: false,
+              content: () => <DrawerTitle>Second drawer</DrawerTitle>,
+            });
+          }}
+        >
+          Open Both
+        </button>
+      );
+    }
+
+    render(
+      <DrawerProvider>
+        <StackedDrawer />
+      </DrawerProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Open Both').click();
+    });
+
+    expect(screen.getAllByRole('dialog')).toHaveLength(2);
+
+    await act(async () => {
+      fireEvent.keyDown(document, { key: 'Escape' });
+    });
+
+    expect(screen.getAllByRole('dialog')).toHaveLength(2);
+    expect(screen.getByText('First drawer')).toBeInTheDocument();
+    expect(screen.getByText('Second drawer')).toBeInTheDocument();
+  });
+});

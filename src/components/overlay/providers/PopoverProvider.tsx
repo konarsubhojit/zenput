@@ -116,9 +116,11 @@ function usePopoverProviderContext(): PopoverProviderContextValue {
 function ImperativePopoverContent({
   entry,
   onClose,
+  isTopmost,
 }: {
   entry: PopoverStackEntry;
   onClose: (value?: unknown) => void;
+  isTopmost: boolean;
 }): React.ReactElement | null {
   const contentRef = useRef<HTMLDivElement | null>(null);
   const [coords, setCoords] = useState<PopoverCoords | null>(null);
@@ -150,7 +152,7 @@ function ImperativePopoverContent({
   const handleEscape = useCallback(() => {
     if (entry.dismissible) onClose(null);
   }, [entry.dismissible, onClose]);
-  useEscapeKey(true, handleEscape);
+  useEscapeKey(isTopmost, handleEscape);
 
   const anchorRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
@@ -164,7 +166,7 @@ function ImperativePopoverContent({
   const handleClickOutside = useCallback(() => {
     if (entry.dismissible) onClose(null);
   }, [entry.dismissible, onClose]);
-  useClickOutside(true, [contentRef, anchorRef], handleClickOutside);
+  useClickOutside(isTopmost, [contentRef, anchorRef], handleClickOutside);
 
   return (
     <Portal>
@@ -180,7 +182,6 @@ function ImperativePopoverContent({
           top: coords?.top ?? -9999,
           left: coords?.left ?? -9999,
           visibility: coords ? 'visible' : 'hidden',
-          zIndex: 'var(--zp-z-popover)' as unknown as number,
         }}
         className={styles.content}
       >
@@ -273,11 +274,12 @@ export function PopoverProvider({ children }: PopoverProviderProps): React.React
   return (
     <PopoverProviderContext.Provider value={{ _open }}>
       {children}
-      {stack.map((entry) => (
+      {stack.map((entry, index) => (
         <ImperativePopoverContent
           key={entry.id}
           entry={entry}
           onClose={entry.close}
+          isTopmost={index === stack.length - 1}
         />
       ))}
     </PopoverProviderContext.Provider>

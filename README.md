@@ -504,15 +504,21 @@ function DeleteButton() {
 ```tsx
 import { usePrompt } from 'zenput';
 
-const prompt = usePrompt();
+function RenameButton({ file, renameFile }: Props) {
+  const prompt = usePrompt();
 
-const newName = await prompt({
-  title: 'Rename file',
-  label: 'New name',
-  defaultValue: file.name,
-  validate: (v) => v.trim().length > 0 || 'Name is required',
-});
-if (newName) renameFile(newName);
+  const handleRename = async () => {
+    const newName = await prompt({
+      title: 'Rename file',
+      label: 'New name',
+      defaultValue: file.name,
+      validate: (v) => v.trim().length > 0 || 'Name is required',
+    });
+    if (newName) renameFile(newName);
+  };
+
+  return <button onClick={handleRename}>Rename</button>;
+}
 ```
 
 ### `useAlert`
@@ -520,13 +526,23 @@ if (newName) renameFile(newName);
 ```tsx
 import { useAlert } from 'zenput';
 
-const alert = useAlert();
+function SaveButton() {
+  const alert = useAlert();
 
-// Works great inside async error handlers — no JSX needed at the call site.
-fetch('/api/save')
-  .catch(async (err) => {
-    await alert({ title: 'Save failed', description: err.message });
-  });
+  // Works great inside async error handlers — no JSX needed at the call site.
+  const handleSave = async () => {
+    try {
+      await fetch('/api/save');
+    } catch (err) {
+      await alert({
+        title: 'Save failed',
+        description: err instanceof Error ? err.message : 'Unknown error',
+      });
+    }
+  };
+
+  return <button onClick={handleSave}>Save</button>;
+}
 ```
 
 ### `useDialog` — generic content
@@ -534,16 +550,22 @@ fetch('/api/save')
 ```tsx
 import { useDialog } from 'zenput';
 
-const dialog = useDialog<string>();
+function MyButton() {
+  const dialog = useDialog();
 
-const handle = dialog.open({
-  size: 'md',
-  content: ({ close }) => (
-    <MyForm onSubmit={(v) => close(v)} onCancel={() => close()} />
-  ),
-});
-const result = await handle.result; // string | null
-handle.close();                     // programmatic close
+  const openForm = async () => {
+    const handle = dialog.open<string>({
+      size: 'md',
+      content: ({ close }) => (
+        <MyForm onSubmit={(v) => close(v)} onCancel={() => close()} />
+      ),
+    });
+    const result = await handle.result; // string | null
+    return result;
+  };
+
+  return <button onClick={openForm}>Open form</button>;
+}
 ```
 
 ### `useDrawer`
@@ -553,19 +575,25 @@ Same shape as `useDialog` but anchored to an edge of the viewport.
 ```tsx
 import { useDrawer, DrawerHeader, DrawerTitle, DrawerBody, DrawerFooter } from 'zenput';
 
-const drawer = useDrawer();
+function OpenDetailsButton() {
+  const drawer = useDrawer();
 
-drawer.open({
-  side: 'right',   // 'left' | 'right' | 'top' | 'bottom'
-  size: 'md',
-  content: ({ close }) => (
-    <>
-      <DrawerHeader><DrawerTitle>Details</DrawerTitle></DrawerHeader>
-      <DrawerBody>…</DrawerBody>
-      <DrawerFooter><button onClick={() => close()}>Done</button></DrawerFooter>
-    </>
-  ),
-});
+  const handleOpen = () => {
+    drawer.open({
+      side: 'right',   // 'left' | 'right' | 'top' | 'bottom'
+      size: 'md',
+      content: ({ close }) => (
+        <>
+          <DrawerHeader><DrawerTitle>Details</DrawerTitle></DrawerHeader>
+          <DrawerBody>…</DrawerBody>
+          <DrawerFooter><button onClick={() => close()}>Done</button></DrawerFooter>
+        </>
+      ),
+    });
+  };
+
+  return <button onClick={handleOpen}>Open details</button>;
+}
 ```
 
 ### `usePopover`
@@ -573,23 +601,37 @@ drawer.open({
 Anchor a popover to an element ref **or** `(x, y)` viewport coordinates.
 
 ```tsx
+import { useRef } from 'react';
 import { usePopover } from 'zenput';
 
-const popover = usePopover();
-const ref = useRef<HTMLButtonElement>(null);
+function PopoverDemo() {
+  const popover = usePopover();
+  const ref = useRef<HTMLButtonElement>(null);
 
-// Anchored to an element
-popover.open({
-  anchor: ref,
-  side: 'bottom',
-  content: ({ close }) => <Menu onSelect={(v) => close(v)} />,
-});
+  // Anchored to an element
+  const openMenu = () => {
+    popover.open({
+      anchor: ref,
+      side: 'bottom',
+      content: ({ close }) => <Menu onSelect={(v) => close(v)} />,
+    });
+  };
 
-// Anchored to cursor (context menu)
-const handleContextMenu = (e: React.MouseEvent) => {
-  e.preventDefault();
-  popover.open({ anchor: { x: e.clientX, y: e.clientY }, content: ... });
-};
+  // Anchored to cursor (context menu)
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    popover.open({
+      anchor: { x: e.clientX, y: e.clientY },
+      content: ({ close }) => <Menu onSelect={(v) => close(v)} />,
+    });
+  };
+
+  return (
+    <button ref={ref} onClick={openMenu} onContextMenu={handleContextMenu}>
+      Menu
+    </button>
+  );
+}
 ```
 
 ### Promise resolution
@@ -607,7 +649,7 @@ All promises resolve (never reject). When the provider unmounts with open dialog
 
 ### Stack support
 
-Opening a dialog (or confirm) from inside another dialog stacks them in DOM order — the most recently opened overlay is on top. Focus is trapped inside the topmost overlay and returns to the previous focus target on close.
+Opening a dialog (or confirm) from inside another dialog stacks them in DOM order — the most recently opened overlay is on top. Escape and backdrop dismissal target only the topmost overlay; if the topmost is `dismissible: false`, neither it nor any underlying overlay can be dismissed via Escape/backdrop until it is closed programmatically.
 
 ## Development
 

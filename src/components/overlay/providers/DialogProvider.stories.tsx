@@ -147,11 +147,11 @@ export const GenericDialog: Story = {
   name: 'useDialog — generic content',
   render: () => {
     function Demo() {
-      const dialog = useDialog<string>();
+      const dialog = useDialog();
       const [result, setResult] = React.useState<string>('—');
 
       const handleClick = () => {
-        const handle = dialog.open({
+        const handle = dialog.open<string>({
           size: 'sm',
           content: ({ close }) => (
             <div style={{ padding: 24 }}>

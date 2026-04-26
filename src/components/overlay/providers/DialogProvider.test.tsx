@@ -648,3 +648,123 @@ describe('DialogProvider - unmount cleanup', () => {
     expect(results).toEqual([null]);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Topmost-only dismissal for stacked dialogs
+// ---------------------------------------------------------------------------
+
+describe('DialogProvider - stacked dismissal', () => {
+  it('dismisses only the topmost stacked dialog on Escape', async () => {
+    function NestedConfirm() {
+      const confirm = useConfirm();
+      return (
+        <button
+          onClick={() => {
+            // Fire two confirms back-to-back; both go on the stack.
+            void confirm({ title: 'First Confirm' });
+            void confirm({ title: 'Second Confirm' });
+          }}
+        >
+          Start
+        </button>
+      );
+    }
+
+    render(
+      <DialogProvider>
+        <NestedConfirm />
+      </DialogProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Start').click();
+    });
+
+    expect(screen.getAllByRole('dialog')).toHaveLength(2);
+    expect(screen.getByText('First Confirm')).toBeInTheDocument();
+    expect(screen.getByText('Second Confirm')).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.keyDown(document, { key: 'Escape' });
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    });
+
+    expect(screen.getByText('First Confirm')).toBeInTheDocument();
+    expect(screen.queryByText('Second Confirm')).not.toBeInTheDocument();
+  });
+
+  it('does not dismiss the underlying dialog when the topmost is non-dismissible', async () => {
+    function NestedNonDismissible() {
+      const confirm = useConfirm();
+      return (
+        <button
+          onClick={() => {
+            void confirm({ title: 'First Confirm' });
+            void confirm({ title: 'Second Confirm', dismissible: false });
+          }}
+        >
+          Start
+        </button>
+      );
+    }
+
+    render(
+      <DialogProvider>
+        <NestedNonDismissible />
+      </DialogProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Start').click();
+    });
+
+    expect(screen.getAllByRole('dialog')).toHaveLength(2);
+
+    await act(async () => {
+      fireEvent.keyDown(document, { key: 'Escape' });
+    });
+
+    // Neither dialog should be dismissed: top is non-dismissible (so Escape
+    // is a no-op), and the underlying dialog must not receive the key.
+    expect(screen.getAllByRole('dialog')).toHaveLength(2);
+    expect(screen.getByText('First Confirm')).toBeInTheDocument();
+    expect(screen.getByText('Second Confirm')).toBeInTheDocument();
+  });
+});
+
+describe('usePrompt - unique input ids', () => {
+  it('assigns distinct input ids to stacked prompt dialogs', async () => {
+    function NestedPrompt() {
+      const prompt = usePrompt();
+      return (
+        <button
+          onClick={() => {
+            void prompt({ label: 'First' });
+            void prompt({ label: 'Second' });
+          }}
+        >
+          Start
+        </button>
+      );
+    }
+
+    render(
+      <DialogProvider>
+        <NestedPrompt />
+      </DialogProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Start').click();
+    });
+
+    const inputs = document.querySelectorAll<HTMLInputElement>(
+      'input[id^="zdp-prompt-input-"]'
+    );
+    expect(inputs).toHaveLength(2);
+    expect(inputs[0].id).not.toEqual(inputs[1].id);
+  });
+});

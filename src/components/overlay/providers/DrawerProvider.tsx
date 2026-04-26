@@ -137,21 +137,24 @@ export function DrawerProvider({ children }: DrawerProviderProps): React.ReactEl
   return (
     <DrawerProviderContext.Provider value={{ _open }}>
       {children}
-      {stack.map((entry) => (
-        <Drawer
-          key={entry.id}
-          open
-          closeOnOverlayClick={entry.dismissible}
-          closeOnEscape={entry.dismissible}
-          onOpenChange={(open) => {
-            if (!open) entry.close(entry.defaultCloseValue);
-          }}
-        >
-          <DrawerContent side={entry.side} size={entry.size}>
-            {entry.renderContent(entry.close)}
-          </DrawerContent>
-        </Drawer>
-      ))}
+      {stack.map((entry, index) => {
+        const isTopmost = index === stack.length - 1;
+        return (
+          <Drawer
+            key={entry.id}
+            open
+            closeOnOverlayClick={entry.dismissible && isTopmost}
+            closeOnEscape={entry.dismissible && isTopmost}
+            onOpenChange={(open) => {
+              if (!open) entry.close(entry.defaultCloseValue);
+            }}
+          >
+            <DrawerContent side={entry.side} size={entry.size}>
+              {entry.renderContent(entry.close)}
+            </DrawerContent>
+          </Drawer>
+        );
+      })}
     </DrawerProviderContext.Provider>
   );
 }

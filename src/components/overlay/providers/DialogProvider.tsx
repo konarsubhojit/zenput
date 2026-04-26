@@ -3,6 +3,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useId,
   useRef,
   useState,
 } from 'react';
@@ -144,21 +145,24 @@ export function DialogProvider({ children }: DialogProviderProps): React.ReactEl
   return (
     <DialogProviderContext.Provider value={contextValue}>
       {children}
-      {stack.map((entry) => (
-        <Dialog
-          key={entry.id}
-          open
-          closeOnOverlayClick={entry.dismissible}
-          closeOnEscape={entry.dismissible}
-          onOpenChange={(open) => {
-            if (!open) entry.close(entry.defaultCloseValue);
-          }}
-        >
-          <DialogContent size={entry.size}>
-            {entry.renderContent(entry.close)}
-          </DialogContent>
-        </Dialog>
-      ))}
+      {stack.map((entry, index) => {
+        const isTopmost = index === stack.length - 1;
+        return (
+          <Dialog
+            key={entry.id}
+            open
+            closeOnOverlayClick={entry.dismissible && isTopmost}
+            closeOnEscape={entry.dismissible && isTopmost}
+            onOpenChange={(open) => {
+              if (!open) entry.close(entry.defaultCloseValue);
+            }}
+          >
+            <DialogContent size={entry.size}>
+              {entry.renderContent(entry.close)}
+            </DialogContent>
+          </Dialog>
+        );
+      })}
     </DialogProviderContext.Provider>
   );
 }
@@ -334,6 +338,8 @@ function PromptDialogBody({
   const [value, setValue] = useState(defaultValue);
   const [error, setError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const reactId = useId();
+  const inputId = `zdp-prompt-input-${reactId}`;
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -356,7 +362,7 @@ function PromptDialogBody({
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--zp-space-2)' }}>
           {label && (
             <label
-              htmlFor="zdp-prompt-input"
+              htmlFor={inputId}
               style={{
                 fontSize: 'var(--zp-font-size-sm)',
                 fontWeight: 'var(--zp-font-weight-medium)',
@@ -368,7 +374,7 @@ function PromptDialogBody({
           )}
           <input
             ref={inputRef}
-            id="zdp-prompt-input"
+            id={inputId}
             type="text"
             value={value}
             onChange={(e) => {
