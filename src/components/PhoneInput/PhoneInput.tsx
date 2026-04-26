@@ -17,6 +17,36 @@ const DEFAULT_COUNTRIES: CountryCode[] = [
   { code: 'BR', dialCode: '+55', flag: '🇧🇷', name: 'Brazil' },
 ];
 
+interface CountryDialSelectProps {
+  countries: CountryCode[];
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  disabled?: boolean;
+}
+
+function CountryDialSelect({
+  countries,
+  value,
+  onChange,
+  disabled,
+}: CountryDialSelectProps): React.ReactElement {
+  return (
+    <select
+      className={styles.dialCodeSelect}
+      value={value}
+      onChange={onChange}
+      disabled={disabled}
+      aria-label="Country dial code"
+    >
+      {countries.map((c) => (
+        <option key={`${c.code}-${c.dialCode}`} value={c.dialCode}>
+          {c.flag} {c.dialCode}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
   (
     {
@@ -107,8 +137,8 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
         className={classNames(
           styles.wrapper,
           styles[size],
-          validationState !== 'default' ? styles[validationState] : undefined,
-          fullWidth ? styles.fullWidth : undefined,
+          validationState !== 'default' && styles[validationState],
+          fullWidth && styles.fullWidth,
           wrapperClassName
         )}
         style={wrapperStyle}
@@ -118,7 +148,7 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
             {...labelProps}
             className={classNames(
               styles.label,
-              required ? styles.required : undefined,
+              required && styles.required,
               labelClassName
             )}
             style={labelStyle}
@@ -127,21 +157,14 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
           </label>
         )}
         <div
-          className={classNames(styles.inputWrapper, disabled ? styles.disabledWrapper : undefined)}
+          className={classNames(styles.inputWrapper, disabled && styles.disabledWrapper)}
         >
-          <select
-            className={styles.dialCodeSelect}
+          <CountryDialSelect
+            countries={countries}
             value={currentDial}
             onChange={handleDialChange}
             disabled={disabled}
-            aria-label="Country dial code"
-          >
-            {countries.map((c) => (
-              <option key={`${c.code}-${c.dialCode}`} value={c.dialCode}>
-                {c.flag} {c.dialCode}
-              </option>
-            ))}
-          </select>
+          />
           <input
             {...rest}
             {...inputAriaProps}

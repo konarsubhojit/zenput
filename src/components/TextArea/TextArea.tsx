@@ -4,6 +4,58 @@ import { classNames, getValidationMessage, getValidationMessageClass } from '../
 import { useFormField } from '../../hooks';
 import styles from './TextArea.module.css';
 
+interface TextAreaFooterProps {
+  activeMessage: string | undefined;
+  helperId: string | undefined;
+  messageClass: string | undefined;
+  helperTextClassName: string | undefined;
+  helperTextStyle: React.CSSProperties | undefined;
+  showCharCount: boolean | undefined;
+  charCount: number;
+  maxLength: number | undefined;
+  isExceeded: boolean;
+}
+
+function TextAreaFooter({
+  activeMessage,
+  helperId,
+  messageClass,
+  helperTextClassName,
+  helperTextStyle,
+  showCharCount,
+  charCount,
+  maxLength,
+  isExceeded,
+}: TextAreaFooterProps): React.ReactElement | null {
+  if (!activeMessage && !showCharCount) return null;
+  const charLabel = maxLength !== undefined ? `${charCount}/${maxLength}` : charCount;
+  return (
+    <div className={styles.footer}>
+      {activeMessage ? (
+        <span
+          id={helperId}
+          className={classNames(messageClass, helperTextClassName)}
+          style={helperTextStyle}
+        >
+          {activeMessage}
+        </span>
+      ) : (
+        <span />
+      )}
+      {showCharCount && (
+        <span
+          className={classNames(
+            styles.charCount,
+            isExceeded && styles.charCountExceeded
+          )}
+        >
+          {charLabel}
+        </span>
+      )}
+    </div>
+  );
+}
+
 export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
   (
     {
@@ -90,8 +142,8 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
           styles.wrapper,
           styles[size],
           styles[variant],
-          validationState !== 'default' ? styles[validationState] : undefined,
-          fullWidth ? styles.fullWidth : undefined,
+          validationState !== 'default' && styles[validationState],
+          fullWidth && styles.fullWidth,
           wrapperClassName
         )}
         style={wrapperStyle}
@@ -101,7 +153,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
             {...labelProps}
             className={classNames(
               styles.label,
-              required ? styles.required : undefined,
+              required && styles.required,
               labelClassName
             )}
             style={labelStyle}
@@ -124,38 +176,24 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
             onChange={handleChange}
             className={classNames(
               styles.input,
-              autoResize ? styles.autoResize : undefined,
+              autoResize && styles.autoResize,
               inputClassName,
               className
             )}
             style={inputStyle}
           />
         </div>
-        {(activeMessage || showCharCount) && (
-          <div className={styles.footer}>
-            {activeMessage ? (
-              <span
-                id={helperId}
-                className={classNames(messageClass, helperTextClassName)}
-                style={helperTextStyle}
-              >
-                {activeMessage}
-              </span>
-            ) : (
-              <span />
-            )}
-            {showCharCount && (
-              <span
-                className={classNames(
-                  styles.charCount,
-                  isExceeded ? styles.charCountExceeded : undefined
-                )}
-              >
-                {maxLength !== undefined ? `${charCount}/${maxLength}` : charCount}
-              </span>
-            )}
-          </div>
-        )}
+        <TextAreaFooter
+          activeMessage={activeMessage}
+          helperId={helperId}
+          messageClass={messageClass}
+          helperTextClassName={helperTextClassName}
+          helperTextStyle={helperTextStyle}
+          showCharCount={showCharCount}
+          charCount={charCount}
+          maxLength={maxLength}
+          isExceeded={isExceeded}
+        />
       </div>
     );
   }

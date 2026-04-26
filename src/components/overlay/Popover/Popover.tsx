@@ -230,6 +230,13 @@ export const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
 
     if (!open) return null;
 
+    const positionStyle: React.CSSProperties = {
+      position: 'fixed',
+      top: coords?.top ?? -9999,
+      left: coords?.left ?? -9999,
+      visibility: coords ? 'visible' : 'hidden',
+    };
+
     const content = (
       <div
         ref={mergedRef}
@@ -238,12 +245,7 @@ export const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
         tabIndex={-1}
         data-side={side}
         data-align={align}
-        style={{
-          position: 'fixed',
-          top: coords?.top ?? -9999,
-          left: coords?.left ?? -9999,
-          visibility: coords ? 'visible' : 'hidden',
-        }}
+        style={positionStyle}
         className={classNames(styles.content, className)}
         {...rest}
       >
@@ -251,6 +253,7 @@ export const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
       </div>
     );
 
-    return withPortal ? <Portal>{content}</Portal> : content;
+    if (withPortal) return <Portal>{content}</Portal>;
+    return content;
   }
 );

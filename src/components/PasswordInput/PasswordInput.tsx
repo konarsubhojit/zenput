@@ -15,6 +15,24 @@ function getPasswordStrength(password: string): number {
 }
 
 const STRENGTH_LABELS = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+const STRENGTH_SEGMENTS = [1, 2, 3, 4] as const;
+
+interface StrengthIndicatorProps {
+  strength: number;
+}
+
+function StrengthIndicator({ strength }: StrengthIndicatorProps): React.ReactElement {
+  return (
+    <>
+      <div className={classNames(styles.strengthBar, styles[`strength${strength}`])}>
+        {STRENGTH_SEGMENTS.map((i) => (
+          <div key={i} className={styles.strengthSegment} />
+        ))}
+      </div>
+      <span className={styles.strengthLabel}>{STRENGTH_LABELS[strength]}</span>
+    </>
+  );
+}
 
 export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
   (
@@ -80,6 +98,10 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
     );
 
     const strength = showStrengthIndicator ? getPasswordStrength(currentValue) : 0;
+    const showStrength = showStrengthIndicator && currentValue.length > 0;
+
+    const toggleIcon = visible ? (hideIcon ?? <span>🙈</span>) : (showIcon ?? <span>👁</span>);
+    const toggleLabel = visible ? 'Hide password' : 'Show password';
 
     const activeMessage = getValidationMessage(
       validationState,
@@ -136,21 +158,12 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             className={styles.toggleBtn}
             onClick={() => setVisible((v) => !v)}
             disabled={disabled}
-            aria-label={visible ? 'Hide password' : 'Show password'}
+            aria-label={toggleLabel}
           >
-            {visible ? (hideIcon ?? <span>🙈</span>) : (showIcon ?? <span>👁</span>)}
+            {toggleIcon}
           </button>
         </div>
-        {showStrengthIndicator && currentValue.length > 0 && (
-          <>
-            <div className={classNames(styles.strengthBar, styles[`strength${strength}`])}>
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className={styles.strengthSegment} />
-              ))}
-            </div>
-            <span className={styles.strengthLabel}>{STRENGTH_LABELS[strength]}</span>
-          </>
-        )}
+        {showStrength && <StrengthIndicator strength={strength} />}
         {activeMessage && (
           <span
             id={helperId}

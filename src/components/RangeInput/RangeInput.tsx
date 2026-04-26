@@ -4,6 +4,17 @@ import { classNames, getValidationMessage, getValidationMessageClass } from '../
 import { useFormField } from '../../hooks';
 import styles from './RangeInput.module.css';
 
+function getInitialRangeValue(
+  value: unknown,
+  defaultValue: unknown,
+  min: number | string,
+  max: number | string
+): number {
+  if (value !== undefined) return Number(value);
+  if (defaultValue !== undefined) return Number(defaultValue);
+  return (Number(min) + Number(max)) / 2;
+}
+
 export const RangeInput = forwardRef<HTMLInputElement, RangeInputProps>(
   (
     {
@@ -54,13 +65,9 @@ export const RangeInput = forwardRef<HTMLInputElement, RangeInputProps>(
       disabled,
     });
 
-    const getInitial = () => {
-      if (value !== undefined) return Number(value);
-      if (defaultValue !== undefined) return Number(defaultValue);
-      return (Number(min) + Number(max)) / 2;
-    };
-
-    const [internalValue, setInternalValue] = useState<number>(getInitial);
+    const [internalValue, setInternalValue] = useState<number>(() =>
+      getInitialRangeValue(value, defaultValue, min, max)
+    );
 
     const isControlled = value !== undefined;
     const currentValue = isControlled ? Number(value) : internalValue;
@@ -93,8 +100,8 @@ export const RangeInput = forwardRef<HTMLInputElement, RangeInputProps>(
         className={classNames(
           styles.wrapper,
           styles[size],
-          validationState !== 'default' ? styles[validationState] : undefined,
-          fullWidth ? styles.fullWidth : undefined,
+          validationState !== 'default' && styles[validationState],
+          fullWidth && styles.fullWidth,
           wrapperClassName
         )}
         style={wrapperStyle}
@@ -104,7 +111,7 @@ export const RangeInput = forwardRef<HTMLInputElement, RangeInputProps>(
             {...labelProps}
             className={classNames(
               styles.label,
-              required ? styles.required : undefined,
+              required && styles.required,
               labelClassName
             )}
             style={labelStyle}

@@ -344,6 +344,17 @@ export const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
       closeSoon();
     };
 
+    // Internal positioning style is authoritative: it is spread last
+    // so caller `style` cannot overwrite top/left/position/visibility.
+    const positionStyle: React.CSSProperties = {
+      ...userStyle,
+      position: 'fixed',
+      top: coords?.top ?? -9999,
+      left: coords?.left ?? -9999,
+      visibility: coords ? 'visible' : 'hidden',
+      pointerEvents: 'auto',
+    };
+
     const content = (
       <div
         {...rest}
@@ -354,22 +365,14 @@ export const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
         data-align={align}
         onPointerEnter={handlePointerEnter}
         onPointerLeave={handlePointerLeave}
-        // Internal positioning style is authoritative: it is spread last
-        // so caller `style` cannot overwrite top/left/position/visibility.
-        style={{
-          ...userStyle,
-          position: 'fixed',
-          top: coords?.top ?? -9999,
-          left: coords?.left ?? -9999,
-          visibility: coords ? 'visible' : 'hidden',
-          pointerEvents: 'auto',
-        }}
+        style={positionStyle}
         className={classNames(styles.content, className)}
       >
         {children}
       </div>
     );
 
-    return withPortal ? <Portal>{content}</Portal> : content;
+    if (withPortal) return <Portal>{content}</Portal>;
+    return content;
   }
 );

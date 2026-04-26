@@ -231,18 +231,20 @@ export const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(function
 
   if (!open) return null;
 
+  const positionStyle: React.CSSProperties = {
+    position: 'fixed',
+    top: coords?.top ?? -9999,
+    left: coords?.left ?? -9999,
+    visibility: coords ? 'visible' : 'hidden',
+  };
+
   const content = (
     <div
       ref={mergedRef}
       role="menu"
       id={contentId}
       tabIndex={-1}
-      style={{
-        position: 'fixed',
-        top: coords?.top ?? -9999,
-        left: coords?.left ?? -9999,
-        visibility: coords ? 'visible' : 'hidden',
-      }}
+      style={positionStyle}
       className={classNames(styles.content, className)}
       onKeyDown={handleKeyDown}
       {...rest}
@@ -251,7 +253,8 @@ export const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(function
     </div>
   );
 
-  return withPortal ? <Portal>{content}</Portal> : content;
+  if (withPortal) return <Portal>{content}</Portal>;
+  return content;
 });
 
 export interface MenuItemProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'role'> {
@@ -668,6 +671,13 @@ export const MenuSubContent = forwardRef<HTMLDivElement, MenuSubContentProps>(
 
     if (!subCtx.open) return null;
 
+    const positionStyle: React.CSSProperties = {
+      position: 'fixed',
+      top: coords?.top ?? -9999,
+      left: coords?.left ?? -9999,
+      visibility: coords ? 'visible' : 'hidden',
+    };
+
     return (
       <Portal>
         <div
@@ -675,12 +685,7 @@ export const MenuSubContent = forwardRef<HTMLDivElement, MenuSubContentProps>(
           role="menu"
           id={subCtx.contentId}
           tabIndex={-1}
-          style={{
-            position: 'fixed',
-            top: coords?.top ?? -9999,
-            left: coords?.left ?? -9999,
-            visibility: coords ? 'visible' : 'hidden',
-          }}
+          style={positionStyle}
           className={classNames(styles.subContent, className)}
           onKeyDown={handleKeyDown}
           {...rest}
