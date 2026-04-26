@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useTheme } from '../../context/ThemeProvider';
 import { palette } from '../../tokens/colors';
 import {
@@ -17,12 +17,14 @@ import { breakpoints } from '../../tokens/breakpoints';
 import { densityTokens } from '../../tokens/density';
 import { recipes } from '../../tokens/recipes';
 import { defaultComponentTokens } from '../../tokens/components';
+import { typographyPresets } from '../../tokens/typographyPresets';
 import styles from './TokenBrowser.module.css';
 
 type TokenCategory =
   | 'colors'
   | 'palette'
   | 'typography'
+  | 'typographyPresets'
   | 'spacing'
   | 'radii'
   | 'shadows'
@@ -65,6 +67,7 @@ function RecipeVariantSection({
  */
 export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) {
   const [category, setCategory] = useState<TokenCategory>(defaultCategory);
+  const [copied, setCopied] = useState<string | null>(null);
   const { semantic, mode, density, cssVars, components: themeComponents } = useTheme();
 
   // Merge theme.components overrides on top of the defaults so the Component
@@ -81,10 +84,23 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
     return merged;
   }, [themeComponents]);
 
+  const handleCopy = useCallback(
+    (varName: string) => {
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        navigator.clipboard.writeText(varName).then(() => {
+          setCopied(varName);
+          setTimeout(() => setCopied((prev) => (prev === varName ? null : prev)), 1500);
+        });
+      }
+    },
+    []
+  );
+
   const categories: Array<{ id: TokenCategory; label: string }> = [
     { id: 'colors', label: 'Semantic Colors' },
     { id: 'palette', label: 'Color Palette' },
     { id: 'typography', label: 'Typography' },
+    { id: 'typographyPresets', label: 'Typography Presets' },
     { id: 'spacing', label: 'Spacing' },
     { id: 'radii', label: 'Border Radius' },
     { id: 'shadows', label: 'Shadows & Elevation' },
@@ -97,20 +113,38 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
   ];
 
   const renderColorSwatch = (name: string, value: string) => (
-    <div key={name} className={styles.tokenItem}>
+    <div
+      key={name}
+      className={styles.tokenItem}
+      title="Click to copy CSS variable name"
+      onClick={() => handleCopy(`--zp-color-${name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').replace(/([a-zA-Z])([0-9])/g, '$1-$2').toLowerCase()}`)}
+      style={{ cursor: 'pointer' }}
+    >
       <div className={styles.colorSwatch} style={{ backgroundColor: value }} />
       <div className={styles.tokenDetails}>
         <div className={styles.tokenName}>{name}</div>
         <div className={styles.tokenValue}>{value}</div>
+        {copied === `--zp-color-${name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').replace(/([a-zA-Z])([0-9])/g, '$1-$2').toLowerCase()}` && (
+          <div className={styles.tokenValue} aria-live="polite">Copied!</div>
+        )}
       </div>
     </div>
   );
 
   const renderToken = (name: string, value: string | number) => (
-    <div key={name} className={styles.tokenItem}>
+    <div
+      key={name}
+      className={styles.tokenItem}
+      title="Click to copy value"
+      onClick={() => handleCopy(String(value))}
+      style={{ cursor: 'pointer' }}
+    >
       <div className={styles.tokenDetails}>
         <div className={styles.tokenName}>{name}</div>
         <div className={styles.tokenValue}>{String(value)}</div>
+        {copied === String(value) && (
+          <div className={styles.tokenValue} aria-live="polite">Copied!</div>
+        )}
       </div>
     </div>
   );
@@ -173,6 +207,40 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
                 {Object.entries(letterSpacings).map(([key, value]) => renderToken(key, value))}
               </div>
             </div>
+          </div>
+        );
+
+      case 'typographyPresets':
+        return (
+          <div>
+            {Object.entries(typographyPresets).map(([presetName, preset]) => (
+              <div key={presetName} className={styles.section}>
+                <h3 className={styles.sectionTitle}>
+                  {presetName}{' '}
+                  <span className={styles.tokenValue}>.zp-text-{presetName}</span>
+                </h3>
+                <div
+                  className={styles.tokenGrid}
+                  style={{
+                    fontFamily: preset.fontFamily,
+                    fontSize: preset.fontSize,
+                    fontWeight: preset.fontWeight,
+                    lineHeight: preset.lineHeight,
+                    letterSpacing: preset.letterSpacing,
+                    paddingBottom: '0.5rem',
+                  }}
+                >
+                  <div className={styles.tokenItem}>
+                    <div className={styles.tokenDetails}>
+                      <div className={styles.tokenName}>The quick brown fox</div>
+                    </div>
+                  </div>
+                </div>
+                <div className={styles.tokenGrid}>
+                  {Object.entries(preset).map(([prop, value]) => renderToken(prop, value))}
+                </div>
+              </div>
+            ))}
           </div>
         );
 

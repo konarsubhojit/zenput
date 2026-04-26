@@ -24,6 +24,7 @@ describe('TokenBrowser', () => {
     expect(screen.getByRole('button', { name: 'Semantic Colors' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Color Palette' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Typography' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Typography Presets' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Spacing' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Border Radius' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Shadows & Elevation' })).toBeInTheDocument();
@@ -129,6 +130,21 @@ describe('TokenBrowser', () => {
     // Base and variants headings
     expect(screen.getAllByText('Base').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Variants').length).toBeGreaterThan(0);
+  });
+
+  it('renders the Typography Presets category with preset names', () => {
+    renderWithTheme(<TokenBrowser defaultCategory="typographyPresets" />);
+    expect(screen.getByRole('button', { name: 'Typography Presets' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    // Each preset renders an h3 heading — use getAllByText since the name also
+    // appears in the class-name span inside the heading.
+    expect(screen.getAllByText(/display-lg/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/heading-1/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/body-md/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/caption/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/code/).length).toBeGreaterThan(0);
   });
 
   it('renders the Component Tokens category', () => {
