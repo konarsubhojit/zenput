@@ -115,7 +115,9 @@ describe('SegmentedControl', () => {
   it('renders with leftIcon on SegmentedControlItem', () => {
     render(
       <SegmentedControl defaultValue="a" aria-label="P">
-        <SegmentedControlItem value="a" leftIcon={<span data-testid="icon">★</span>}>A</SegmentedControlItem>
+        <SegmentedControlItem value="a" leftIcon={<span data-testid="icon">★</span>}>
+          A
+        </SegmentedControlItem>
       </SegmentedControl>
     );
     expect(screen.getByTestId('icon')).toBeInTheDocument();

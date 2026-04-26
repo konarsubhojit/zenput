@@ -25,7 +25,9 @@ export const Colors: Story = {
   render: () => (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
       {(['brand', 'neutral', 'success', 'warning', 'error', 'info'] as const).map((color) => (
-        <Tag key={color} color={color}>{color}</Tag>
+        <Tag key={color} color={color}>
+          {color}
+        </Tag>
       ))}
     </div>
   ),
@@ -34,9 +36,15 @@ export const Colors: Story = {
 export const Variants: Story = {
   render: () => (
     <div style={{ display: 'flex', gap: 8 }}>
-      <Tag color="brand" variant="solid">Solid</Tag>
-      <Tag color="brand" variant="subtle">Subtle</Tag>
-      <Tag color="brand" variant="outline">Outline</Tag>
+      <Tag color="brand" variant="solid">
+        Solid
+      </Tag>
+      <Tag color="brand" variant="subtle">
+        Subtle
+      </Tag>
+      <Tag color="brand" variant="outline">
+        Outline
+      </Tag>
     </div>
   ),
 };
@@ -53,18 +61,24 @@ export const Sizes: Story = {
 
 export const Closable: Story = {
   render: () => (
-    <Tag color="brand" onRemove={() => alert('removed')}>Closable</Tag>
+    <Tag color="brand" onRemove={() => alert('removed')}>
+      Closable
+    </Tag>
   ),
 };
 
 export const WithIcon: Story = {
   render: () => (
-    <Tag color="brand" leftIcon={<span>#</span>}>Design</Tag>
+    <Tag color="brand" leftIcon={<span>#</span>}>
+      Design
+    </Tag>
   ),
 };
 
 export const Interactive: Story = {
   render: () => (
-    <Tag color="neutral" interactive onClick={() => alert('clicked')}>Click me</Tag>
+    <Tag color="neutral" interactive onClick={() => alert('clicked')}>
+      Click me
+    </Tag>
   ),
 };

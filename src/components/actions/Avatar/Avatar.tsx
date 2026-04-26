@@ -83,13 +83,19 @@ export const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(function Avatar(
   const showImg = Boolean(src) && !imgError;
   const initials = name ? getInitials(name) : undefined;
 
-  const bgColor =
-    colorByName && name ? BG_COLORS[colorIndexFromName(name)] : undefined;
+  const bgColor = colorByName && name ? BG_COLORS[colorIndexFromName(name)] : undefined;
 
   // Build an accessible label that includes both name and status so screen
   // readers announce the full context (e.g. "Ada Lovelace, online").
-  const accessibleLabel =
-    name && status ? `${name}, ${status}` : name ?? undefined;
+  const accessibleLabel = name && status ? `${name}, ${status}` : (name ?? undefined);
+
+  // Allow the consumer to provide their own label via `aria-label`; fall back
+  // to the derived `accessibleLabel`. Only apply `role="img"` when we end up
+  // with *some* accessible name, otherwise we'd produce an unlabeled image
+  // role (a11y failure).
+  const consumerAriaLabel = (rest as { 'aria-label'?: string })['aria-label'];
+  const finalAriaLabel = consumerAriaLabel ?? accessibleLabel;
+  const applyImgRole = Boolean(finalAriaLabel);
 
   return (
     <span
@@ -100,19 +106,19 @@ export const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(function Avatar(
         styles[`shape-${shape}`],
         className
       )}
-      style={
-        bgColor && !showImg
-          ? { ...style, backgroundColor: bgColor, color: '#fff' }
-          : style
-      }
-      aria-label={accessibleLabel}
-      role="img"
+      style={bgColor && !showImg ? { ...style, backgroundColor: bgColor, color: '#fff' } : style}
+      aria-label={applyImgRole ? finalAriaLabel : undefined}
+      role={applyImgRole ? 'img' : undefined}
       {...rest}
     >
       {showImg ? (
+        // When the wrapper exposes `role="img"` with an accessible name, the
+        // inner `<img>` must be decorative to avoid duplicate announcements.
+        // Otherwise (no wrapper label), let the `<img alt>` carry the label.
         <img
           src={src}
-          alt={name ?? ''}
+          alt={applyImgRole ? '' : (name ?? '')}
+          aria-hidden={applyImgRole ? 'true' : undefined}
           className={styles.img}
           onError={() => setImgError(true)}
         />
@@ -194,7 +200,12 @@ export function AvatarGroup({
       })}
       {overflow > 0 && (
         <span
-          className={classNames(styles.avatar, styles[`size-${size}`], styles['shape-circle'], styles.overflow)}
+          className={classNames(
+            styles.avatar,
+            styles[`size-${size}`],
+            styles['shape-circle'],
+            styles.overflow
+          )}
           style={{ marginLeft: spacing }}
           aria-label={`${overflow} more`}
           role="img"

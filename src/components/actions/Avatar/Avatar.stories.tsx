@@ -32,7 +32,9 @@ export const ColorByName: Story = {
   render: () => (
     <div style={{ display: 'flex', gap: 8 }}>
       {['Ada Lovelace', 'Grace Hopper', 'Alan Turing', 'Linus Torvalds', 'Margaret Hamilton'].map(
-        (name) => <Avatar key={name} name={name} colorByName />
+        (name) => (
+          <Avatar key={name} name={name} colorByName />
+        )
       )}
     </div>
   ),
@@ -71,9 +73,16 @@ export const Statuses: Story = {
 export const Group: StoryObj<typeof AvatarGroup> = {
   render: () => (
     <AvatarGroup max={4} size="md">
-      {['Ada Lovelace', 'Grace Hopper', 'Alan Turing', 'Linus Torvalds', 'Margaret Hamilton', 'Tim Berners-Lee'].map(
-        (name) => <Avatar key={name} name={name} colorByName />
-      )}
+      {[
+        'Ada Lovelace',
+        'Grace Hopper',
+        'Alan Turing',
+        'Linus Torvalds',
+        'Margaret Hamilton',
+        'Tim Berners-Lee',
+      ].map((name) => (
+        <Avatar key={name} name={name} colorByName />
+      ))}
     </AvatarGroup>
   ),
 };

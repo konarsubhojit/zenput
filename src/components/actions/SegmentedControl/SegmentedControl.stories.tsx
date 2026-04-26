@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { SegmentedControl, SegmentedControlItem, ToggleGroup, ToggleGroupItem } from './SegmentedControl';
+import {
+  SegmentedControl,
+  SegmentedControlItem,
+  ToggleGroup,
+  ToggleGroupItem,
+} from './SegmentedControl';
 
 const meta: Meta<typeof SegmentedControl> = {
   title: 'Components/Actions/SegmentedControl',
@@ -57,7 +62,9 @@ export const WithDisabledItem: Story = {
   render: () => (
     <SegmentedControl defaultValue="a" aria-label="Options">
       <SegmentedControlItem value="a">Enabled</SegmentedControlItem>
-      <SegmentedControlItem value="b" disabled>Disabled</SegmentedControlItem>
+      <SegmentedControlItem value="b" disabled>
+        Disabled
+      </SegmentedControlItem>
       <SegmentedControlItem value="c">Enabled</SegmentedControlItem>
     </SegmentedControl>
   ),

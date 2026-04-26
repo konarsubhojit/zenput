@@ -11,7 +11,11 @@ describe('Tag', () => {
   });
 
   it('applies color and variant classes', () => {
-    const { container } = render(<Tag color="brand" variant="solid">T</Tag>);
+    const { container } = render(
+      <Tag color="brand" variant="solid">
+        T
+      </Tag>
+    );
     const tag = container.firstChild as HTMLElement;
     expect(tag.className).toMatch(/color-brand/);
     expect(tag.className).toMatch(/variant-solid/);
@@ -40,7 +44,11 @@ describe('Tag', () => {
   });
 
   it('uses custom removeLabel for accessible label', () => {
-    render(<Tag onRemove={() => {}} removeLabel="Quitar">Label</Tag>);
+    render(
+      <Tag onRemove={() => {}} removeLabel="Quitar">
+        Label
+      </Tag>
+    );
     expect(screen.getByRole('button', { name: 'Quitar' })).toBeInTheDocument();
   });
 
@@ -59,7 +67,11 @@ describe('Tag', () => {
 
   it('calls onClick when interactive and Enter key pressed', () => {
     const onClick = vi.fn();
-    render(<Tag interactive onClick={onClick}>T</Tag>);
+    render(
+      <Tag interactive onClick={onClick}>
+        T
+      </Tag>
+    );
     const tag = screen.getByRole('button', { name: /T/i });
     fireEvent.keyDown(tag, { key: 'Enter' });
     expect(onClick).toHaveBeenCalled();
@@ -77,7 +89,11 @@ describe('Tag a11y (axe)', () => {
   });
 
   it('has no axe violations for closable tag', async () => {
-    const { container } = render(<Tag color="brand" onRemove={() => {}}>Closable</Tag>);
+    const { container } = render(
+      <Tag color="brand" onRemove={() => {}}>
+        Closable
+      </Tag>
+    );
     await expectNoA11yViolations(container);
   });
 });

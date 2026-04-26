@@ -35,6 +35,10 @@ interface SegmentedControlContextValue {
   onSelect: (value: string) => void;
   size: SegmentedControlSize;
   baseId: string;
+  /** Value that should currently own the tabstop (roving tabindex). Equals
+   *  `value` when something is selected; falls back to the first item value
+   *  when no selection exists, so the control is always reachable via Tab. */
+  rovingValue: string;
 }
 
 const SegmentedControlContext = createContext<SegmentedControlContextValue | null>(null);
@@ -42,9 +46,7 @@ const SegmentedControlContext = createContext<SegmentedControlContextValue | nul
 function useSegmentedControlContext(): SegmentedControlContextValue {
   const ctx = useContext(SegmentedControlContext);
   if (!ctx) {
-    throw new Error(
-      'SegmentedControlItem must be rendered inside <SegmentedControl>.'
-    );
+    throw new Error('SegmentedControlItem must be rendered inside <SegmentedControl>.');
   }
   return ctx;
 }
@@ -157,8 +159,16 @@ export function SegmentedControl({
     [itemValues, selected, onSelect]
   );
 
+  // Compute the roving-tabindex owner. When no value/defaultValue is provided
+  // `selected` is '' and would leave every item with tabIndex=-1, making the
+  // control unreachable via Tab. Fall back to the first item value (if any)
+  // so the group always has exactly one tabbable button.
+  const rovingValue = selected || itemValues[0] || '';
+
   return (
-    <SegmentedControlContext.Provider value={{ value: selected, onSelect, size, baseId }}>
+    <SegmentedControlContext.Provider
+      value={{ value: selected, onSelect, size, baseId, rovingValue }}
+    >
       {/* eslint-disable-next-line jsx-a11y/interactive-supports-focus -- radiogroup focus is handled by roving tabindex on child radio buttons */}
       <div
         ref={groupRef}
@@ -206,8 +216,9 @@ export function SegmentedControlItem({
   children,
   className,
 }: SegmentedControlItemProps): React.ReactElement {
-  const { value: selected, onSelect, baseId } = useSegmentedControlContext();
+  const { value: selected, onSelect, baseId, rovingValue } = useSegmentedControlContext();
   const isSelected = selected === value;
+  const isTabStop = rovingValue === value;
 
   const handleClick = useCallback(() => {
     if (!disabled) onSelect(value);
@@ -219,7 +230,7 @@ export function SegmentedControlItem({
       type="button"
       id={`${baseId}-item-${safeIdSegment(value)}`}
       aria-checked={isSelected}
-      tabIndex={isSelected ? 0 : -1}
+      tabIndex={isTabStop ? 0 : -1}
       disabled={disabled}
       data-sc-value={value}
       data-selected={isSelected || undefined}
@@ -231,7 +242,11 @@ export function SegmentedControlItem({
         className
       )}
     >
-      {leftIcon && <span className={styles.itemIcon} aria-hidden="true">{leftIcon}</span>}
+      {leftIcon && (
+        <span className={styles.itemIcon} aria-hidden="true">
+          {leftIcon}
+        </span>
+      )}
       {children}
     </button>
   );
@@ -299,8 +314,11 @@ function useToggleGroupContext(): ToggleGroupContextValue {
  * A group of toggle buttons that can be used in single or multiple selection
  * mode.
  *
- * - Single: `role="group"` containing `role="radio"` buttons.
- * - Multiple: `role="group"` containing `role="checkbox"` buttons.
+ * Renders a `role="group"` containing native `<button>` elements. Each
+ * `<ToggleGroupItem>` exposes its pressed state via `aria-pressed`
+ * (rather than `role="radio"` / `role="checkbox"` + `aria-checked`).
+ * - `type="single"`: arrow keys move focus and update selection (roving tabindex).
+ * - `type="multiple"`: each button is independently tabbable; arrow keys only move focus.
  */
 export function ToggleGroup(props: ToggleGroupProps): React.ReactElement {
   const { type, size = 'md', fullWidth, children, className, style } = props;
@@ -316,9 +334,7 @@ export function ToggleGroup(props: ToggleGroupProps): React.ReactElement {
   const isSingleControlled = singleProps?.value !== undefined;
   const isMultipleControlled = multipleProps?.value !== undefined;
 
-  const [singleInternal, setSingleInternal] = useState<string>(
-    singleProps?.defaultValue ?? ''
-  );
+  const [singleInternal, setSingleInternal] = useState<string>(singleProps?.defaultValue ?? '');
   const [multipleInternal, setMultipleInternal] = useState<string[]>(
     multipleProps?.defaultValue ?? []
   );
@@ -339,7 +355,15 @@ export function ToggleGroup(props: ToggleGroupProps): React.ReactElement {
         return current.includes(value);
       }
     },
-    [type, isSingleControlled, singleControlledValue, singleInternal, isMultipleControlled, multipleControlledValue, multipleInternal]
+    [
+      type,
+      isSingleControlled,
+      singleControlledValue,
+      singleInternal,
+      isMultipleControlled,
+      multipleControlledValue,
+      multipleInternal,
+    ]
   );
 
   const toggle = useCallback(
@@ -356,7 +380,15 @@ export function ToggleGroup(props: ToggleGroupProps): React.ReactElement {
         multipleOnValueChange?.(next);
       }
     },
-    [type, isSingleControlled, singleOnValueChange, isMultipleControlled, multipleControlledValue, multipleInternal, multipleOnValueChange]
+    [
+      type,
+      isSingleControlled,
+      singleOnValueChange,
+      isMultipleControlled,
+      multipleControlledValue,
+      multipleInternal,
+      multipleOnValueChange,
+    ]
   );
 
   // Collect item values for keyboard navigation
@@ -424,9 +456,7 @@ export function ToggleGroup(props: ToggleGroupProps): React.ReactElement {
   );
 
   return (
-    <ToggleGroupContext.Provider
-      value={{ isSelected, toggle, size, baseId, type, rovingValue }}
-    >
+    <ToggleGroupContext.Provider value={{ isSelected, toggle, size, baseId, type, rovingValue }}>
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- keyboard handler enables arrow-key navigation between toggle items */}
       <div
         ref={groupRef}
@@ -505,7 +535,11 @@ export function ToggleGroupItem({
         className
       )}
     >
-      {leftIcon && <span className={styles.itemIcon} aria-hidden="true">{leftIcon}</span>}
+      {leftIcon && (
+        <span className={styles.itemIcon} aria-hidden="true">
+          {leftIcon}
+        </span>
+      )}
       {children}
     </button>
   );

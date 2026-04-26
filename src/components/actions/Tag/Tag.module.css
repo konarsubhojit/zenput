@@ -11,6 +11,27 @@
   border: var(--zp-border-width-1) solid transparent;
 }
 
+/* Inner activator button used when the tag is both interactive and removable.
+ * Renders unstyled so the visible appearance is owned by the wrapper `.tag`. */
+.activator {
+  display: inline-flex;
+  align-items: center;
+  gap: inherit;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  outline: none;
+}
+.activator:focus-visible {
+  outline: 2px solid var(--zp-color-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--zp-radius-sm);
+}
+
 /* Sizes */
 .size-sm {
   height: 1.375rem;
