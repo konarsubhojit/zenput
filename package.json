@@ -5,6 +5,18 @@
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./forms": {
+      "import": "./dist/esm/forms/index.js",
+      "require": "./dist/cjs/forms/index.js",
+      "types": "./dist/forms/index.d.ts"
+    }
+  },
   "files": [
     "dist"
   ],
@@ -29,7 +41,15 @@
   },
   "peerDependencies": {
     "react": ">=17.0.0",
-    "react-dom": ">=17.0.0"
+    "react-dom": ">=17.0.0",
+    "@hookform/resolvers": ">=3.0.0",
+    "react-hook-form": ">=7.0.0",
+    "zod": ">=3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@hookform/resolvers": { "optional": true },
+    "react-hook-form": { "optional": true },
+    "zod": { "optional": true }
   },
   "devDependencies": {
     "@babel/preset-env": "^7.29.2",

@@ -711,6 +711,166 @@ Playwright browsers are cached under `~/.cache/ms-playwright` and installed
 only when missing. SonarCloud analysis is gated on a `SONAR_TOKEN` pipeline
 variable and a service connection named `SonarCloud`.
 
+## Forms
+
+Zenput ships an **opt-in** form integration via the `zenput/forms` subpath. It wraps `react-hook-form` + `zod` so that every Zenput input gets `value`, `onChange`, `onBlur`, `name`, `ref`, `validationState`, `errorMessage`, `aria-invalid`, and `aria-describedby` wired up automatically.
+
+### Installation
+
+Install the peer dependencies alongside Zenput:
+
+```bash
+npm install zenput react-hook-form @hookform/resolvers zod
+```
+
+`react-hook-form`, `@hookform/resolvers`, and `zod` are **peer-optional** — the core bundle is unaffected if you don't use the `zenput/forms` entry point.
+
+### End-to-end example
+
+```tsx
+import { z } from 'zod';
+import { Form, useZenputForm } from 'zenput/forms';
+import { TextInput, PasswordInput, Button } from 'zenput';
+
+const loginSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+});
+
+type LoginValues = z.infer<typeof loginSchema>;
+
+export function LoginForm() {
+  const form = useZenputForm<LoginValues>({
+    schema: loginSchema,
+    defaultValues: { email: '', password: '' },
+  });
+
+  const onSubmit = async (values: LoginValues) => {
+    await fetch('/api/login', { method: 'POST', body: JSON.stringify(values) });
+  };
+
+  return (
+    <Form form={form} onSubmit={onSubmit}>
+      {/* Error summary — focuses and lists all errors for screen readers */}
+      <Form.ErrorSummary />
+
+      <Form.Field<LoginValues> name="email">
+        {(field) => (
+          <TextInput
+            label="Email"
+            type="email"
+            placeholder="you@example.com"
+            validationState={field.props.validationState}
+            errorMessage={field.props.errorMessage}
+            value={field.props.value as string}
+            onChange={(e) => field.props.onChange(e.target.value)}
+            onBlur={field.props.onBlur}
+            ref={field.props.ref as React.Ref<HTMLInputElement>}
+            name={field.props.name}
+            fullWidth
+          />
+        )}
+      </Form.Field>
+
+      <Form.Field<LoginValues> name="password">
+        {(field) => (
+          <PasswordInput
+            label="Password"
+            validationState={field.props.validationState}
+            errorMessage={field.props.errorMessage}
+            value={field.props.value as string}
+            onChange={(e) => field.props.onChange(e.target.value)}
+            onBlur={field.props.onBlur}
+            ref={field.props.ref as React.Ref<HTMLInputElement>}
+            name={field.props.name}
+            fullWidth
+          />
+        )}
+      </Form.Field>
+
+      <Button type="submit" loading={form.formState.isSubmitting} fullWidth>
+        Sign in
+      </Button>
+    </Form>
+  );
+}
+```
+
+### API
+
+#### `useZenputForm(options)`
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `schema` | `ZodType` | — | Zod schema for validation (optional). |
+| `defaultValues` | `Partial<TFieldValues>` | — | Initial form values. |
+| `mode` | `'onBlur' \| 'onChange' \| 'onSubmit' \| 'onTouched' \| 'all'` | `'onBlur'` | Validation trigger mode. |
+
+Returns the standard `react-hook-form` `UseFormReturn` object — every RHF API is available.
+
+#### `<Form form={form} onSubmit={handler}>`
+
+| Prop | Type | Description |
+|---|---|---|
+| `form` | `UseFormReturn` | The form instance from `useZenputForm`. |
+| `onSubmit` | `SubmitHandler` | Called with validated values on success. |
+| `onError` | `SubmitErrorHandler` | Called with validation errors on failure (optional). |
+
+#### `<Form.Field name="fieldName">`
+
+Render-prop component. The child function receives `{ props, invalid, errorMessage }`. Spread `field.props` onto any Zenput input:
+
+```tsx
+<Form.Field name="email">
+  {(field) => <TextInput {...field.props} label="Email" />}
+</Form.Field>
+```
+
+#### `<Form.Submit>` / `<Form.Reset>`
+
+Pre-wired `<button type="submit">` and `<button type="reset">`. Both are automatically disabled while the form is submitting.
+
+#### `<Form.ErrorSummary>`
+
+Renders a live region listing all current field errors. When errors first appear (e.g., after a failed submit), the container is focused automatically — critical for keyboard and screen-reader users.
+
+### Recipe: no form library (`useFormField` only)
+
+If you don't want `react-hook-form`, use `useFormField` directly:
+
+```tsx
+import { useFormField } from 'zenput';
+import { TextInput } from 'zenput';
+import { useState } from 'react';
+
+function EmailField() {
+  const [value, setValue] = useState('');
+  const [error, setError] = useState('');
+
+  const { inputId, inputAriaProps } = useFormField({
+    id: 'email',
+    label: 'Email',
+    errorMessage: error,
+    validationState: error ? 'error' : 'default',
+    required: true,
+  });
+
+  return (
+    <TextInput
+      id={inputId}
+      label="Email"
+      value={value}
+      onChange={(e) => { setValue(e.target.value); setError(''); }}
+      validationState={error ? 'error' : 'default'}
+      errorMessage={error}
+      required
+      {...inputAriaProps}
+    />
+  );
+}
+```
+
+
 ## License
 
 MIT © konarsubhojit
