@@ -85,6 +85,9 @@ export function useRovingTabIndex({
   );
 
   const onKeyDown = useCallback((e: React.KeyboardEvent): void => {
+    // All mutable options are read from stateRef so the handler function
+    // identity stays stable (empty dep array) while always using the latest
+    // values without re-attaching event listeners on each render.
     const { items: currentItems, activeItem: current, onNavigate: navigate, loop: shouldLoop, disabledItems: disabled, containerRef: ref, orientation: orient } = stateRef.current;
 
     const isForward =

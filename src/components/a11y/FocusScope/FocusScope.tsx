@@ -62,8 +62,8 @@ export function FocusScope({
 
   // Internal refs used when the consumer has not provided explicit refs.
   // useFocusTrap ignores undefined refs and falls back to its own logic.
-  const initialFocusRef = autoFocus ? (externalInitialFocusRef ?? undefined) : undefined;
-  const returnFocusRef = restoreFocus ? (externalReturnFocusRef ?? undefined) : undefined;
+  const initialFocusRef = autoFocus ? externalInitialFocusRef : undefined;
+  const returnFocusRef = restoreFocus ? externalReturnFocusRef : undefined;
 
   useFocusTrap({
     active: trapped,
