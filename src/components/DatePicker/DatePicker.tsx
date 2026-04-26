@@ -26,6 +26,11 @@ function formatDate(
   return new Intl.DateTimeFormat(locale, opts).format(date);
 }
 
+/** Timezone-safe local date-only string in YYYY-MM-DD format. */
+function toLocalDateStr(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 function isTouchDevice(): boolean {
   return (
     typeof window !== 'undefined' &&
@@ -205,9 +210,9 @@ export function DatePicker({
         size={size}
         variant={variant}
         validationState={validationState}
-        min={min ? min.toISOString().slice(0, 10) : undefined}
-        max={max ? max.toISOString().slice(0, 10) : undefined}
-        value={value ? value.toISOString().slice(0, 10) : undefined}
+        min={min ? toLocalDateStr(min) : undefined}
+        max={max ? toLocalDateStr(max) : undefined}
+        value={value ? toLocalDateStr(value) : undefined}
         onChange={(e) => {
           const d = e.target.value ? new Date(e.target.value + 'T00:00:00') : null;
           if (!isControlled) setInternalValue(d);
@@ -243,7 +248,7 @@ export function DatePicker({
       )}
 
       <Popover>
-        <div className={inputStyles.inputWrapper}>
+        <div className={inputStyles.inputWrapper} style={{ position: 'relative', display: 'flex', alignItems: 'stretch' }}>
           <PopoverTrigger
             id={inputId}
             aria-label={label ? undefined : placeholder}
@@ -257,25 +262,25 @@ export function DatePicker({
           >
             <span className={styles.triggerText}>{displayText || placeholder}</span>
             <span className={styles.triggerIcons}>
-              {clearable && value && !disabled && !readOnly && (
-                <span
-                  role="button"
-                  tabIndex={0}
-                  aria-label="Clear date"
-                  className={styles.clearBtn}
-                  onClick={handleClear}
-                  onKeyDown={(e) =>
-                    e.key === 'Enter' && handleClear(e as unknown as React.MouseEvent)
-                  }
-                >
-                  \u2715
-                </span>
-              )}
               <span aria-hidden className={styles.calIcon}>
                 \uD83D\uDCC5
               </span>
             </span>
           </PopoverTrigger>
+          {clearable && value && !disabled && !readOnly && (
+            <button
+              type="button"
+              aria-label="Clear date"
+              className={styles.clearBtn}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onClick={handleClear}
+            >
+              \u2715
+            </button>
+          )}
         </div>
 
         <PopoverContent side="bottom" align="start" aria-label="Date picker calendar">

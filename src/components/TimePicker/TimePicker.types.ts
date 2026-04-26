@@ -11,8 +11,8 @@ export interface TimePickerProps {
   value?: TimeValue | null;
   /** Uncontrolled default value. */
   defaultValue?: TimeValue | null;
-  /** Called when the time changes. */
-  onChange?: (time: TimeValue) => void;
+  /** Called when the time changes. Emits `null` when cleared. */
+  onChange?: (time: TimeValue | null) => void;
   /** 12-hour or 24-hour clock. Default: `24`. */
   hourCycle?: 12 | 24;
   /** Minute step (5, 10, 15, 30, etc.). Default: `1`. */

@@ -20,6 +20,11 @@ import styles from './Calendar.module.css';
 // Helpers
 // ---------------------------------------------------------------------------
 
+/** Timezone-safe local date-only string in YYYY-MM-DD format. */
+function toLocalDateStr(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 function isSameDay(a: Date, b: Date): boolean {
   return (
     a.getFullYear() === b.getFullYear() &&
@@ -272,7 +277,7 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>(function Calen
   useEffect(() => {
     if (!gridRef.current) return;
     const cell = gridRef.current.querySelector<HTMLElement>(
-      `[data-date="${focusedDate.toISOString().slice(0, 10)}"]`
+      `[data-date="${toLocalDateStr(focusedDate)}"]`
     );
     if (cell) {
       cell.focus();
@@ -289,6 +294,16 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>(function Calen
     new Date(displayMonth.getFullYear(), displayMonth.getMonth() + 1, 1) >
       new Date(max.getFullYear(), max.getMonth(), max.getDate());
 
+  const prevYearDisabled =
+    min !== undefined &&
+    new Date(displayMonth.getFullYear() - 1, displayMonth.getMonth() + 1, 0) <
+      new Date(min.getFullYear(), min.getMonth(), min.getDate());
+
+  const nextYearDisabled =
+    max !== undefined &&
+    new Date(displayMonth.getFullYear() + 1, displayMonth.getMonth(), 1) >
+      new Date(max.getFullYear(), max.getMonth(), max.getDate());
+
   return (
     <div
       ref={ref}
@@ -303,7 +318,7 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>(function Calen
           className={styles.navBtn}
           onClick={() => navYear(-1)}
           aria-label="Previous year"
-          disabled={prevMonthDisabled}
+          disabled={prevYearDisabled}
         >
           ‹‹
         </button>
@@ -333,7 +348,7 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>(function Calen
           className={styles.navBtn}
           onClick={() => navYear(1)}
           aria-label="Next year"
-          disabled={nextMonthDisabled}
+          disabled={nextYearDisabled}
         >
           ››
         </button>
@@ -378,7 +393,7 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>(function Calen
                   const isTodayDate = highlightToday && isToday(date);
                   const disabled = isDateDisabled(date, min, max, disabledDates);
                   const isFocused = isSameDay(date, focusedDate);
-                  const dateStr = date.toISOString().slice(0, 10);
+                  const dateStr = toLocalDateStr(date);
 
                   return (
                     <td

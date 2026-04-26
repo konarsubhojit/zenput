@@ -56,7 +56,8 @@ describe('DateRangePicker', () => {
 
   it('selects end date on second click and closes', () => {
     const onChange = vi.fn();
-    const start = new Date(2024, 0, 10);
+    const start = new Date();
+    start.setDate(1); // Use the 1st of the current month as start
     render(
       <DateRangePicker
         label="Date range"
@@ -64,11 +65,34 @@ describe('DateRangePicker', () => {
         onChange={onChange}
       />
     );
+    // Open — value has start but no end, so phase=1 (waiting for end)
     act(() => screen.getByRole('button').click());
-    // In "phase 1" state – click an end date.
-    // We need to open and be in phase 1
-    // Since value is controlled with start already, clicking directly will select end.
-    // But the phase is managed internally. Let's simulate both clicks.
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    // Find a current-month date later than start to click as end date
+    const now = new Date();
+    const endDateBtns = screen
+      .getAllByRole('gridcell')
+      .map((c) => c.querySelector('button'))
+      .filter((btn): btn is HTMLButtonElement => {
+        if (!btn || btn.disabled) return false;
+        const dateStr = btn.getAttribute('data-date');
+        if (!dateStr) return false;
+        const d = new Date(dateStr);
+        return (
+          d.getFullYear() === now.getFullYear() &&
+          d.getMonth() === now.getMonth() &&
+          d.getDate() > start.getDate()
+        );
+      });
+
+    if (endDateBtns.length > 0) {
+      const selectedEnd = new Date(endDateBtns[0].getAttribute('data-date') as string);
+      act(() => endDateBtns[0].click());
+      expect(onChange).toHaveBeenCalledWith({ start, end: selectedEnd });
+      // Popover closes after end date selection
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    }
   });
 
   it('displays formatted range in trigger', () => {

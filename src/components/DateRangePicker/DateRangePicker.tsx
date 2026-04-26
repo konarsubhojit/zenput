@@ -121,18 +121,33 @@ function DateRangePickerPanel({
 }
 
 // Panel wrapper that also closes the popover when presets are selected
-function DateRangePickerPanelWrapper(props: DateRangePickerPanelProps): React.ReactElement {
+// and after the end date is selected (range complete).
+function DateRangePickerPanelWrapper(props: DateRangePickerPanelProps & { onSelectWithClose: (date: Date) => void }): React.ReactElement {
   const { setOpen } = usePopoverState();
+  const { onSelectWithClose: _, ...panelProps } = props;
 
   const handlePreset = useCallback(
     (range: DateRange) => {
-      props.onPreset(range);
+      panelProps.onPreset(range);
       setOpen(false);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [panelProps.onPreset, setOpen]
+  );
+
+  const handleSelect = useCallback(
+    (date: Date) => {
+      props.onSelectWithClose(date);
+      // Close only when completing the range (phase 1 → done).
+      // The parent calls setPhase(0) after the second click; we close here.
+      if (props.phase === 1) {
+        setOpen(false);
+      }
     },
     [props, setOpen]
   );
 
-  return <DateRangePickerPanel {...props} onPreset={handlePreset} />;
+  return <DateRangePickerPanel {...panelProps} onSelect={handleSelect} onPreset={handlePreset} />;
 }
 
 // ---------------------------------------------------------------------------
@@ -181,7 +196,10 @@ export function DateRangePicker({
     : internalValue;
 
   const [hoverDate, setHoverDate] = useState<Date | null>(null);
-  const [phase, setPhase] = useState<0 | 1>(0);
+  // Phase is derived from value: if start is set but end is null we're in
+  // "waiting for end date" mode (phase 1), otherwise we start fresh (phase 0).
+  const derivedPhase = (value.start && !value.end) ? 1 : 0;
+  const [phase, setPhase] = useState<0 | 1>(derivedPhase);
 
   const now = new Date();
   const [leftMonth, setLeftMonth] = useState<Date>(
@@ -298,7 +316,7 @@ export function DateRangePicker({
       )}
 
       <Popover>
-        <div className={inputStyles.inputWrapper}>
+        <div className={inputStyles.inputWrapper} style={{ position: 'relative', display: 'flex', alignItems: 'stretch' }}>
           <PopoverTrigger
             id={inputId}
             disabled={disabled || readOnly}
@@ -311,25 +329,29 @@ export function DateRangePicker({
           >
             <span className={styles.triggerText}>{displayText || placeholder}</span>
             <span className={styles.triggerIcons}>
-              {clearable && (value.start || value.end) && !disabled && !readOnly && (
-                <span
-                  role="button"
-                  tabIndex={0}
-                  aria-label="Clear date range"
-                  className={styles.clearBtn}
-                  onClick={handleClear}
-                  onKeyDown={(e) =>
-                    e.key === 'Enter' && handleClear(e as unknown as React.MouseEvent)
-                  }
-                >
-                  \u2715
-                </span>
-              )}
               <span aria-hidden className={styles.calIcon}>
                 \uD83D\uDCC5
               </span>
             </span>
           </PopoverTrigger>
+          {clearable && (value.start || value.end) && !disabled && !readOnly && (
+            <button
+              type="button"
+              aria-label="Clear date range"
+              className={styles.clearBtn}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleClear(e);
+              }}
+            >
+              \u2715
+            </button>
+          )}
         </div>
 
         <PopoverContent
@@ -340,6 +362,7 @@ export function DateRangePicker({
           <DateRangePickerPanelWrapper
             value={value}
             onSelect={handleSelect}
+            onSelectWithClose={handleSelect}
             onPreset={handlePreset}
             phase={phase}
             hoverDate={hoverDate}

@@ -317,7 +317,7 @@ export const defaultComponentTokens = {
   calendar: {
     cellSize: '2rem',
     cellRadius: 'var(--zp-radius-full)',
-    todayRing: '2px solid var(--zp-color-brand)',
+    todayRing: '0 0 0 2px var(--zp-color-brand)',
     selectedBg: 'var(--zp-color-brand)',
     rangeBg: 'var(--zp-color-brand-subtle)',
     rangeEdgeBg: 'var(--zp-color-brand)',
@@ -362,7 +362,7 @@ export interface CalendarTokens {
   cellSize?: string;
   /** Border radius of each day cell. Default: `'9999px'` (full). */
   cellRadius?: string;
-  /** CSS box-shadow used to indicate today. Default: `'2px solid var(--zp-color-brand)'`. */
+  /** CSS box-shadow used to indicate today. Default: `'0 0 0 2px var(--zp-color-brand)'`. */
   todayRing?: string;
   /** Background of the selected day. Default: `var(--zp-color-brand)`. */
   selectedBg?: string;
@@ -372,6 +372,9 @@ export interface CalendarTokens {
   rangeEdgeBg?: string;
   /** Color of the weekday header labels. Default: `var(--zp-color-text-secondary)`. */
   weekdayColor?: string;
+}
+
+/**
  * SegmentedControl component tokens
  */
 export interface SegmentedTokens {

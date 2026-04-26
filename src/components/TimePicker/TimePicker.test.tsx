@@ -84,7 +84,7 @@ describe('TimePicker', () => {
     const clearBtn = screen.getByRole('button', { name: /clear time/i });
     expect(clearBtn).toBeInTheDocument();
     act(() => clearBtn.click());
-    expect(onChange).toHaveBeenCalledWith({ hours: 0, minutes: 0, seconds: 0 });
+    expect(onChange).toHaveBeenCalledWith(null);
   });
 
   it('does not open when disabled', () => {

@@ -400,7 +400,7 @@ export function TimePicker({
     (e: React.MouseEvent) => {
       e.stopPropagation();
       if (!isControlled) setInternalValue(null);
-      onChange?.({ hours: 0, minutes: 0, seconds: 0 });
+      onChange?.(null);
     },
     [isControlled, onChange]
   );
@@ -454,7 +454,7 @@ export function TimePicker({
       )}
 
       <Popover onOpenChange={handleOpenChange}>
-        <div className={inputStyles.inputWrapper}>
+        <div className={inputStyles.inputWrapper} style={{ position: 'relative', display: 'flex', alignItems: 'stretch' }}>
           <PopoverTrigger
             id={inputId}
             disabled={disabled || readOnly}
@@ -467,25 +467,25 @@ export function TimePicker({
           >
             <span className={styles.triggerText}>{displayText || placeholder}</span>
             <span className={styles.triggerIcons}>
-              {clearable && value && !disabled && !readOnly && (
-                <span
-                  role="button"
-                  tabIndex={0}
-                  aria-label="Clear time"
-                  className={styles.clearBtn}
-                  onClick={handleClear}
-                  onKeyDown={(e) =>
-                    e.key === 'Enter' && handleClear(e as unknown as React.MouseEvent)
-                  }
-                >
-                  \u2715
-                </span>
-              )}
               <span aria-hidden className={styles.clockIcon}>
                 \uD83D\uDD50
               </span>
             </span>
           </PopoverTrigger>
+          {clearable && value && !disabled && !readOnly && (
+            <button
+              type="button"
+              aria-label="Clear time"
+              className={styles.clearBtn}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onClick={handleClear}
+            >
+              \u2715
+            </button>
+          )}
         </div>
 
         <PopoverContent side="bottom" align="start" aria-label="Time picker">

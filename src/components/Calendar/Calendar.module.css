@@ -8,13 +8,13 @@
   border-radius: var(--zp-radius-md, 8px);
   padding: var(--zp-space-3, 12px);
   /* Calendar tokens */
-  --cal-cell-size: var(--zp-calendar-cell-size, 2rem);
-  --cal-cell-radius: var(--zp-calendar-cell-radius, var(--zp-radius-full, 9999px));
-  --cal-today-ring: var(--zp-calendar-today-ring, 2px solid var(--zp-color-brand, #3b82f6));
-  --cal-selected-bg: var(--zp-calendar-selected-bg, var(--zp-color-brand, #3b82f6));
-  --cal-range-bg: var(--zp-calendar-range-bg, var(--zp-color-brand-subtle, #eff6ff));
-  --cal-range-edge-bg: var(--zp-calendar-range-edge-bg, var(--zp-color-brand, #3b82f6));
-  --cal-weekday-color: var(--zp-calendar-weekday-color, var(--zp-color-text-secondary, #6b7280));
+  --cal-cell-size: var(--zp-component-calendar-cell-size, 2rem);
+  --cal-cell-radius: var(--zp-component-calendar-cell-radius, var(--zp-radius-full, 9999px));
+  --cal-today-ring: var(--zp-component-calendar-today-ring, 0 0 0 2px var(--zp-color-brand, #3b82f6));
+  --cal-selected-bg: var(--zp-component-calendar-selected-bg, var(--zp-color-brand, #3b82f6));
+  --cal-range-bg: var(--zp-component-calendar-range-bg, var(--zp-color-brand-subtle, #eff6ff));
+  --cal-range-edge-bg: var(--zp-component-calendar-range-edge-bg, var(--zp-color-brand, #3b82f6));
+  --cal-weekday-color: var(--zp-component-calendar-weekday-color, var(--zp-color-text-secondary, #6b7280));
 }
 
 /* Header */
