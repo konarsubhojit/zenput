@@ -454,7 +454,7 @@ export function TimePicker({
       )}
 
       <Popover onOpenChange={handleOpenChange}>
-        <div className={inputStyles.inputWrapper} style={{ position: 'relative', display: 'flex', alignItems: 'stretch' }}>
+        <div className={classNames(inputStyles.inputWrapper, styles.triggerWrap)}>
           <PopoverTrigger
             id={inputId}
             disabled={disabled || readOnly}

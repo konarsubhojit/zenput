@@ -248,7 +248,7 @@ export function DatePicker({
       )}
 
       <Popover>
-        <div className={inputStyles.inputWrapper} style={{ position: 'relative', display: 'flex', alignItems: 'stretch' }}>
+        <div className={classNames(inputStyles.inputWrapper, styles.triggerWrap)}>
           <PopoverTrigger
             id={inputId}
             aria-label={label ? undefined : placeholder}

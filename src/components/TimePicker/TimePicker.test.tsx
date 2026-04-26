@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, act } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { TimePicker } from './TimePicker';
+import { expectNoA11yViolations } from '../../test-utils/axe';
 
 afterEach(() => {
   document.querySelectorAll('[data-zenput-portal]').forEach((el) => el.remove());
@@ -142,5 +143,12 @@ describe('TimePicker', () => {
     const options = minuteList.querySelectorAll('[role="option"]');
     // 60/15 = 4 options: 00, 15, 30, 45
     expect(options.length).toBe(4);
+  });
+
+  it('has no a11y violations (closed)', async () => {
+    const { container } = render(
+      <TimePicker label="Meeting time" value={{ hours: 9, minutes: 30 }} clearable />
+    );
+    await expectNoA11yViolations(container);
   });
 });

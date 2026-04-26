@@ -144,6 +144,8 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>(function Calen
     month: controlledMonth,
     onMonthChange,
     highlightToday = true,
+    rangeStart,
+    rangeEnd,
     className,
     id,
     'aria-label': ariaLabel,
@@ -151,12 +153,9 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>(function Calen
   },
   ref
 ) {
-  const defaultMonth = useMemo(
-    () => value ?? new Date(),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
-  );
-  const [internalMonth, setInternalMonth] = useState<Date>(defaultMonth);
+  // Capture the initial month once on mount; updates via setInternalMonth.
+  const defaultMonthRef = useRef<Date>(value ?? new Date());
+  const [internalMonth, setInternalMonth] = useState<Date>(defaultMonthRef.current);
 
   const displayMonth = controlledMonth ?? internalMonth;
 
@@ -358,8 +357,8 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>(function Calen
       <table
         ref={gridRef}
         role="grid"
-        aria-label={ariaLabel ?? (!ariaLabelledby ? 'Calendar' : undefined)}
-        aria-labelledby={ariaLabelledby ?? titleId}
+        aria-label={ariaLabel ?? (ariaLabelledby ? undefined : undefined)}
+        aria-labelledby={ariaLabel ? undefined : (ariaLabelledby ?? titleId)}
         className={styles.grid}
         onKeyDown={handleGridKeyDown}
       >
@@ -395,6 +394,14 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>(function Calen
                   const isFocused = isSameDay(date, focusedDate);
                   const dateStr = toLocalDateStr(date);
 
+                  // Range highlighting (used by DateRangePicker).
+                  const isRangeStart = rangeStart ? isSameDay(date, rangeStart) : false;
+                  const isRangeEnd = rangeEnd ? isSameDay(date, rangeEnd) : false;
+                  const isInRange =
+                    rangeStart && rangeEnd
+                      ? date > rangeStart && date < rangeEnd
+                      : false;
+
                   return (
                     <td
                       key={dateStr}
@@ -415,7 +422,10 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>(function Calen
                           !isCurrentMonth ? styles.outsideMonth : undefined,
                           isSelected ? styles.selected : undefined,
                           isTodayDate && !isSelected ? styles.today : undefined,
-                          disabled ? styles.disabled : undefined
+                          disabled ? styles.disabled : undefined,
+                          isInRange ? styles.rangeMiddle : undefined,
+                          isRangeStart ? styles.rangeStart : undefined,
+                          isRangeEnd ? styles.rangeEnd : undefined
                         )}
                         onClick={() => {
                           setFocusedDate(date);

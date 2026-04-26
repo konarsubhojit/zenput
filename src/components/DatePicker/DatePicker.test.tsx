@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, act, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { DatePicker } from './DatePicker';
+import { expectNoA11yViolations } from '../../test-utils/axe';
 
 afterEach(() => {
   document.querySelectorAll('[data-zenput-portal]').forEach((el) => el.remove());
@@ -147,5 +148,12 @@ describe('DatePicker', () => {
       fireEvent.keyDown(document, { key: 'Escape' });
     });
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('has no a11y violations (closed)', async () => {
+    const { container } = render(
+      <DatePicker label="Pick date" value={new Date(2024, 0, 15)} clearable />
+    );
+    await expectNoA11yViolations(container);
   });
 });

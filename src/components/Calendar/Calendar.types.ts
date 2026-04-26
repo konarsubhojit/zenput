@@ -21,6 +21,10 @@ export interface CalendarProps {
   onMonthChange?: (month: Date) => void;
   /** Highlight today even when it is not the selected value. Default: true. */
   highlightToday?: boolean;
+  /** Start date of a selected range (used by DateRangePicker for range highlight). */
+  rangeStart?: Date | null;
+  /** End date of a selected range (used by DateRangePicker for range highlight). */
+  rangeEnd?: Date | null;
   /** Additional class on the root element. */
   className?: string;
   /** id for accessibility. */

@@ -38,8 +38,6 @@ interface DateRangePickerPanelProps {
   onSelect: (date: Date) => void;
   onPreset: (range: DateRange) => void;
   phase: 0 | 1;
-  hoverDate: Date | null;
-  onHover: (date: Date | null) => void;
   leftMonth: Date;
   rightMonth: Date;
   onLeftMonthChange: (m: Date) => void;
@@ -92,6 +90,8 @@ function DateRangePickerPanel({
           month={leftMonth}
           onMonthChange={onLeftMonthChange}
           value={value.start ?? undefined}
+          rangeStart={value.start}
+          rangeEnd={value.end}
           onChange={onSelect}
           min={min}
           max={max}
@@ -107,6 +107,8 @@ function DateRangePickerPanel({
             onLeftMonthChange(new Date(m.getFullYear(), m.getMonth() - 1, 1));
           }}
           value={value.end ?? undefined}
+          rangeStart={value.start}
+          rangeEnd={value.end}
           onChange={onSelect}
           min={min}
           max={max}
@@ -120,34 +122,32 @@ function DateRangePickerPanel({
   );
 }
 
-// Panel wrapper that also closes the popover when presets are selected
-// and after the end date is selected (range complete).
-function DateRangePickerPanelWrapper(props: DateRangePickerPanelProps & { onSelectWithClose: (date: Date) => void }): React.ReactElement {
+// Panel wrapper that closes the popover on preset selection and after the
+// end date is chosen (range complete).
+function DateRangePickerPanelWrapper(props: DateRangePickerPanelProps): React.ReactElement {
   const { setOpen } = usePopoverState();
-  const { onSelectWithClose: _, ...panelProps } = props;
+  const { onPreset, onSelect, phase } = props;
 
   const handlePreset = useCallback(
     (range: DateRange) => {
-      panelProps.onPreset(range);
+      onPreset(range);
       setOpen(false);
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [panelProps.onPreset, setOpen]
+    [onPreset, setOpen]
   );
 
   const handleSelect = useCallback(
     (date: Date) => {
-      props.onSelectWithClose(date);
-      // Close only when completing the range (phase 1 → done).
-      // The parent calls setPhase(0) after the second click; we close here.
-      if (props.phase === 1) {
+      onSelect(date);
+      // phase === 1 means this click completed the range.
+      if (phase === 1) {
         setOpen(false);
       }
     },
-    [props, setOpen]
+    [onSelect, phase, setOpen]
   );
 
-  return <DateRangePickerPanel {...panelProps} onSelect={handleSelect} onPreset={handlePreset} />;
+  return <DateRangePickerPanel {...props} onSelect={handleSelect} onPreset={handlePreset} />;
 }
 
 // ---------------------------------------------------------------------------
@@ -195,11 +195,11 @@ export function DateRangePicker({
     ? (controlledValue ?? emptyRange)
     : internalValue;
 
-  const [hoverDate, setHoverDate] = useState<Date | null>(null);
-  // Phase is derived from value: if start is set but end is null we're in
-  // "waiting for end date" mode (phase 1), otherwise we start fresh (phase 0).
-  const derivedPhase = (value.start && !value.end) ? 1 : 0;
-  const [phase, setPhase] = useState<0 | 1>(derivedPhase);
+  // Phase is fully derived from value: when start is set but end is not,
+  // we are waiting for an end date (phase 1); otherwise we are ready to
+  // start a new range (phase 0). No state needed — handleSelect uses the
+  // current phase computed at click time.
+  const phase: 0 | 1 = (value.start && !value.end) ? 1 : 0;
 
   const now = new Date();
   const [leftMonth, setLeftMonth] = useState<Date>(
@@ -227,7 +227,6 @@ export function DateRangePicker({
         const next: DateRange = { start: date, end: null };
         if (!isControlled) setInternalValue(next);
         onChange?.(next);
-        setPhase(1);
       } else {
         const start = value.start;
         let next: DateRange;
@@ -238,7 +237,6 @@ export function DateRangePicker({
         }
         if (!isControlled) setInternalValue(next);
         onChange?.(next);
-        setPhase(0);
       }
     },
     [phase, value.start, isControlled, onChange]
@@ -250,7 +248,6 @@ export function DateRangePicker({
       const next: DateRange = { start: null, end: null };
       if (!isControlled) setInternalValue(next);
       onChange?.(next);
-      setPhase(0);
     },
     [isControlled, onChange]
   );
@@ -259,7 +256,6 @@ export function DateRangePicker({
     (range: DateRange) => {
       if (!isControlled) setInternalValue(range);
       onChange?.(range);
-      setPhase(0);
     },
     [isControlled, onChange]
   );
@@ -316,7 +312,7 @@ export function DateRangePicker({
       )}
 
       <Popover>
-        <div className={inputStyles.inputWrapper} style={{ position: 'relative', display: 'flex', alignItems: 'stretch' }}>
+        <div className={classNames(inputStyles.inputWrapper, styles.triggerWrap)}>
           <PopoverTrigger
             id={inputId}
             disabled={disabled || readOnly}
@@ -362,11 +358,8 @@ export function DateRangePicker({
           <DateRangePickerPanelWrapper
             value={value}
             onSelect={handleSelect}
-            onSelectWithClose={handleSelect}
             onPreset={handlePreset}
             phase={phase}
-            hoverDate={hoverDate}
-            onHover={setHoverDate}
             leftMonth={leftMonth}
             rightMonth={rightMonth}
             onLeftMonthChange={setLeftMonth}

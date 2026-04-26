@@ -7,6 +7,12 @@
   gap: 4px;
 }
 
+.triggerWrap {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+
 .trigger:disabled {
   cursor: not-allowed;
 }

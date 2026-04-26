@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, act } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { DateRangePicker } from './DateRangePicker';
+import { expectNoA11yViolations } from '../../test-utils/axe';
 
 afterEach(() => {
   document.querySelectorAll('[data-zenput-portal]').forEach((el) => el.remove());
@@ -87,7 +88,11 @@ describe('DateRangePicker', () => {
       });
 
     if (endDateBtns.length > 0) {
-      const selectedEnd = new Date(endDateBtns[0].getAttribute('data-date') as string);
+      const dateStr = endDateBtns[0].getAttribute('data-date') as string;
+      // Parse YYYY-MM-DD as local date (not UTC) so the assertion matches
+      // Calendar's local-date Date objects.
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const selectedEnd = new Date(y, m - 1, d);
       act(() => endDateBtns[0].click());
       expect(onChange).toHaveBeenCalledWith({ start, end: selectedEnd });
       // Popover closes after end date selection
@@ -197,5 +202,16 @@ describe('DateRangePicker', () => {
         end: expect.any(Date),
       });
     }
+  });
+
+  it('has no a11y violations (closed)', async () => {
+    const { container } = render(
+      <DateRangePicker
+        label="Trip dates"
+        value={{ start: new Date(2024, 0, 5), end: new Date(2024, 0, 20) }}
+        clearable
+      />
+    );
+    await expectNoA11yViolations(container);
   });
 });

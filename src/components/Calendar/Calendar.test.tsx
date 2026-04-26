@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, act, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { Calendar } from './Calendar';
+import { expectNoA11yViolations } from '../../test-utils/axe';
 
 // Fixed "today" so snapshots are stable.
 const TODAY = new Date(2024, 0, 15); // Jan 15, 2024
@@ -207,5 +208,10 @@ describe('Calendar', () => {
   it('respects controlled month prop', () => {
     renderCalendar({ month: new Date(2024, 5, 1) }); // June 2024
     expect(screen.getByText(/June 2024/i)).toBeInTheDocument();
+  });
+
+  it('has no a11y violations', async () => {
+    const { container } = renderCalendar({ 'aria-label': 'Birthday' });
+    await expectNoA11yViolations(container);
   });
 });
