@@ -20,6 +20,11 @@ import styles from './MultiSelect.module.css';
 
 const DEFAULT_DEBOUNCE_MS = 300;
 
+let _creatableCounter = 0;
+function nextCreatableId() {
+  return `custom-${++_creatableCounter}`;
+}
+
 function defaultIsValidNewOption(inputValue: string, selected: MultiSelectOption[]) {
   const trimmed = inputValue.trim();
   return trimmed.length > 0 && !selected.some((s) => s.label === trimmed);
@@ -209,7 +214,7 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
         if (opt.disabled) return;
 
         if (opt._isCreate) {
-          const newOpt: MultiSelectOption = { value: `custom-${Date.now()}`, label: opt.label };
+          const newOpt: MultiSelectOption = { value: nextCreatableId(), label: opt.label };
           if (maxTags && selectedValues.length >= maxTags) return;
           updateSelected([...selectedValues, newOpt]);
           setQuery('');
