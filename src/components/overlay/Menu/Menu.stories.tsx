@@ -7,7 +7,6 @@ import {
   MenuItem,
   MenuSeparator,
   MenuLabel,
-  MenuCheckboxItem,
   MenuRadioGroup,
   MenuRadioItem,
   MenuSub,
@@ -54,22 +53,24 @@ export const UserMenu: Story = {
   ),
 };
 
+function SortMenuExample() {
+  const [sort, setSort] = useState('name');
+  return (
+    <Menu>
+      <MenuTrigger>Sort by: {sort}</MenuTrigger>
+      <MenuContent aria-label="Sort options">
+        <MenuRadioGroup value={sort} onValueChange={setSort}>
+          <MenuRadioItem value="name">Name</MenuRadioItem>
+          <MenuRadioItem value="date">Date</MenuRadioItem>
+          <MenuRadioItem value="size">Size</MenuRadioItem>
+        </MenuRadioGroup>
+      </MenuContent>
+    </Menu>
+  );
+}
+
 export const SortMenu: Story = {
-  render: () => {
-    const [sort, setSort] = useState('name');
-    return (
-      <Menu>
-        <MenuTrigger>Sort by: {sort}</MenuTrigger>
-        <MenuContent aria-label="Sort options">
-          <MenuRadioGroup value={sort} onValueChange={setSort}>
-            <MenuRadioItem value="name">Name</MenuRadioItem>
-            <MenuRadioItem value="date">Date</MenuRadioItem>
-            <MenuRadioItem value="size">Size</MenuRadioItem>
-          </MenuRadioGroup>
-        </MenuContent>
-      </Menu>
-    );
-  },
+  render: () => <SortMenuExample />,
 };
 
 export const NestedSubmenus: Story = {

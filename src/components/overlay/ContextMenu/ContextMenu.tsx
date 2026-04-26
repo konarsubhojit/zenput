@@ -8,6 +8,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { useIsomorphicLayoutEffect } from '../internal/useIsomorphicLayoutEffect';
 import { classNames } from '../../../utils';
 import { useDisclosure } from '../../../hooks/useDisclosure';
 import { Portal } from '../../Portal';
@@ -136,17 +137,30 @@ export const ContextMenuContent = forwardRef<HTMLDivElement, ContextMenuContentP
       [forwardedRef]
     );
 
-    const clampedCoords = useMemo(() => {
-      if (!anchorPoint) return null;
-      const vw = typeof window !== 'undefined' ? window.innerWidth : 0;
-      const vh = typeof window !== 'undefined' ? window.innerHeight : 0;
-      const w = contentElRef.current?.offsetWidth ?? 180;
-      const h = contentElRef.current?.offsetHeight ?? 0;
-      return {
-        x: Math.max(4, Math.min(anchorPoint.x, vw - w - 4)),
-        y: Math.max(4, Math.min(anchorPoint.y, vh - h - 4)),
+    const [clampedCoords, setClampedCoords] = useState<{ x: number; y: number } | null>(null);
+
+    useIsomorphicLayoutEffect(() => {
+      if (!open || !anchorPoint) {
+        setClampedCoords(null);
+        return;
+      }
+      const updateCoords = (): void => {
+        const el = contentElRef.current;
+        const vw = typeof window !== 'undefined' ? window.innerWidth : 0;
+        const vh = typeof window !== 'undefined' ? window.innerHeight : 0;
+        const w = el ? el.offsetWidth : 180;
+        const h = el ? el.offsetHeight : 0;
+        setClampedCoords({
+          x: Math.max(4, Math.min(anchorPoint.x, vw - w - 4)),
+          y: Math.max(4, Math.min(anchorPoint.y, vh - h - 4)),
+        });
       };
-    }, [anchorPoint]);
+      updateCoords();
+      window.addEventListener('resize', updateCoords);
+      return () => {
+        window.removeEventListener('resize', updateCoords);
+      };
+    }, [open, anchorPoint]);
 
     useEffect(() => {
       if (!open) return;
@@ -256,6 +270,7 @@ export const ContextMenuContent = forwardRef<HTMLDivElement, ContextMenuContentP
             position: 'fixed',
             top: clampedCoords?.y ?? anchorPoint?.y ?? -9999,
             left: clampedCoords?.x ?? anchorPoint?.x ?? -9999,
+            visibility: clampedCoords ? 'visible' : 'hidden',
           }}
           className={classNames(styles.content, className)}
           onKeyDown={handleKeyDown}

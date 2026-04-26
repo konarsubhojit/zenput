@@ -391,6 +391,20 @@ export const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(
       [disabled, onClick, onSelect, ctx]
     );
 
+    const handleKeyDown = useCallback(
+      (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (!disabled) {
+            onSelect?.();
+            ctx?.setOpen(false);
+            ctx?.triggerRef.current?.focus();
+          }
+        }
+      },
+      [disabled, onSelect, ctx]
+    );
+
     return (
       <div
         ref={ref}
@@ -405,6 +419,7 @@ export const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(
           className
         )}
         onClick={handleClick}
+        onKeyDown={handleKeyDown}
         {...rest}
       >
         {leftIcon && <span className={styles.itemIcon}>{leftIcon}</span>}
@@ -418,7 +433,7 @@ export type MenuSeparatorProps = React.HTMLAttributes<HTMLHRElement>;
 
 export const MenuSeparator = forwardRef<HTMLHRElement, MenuSeparatorProps>(
   function MenuSeparator({ className, ...rest }, ref) {
-    return <hr ref={ref} role="separator" className={classNames(styles.separator, className)} {...rest} />;
+    return <hr ref={ref} className={classNames(styles.separator, className)} {...rest} />;
   }
 );
 
@@ -454,6 +469,20 @@ export const MenuCheckboxItem = forwardRef<HTMLDivElement, MenuCheckboxItemProps
       [disabled, onClick, onCheckedChange, checked, ctx]
     );
 
+    const handleKeyDown = useCallback(
+      (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (!disabled) {
+            onCheckedChange?.(!checked);
+            ctx?.setOpen(false);
+            ctx?.triggerRef.current?.focus();
+          }
+        }
+      },
+      [disabled, onCheckedChange, checked, ctx]
+    );
+
     return (
       <div
         ref={ref}
@@ -464,6 +493,7 @@ export const MenuCheckboxItem = forwardRef<HTMLDivElement, MenuCheckboxItemProps
         data-disabled={disabled ? '' : undefined}
         className={classNames(styles.checkboxItem, disabled && styles.itemDisabled, className)}
         onClick={handleClick}
+        onKeyDown={handleKeyDown}
         {...rest}
       >
         <span className={styles.itemIndicator}>{checked ? '✓' : ''}</span>
@@ -512,6 +542,20 @@ export const MenuRadioItem = forwardRef<HTMLDivElement, MenuRadioItemProps>(
       [disabled, onClick, radioCtx, value, ctx]
     );
 
+    const handleKeyDown = useCallback(
+      (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (!disabled) {
+            radioCtx?.onValueChange(value);
+            ctx?.setOpen(false);
+            ctx?.triggerRef.current?.focus();
+          }
+        }
+      },
+      [disabled, radioCtx, value, ctx]
+    );
+
     return (
       <div
         ref={ref}
@@ -522,6 +566,7 @@ export const MenuRadioItem = forwardRef<HTMLDivElement, MenuRadioItemProps>(
         data-disabled={disabled ? '' : undefined}
         className={classNames(styles.radioItem, disabled && styles.itemDisabled, className)}
         onClick={handleClick}
+        onKeyDown={handleKeyDown}
         {...rest}
       >
         <span className={styles.itemIndicator}>{checked ? '●' : ''}</span>
