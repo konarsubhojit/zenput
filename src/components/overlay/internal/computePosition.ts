@@ -9,6 +9,22 @@ export type OverlaySide = 'top' | 'bottom' | 'left' | 'right';
 export type OverlayAlign = 'start' | 'center' | 'end';
 
 /**
+ * Compute the position along the alignment axis (perpendicular to `side`).
+ * Returns the coordinate (left for top/bottom sides, top for left/right sides).
+ */
+function computeAlignmentCoord(
+  triggerStart: number,
+  triggerSize: number,
+  contentSize: number,
+  align: OverlayAlign,
+  alignOffset: number
+): number {
+  if (align === 'start') return triggerStart + alignOffset;
+  if (align === 'end') return triggerStart + triggerSize - contentSize - alignOffset;
+  return triggerStart + triggerSize / 2 - contentSize / 2 + alignOffset;
+}
+
+/**
  * Compute absolute `top`/`left` from the trigger rect, content rect, side,
  * and alignment. Returns viewport-space coordinates suitable for
  * `position: fixed` elements.
@@ -28,24 +44,20 @@ export function computePosition(
   sideOffset: number,
   alignOffset = 0
 ): { top: number; left: number } {
-  let top = 0;
-  let left = 0;
+  let top: number;
+  let left: number;
 
   if (side === 'top' || side === 'bottom') {
     top = side === 'top' ? trigger.top - content.height - sideOffset : trigger.bottom + sideOffset;
-    if (align === 'start') left = trigger.left + alignOffset;
-    else if (align === 'end') left = trigger.right - content.width - alignOffset;
-    else left = trigger.left + trigger.width / 2 - content.width / 2 + alignOffset;
+    left = computeAlignmentCoord(trigger.left, trigger.width, content.width, align, alignOffset);
   } else {
     left = side === 'left' ? trigger.left - content.width - sideOffset : trigger.right + sideOffset;
-    if (align === 'start') top = trigger.top + alignOffset;
-    else if (align === 'end') top = trigger.bottom - content.height - alignOffset;
-    else top = trigger.top + trigger.height / 2 - content.height / 2 + alignOffset;
+    top = computeAlignmentCoord(trigger.top, trigger.height, content.height, align, alignOffset);
   }
 
   // Clamp to viewport to avoid overflow.
-  const vw = typeof window !== 'undefined' ? window.innerWidth : 0;
-  const vh = typeof window !== 'undefined' ? window.innerHeight : 0;
+  const vw = typeof window === 'undefined' ? 0 : window.innerWidth;
+  const vh = typeof window === 'undefined' ? 0 : window.innerHeight;
   left = Math.max(4, Math.min(left, vw - content.width - 4));
   top = Math.max(4, Math.min(top, vh - content.height - 4));
 
