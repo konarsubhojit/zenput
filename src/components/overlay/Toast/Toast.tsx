@@ -114,6 +114,14 @@ export function getToastHandle(): ToastHandle | null {
 // to start before the new toast enters, preventing a visual jump.
 const PROMISE_TRANSITION_DELAY_MS = 100;
 
+// Maximum time (ms) we'll wait for the CSS exit animation's `animationend`
+// event before forcibly removing the toast from state. Slightly longer than
+// the 150ms `toast-exit` keyframe so the animation has time to finish in
+// normal conditions, while still cleaning up reliably under
+// `prefers-reduced-motion: reduce` (animation disabled, animationend never
+// fires) or in non-animating environments such as jsdom.
+const TOAST_EXIT_FALLBACK_MS = 200;
+
 // ---------------------------------------------------------------------------
 // Default status icons
 // ---------------------------------------------------------------------------
@@ -276,6 +284,22 @@ function ToastItemComponent({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // When the toast enters its exiting phase:
+  //   1. Stop the auto-dismiss timer so it cannot fire after dismissal began
+  //      (preventing a post-exit `dismiss()` call).
+  //   2. Schedule a deterministic removal fallback. The CSS exit animation
+  //      drives `onAnimationEnd`, but `prefers-reduced-motion: reduce` (and
+  //      jsdom) disable animations entirely — without this fallback, exiting
+  //      toasts would remain in state/DOM indefinitely.
+  useEffect(() => {
+    if (!toast.exiting) return;
+    clearTimer();
+    const fallback = setTimeout(() => {
+      onExited();
+    }, TOAST_EXIT_FALLBACK_MS);
+    return () => clearTimeout(fallback);
+  }, [toast.exiting, clearTimer, onExited]);
+
   // Touch swipe state
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const [swipeOffset, setSwipeOffset] = useState(0);
@@ -301,17 +325,23 @@ function ToastItemComponent({
     (e: React.KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.stopPropagation();
-        safeDismiss();
+        onDismiss();
       }
     },
-    [safeDismiss]
+    [onDismiss]
   );
 
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    setIsSwiping(false);
-    setSwipeOffset(0);
-  }, []);
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      setIsSwiping(false);
+      setSwipeOffset(0);
+      // Pause auto-dismiss while the user is interacting via touch, mirroring
+      // the mouse/focus pause behavior so the toast cannot disappear mid-swipe.
+      if (toast.duration != null) pauseTimer();
+    },
+    [toast.duration, pauseTimer]
+  );
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!touchStartRef.current) return;
@@ -325,13 +355,15 @@ function ToastItemComponent({
 
   const handleTouchEnd = useCallback(() => {
     if (isSwiping && Math.abs(swipeOffset) > 80) {
-      safeDismiss();
+      onDismiss();
     } else {
       setSwipeOffset(0);
       setIsSwiping(false);
+      // Resume the auto-dismiss timer if the swipe was below threshold.
+      if (toast.duration != null) startTimer();
     }
     touchStartRef.current = null;
-  }, [isSwiping, swipeOffset, safeDismiss]);
+  }, [isSwiping, swipeOffset, onDismiss, toast.duration, startTimer]);
 
   // When exit animation completes, notify parent to remove from state
   const handleAnimationEnd = useCallback(
@@ -391,7 +423,7 @@ function ToastItemComponent({
       <button
         type="button"
         className={styles.closeButton}
-        onClick={safeDismiss}
+        onClick={onDismiss}
         aria-label="Dismiss notification"
       >
         <svg
@@ -446,6 +478,74 @@ export function ToastProvider({
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const idCounterRef = useRef(0);
 
+  // Set of toast ids that are currently "live" (shown but not yet removed).
+  // Used to compute `max`-overflow synchronously without depending on
+  // React's not-yet-committed `toasts` state.
+  const liveIdsRef = useRef<Set<string>>(new Set());
+  // Map of toast id → onClose callback. Lets us fire `onClose` for any
+  // dismissal path (close button, Escape, swipe, auto-timer, programmatic
+  // `dismiss(id)`, `dismiss()` (all), and `max`-overflow eviction) without
+  // running side effects inside `setToasts` updaters.
+  const onCloseMapRef = useRef<Map<string, () => void>>(new Map());
+  // Ids whose `onClose` has already fired, ensuring exactly-once semantics
+  // even when multiple dismissal paths race each other.
+  const firedSetRef = useRef<Set<string>>(new Set());
+
+  // Tracks pending `promise()` follow-up timeouts so we can cancel them on
+  // unmount and avoid scheduling state updates against an unmounted tree.
+  const pendingTimeoutsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    isMountedRef.current = true;
+    const pending = pendingTimeoutsRef.current;
+    return () => {
+      isMountedRef.current = false;
+      for (const t of pending) clearTimeout(t);
+      pending.clear();
+    };
+  }, []);
+
+  /** Fires `onClose` for a single toast id at most once across all dismissal paths. */
+  const fireOnClose = useCallback((id: string) => {
+    if (firedSetRef.current.has(id)) return;
+    const cb = onCloseMapRef.current.get(id);
+    if (!cb) {
+      // No callback registered, but still mark fired so a later dismissal of
+      // the same id is a no-op.
+      firedSetRef.current.add(id);
+      return;
+    }
+    firedSetRef.current.add(id);
+    try {
+      cb();
+    } catch {
+      // Swallow listener errors so a misbehaving consumer can't poison the
+      // rest of the toast cleanup pipeline.
+    }
+  }, []);
+
+  const dismiss = useCallback(
+    (id?: string) => {
+      // Decide which ids to close based on the live registry, which always
+      // reflects every toast that has been shown but not yet fully removed —
+      // including toasts whose state update from a synchronous `show()` call
+      // has not yet committed.
+      const ids: string[] = id == null ? Array.from(liveIdsRef.current) : [id];
+      for (const tid of ids) fireOnClose(tid);
+      setToasts((prev) =>
+        prev.map((t) => (ids.includes(t.id) ? { ...t, closed: true, exiting: true } : t))
+      );
+    },
+    [fireOnClose]
+  );
+
+  const removeToast = useCallback((id: string) => {
+    liveIdsRef.current.delete(id);
+    onCloseMapRef.current.delete(id);
+    firedSetRef.current.delete(id);
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
   const show = useCallback(
     (options: ToastOptions): string => {
       idCounterRef.current += 1;
@@ -460,27 +560,40 @@ export function ToastProvider({
         onClose: options.onClose,
         icon: options.icon,
         exiting: false,
+        closed: false,
       };
+      // Register this toast in the live registry before queueing the state
+      // update so concurrent `dismiss(id)` / overflow logic can see it.
+      liveIdsRef.current.add(id);
+      if (options.onClose) onCloseMapRef.current.set(id, options.onClose);
+
+      // `max`-overflow eviction: when adding this toast would exceed `max`,
+      // drop the oldest active toasts and fire their `onClose` callbacks so
+      // the documented dismissal contract holds even for overflow drops.
+      if (max > 0) {
+        // Use the live registry (insertion-ordered) to find still-active
+        // toasts. Already-fired ids are excluded so a toast that was just
+        // dismissed but not yet removed doesn't count toward eviction.
+        const activeIds = Array.from(liveIdsRef.current).filter(
+          (k) => !firedSetRef.current.has(k) && k !== id
+        );
+        const projectedLength = activeIds.length + 1;
+        if (projectedLength > max) {
+          const evictionCount = projectedLength - max;
+          for (let i = 0; i < evictionCount; i += 1) {
+            fireOnClose(activeIds[i]);
+          }
+        }
+      }
+
       setToasts((prev) => {
         const next = [...prev, item];
         return max > 0 ? next.slice(-max) : next;
       });
       return id;
     },
-    [defaultDuration, max]
+    [defaultDuration, max, fireOnClose]
   );
-
-  const dismiss = useCallback((id?: string) => {
-    if (id == null) {
-      setToasts((prev) => prev.map((t) => ({ ...t, exiting: true })));
-    } else {
-      setToasts((prev) => prev.map((t) => (t.id === id ? { ...t, exiting: true } : t)));
-    }
-  }, []);
-
-  const removeToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  }, []);
 
   const promise = useCallback(
     <T,>(
@@ -492,19 +605,26 @@ export function ToastProvider({
       }
     ): Promise<T> => {
       const id = show({ title: messages.loading, status: 'loading', duration: null });
+      const schedule = (cb: () => void) => {
+        const handle = setTimeout(() => {
+          pendingTimeoutsRef.current.delete(handle);
+          if (isMountedRef.current) cb();
+        }, PROMISE_TRANSITION_DELAY_MS);
+        pendingTimeoutsRef.current.add(handle);
+      };
       return p.then(
         (data) => {
           const title =
             typeof messages.success === 'function' ? messages.success(data) : messages.success;
           dismiss(id);
-          setTimeout(() => show({ title, status: 'success' }), PROMISE_TRANSITION_DELAY_MS);
+          schedule(() => show({ title, status: 'success' }));
           return data;
         },
         (err: unknown) => {
           const title =
             typeof messages.error === 'function' ? messages.error(err) : messages.error;
           dismiss(id);
-          setTimeout(() => show({ title, status: 'error' }), PROMISE_TRANSITION_DELAY_MS);
+          schedule(() => show({ title, status: 'error' }));
           throw err;
         }
       );
@@ -514,11 +634,15 @@ export function ToastProvider({
 
   const handle = useMemo<ToastHandle>(() => ({ show, dismiss, promise }), [show, dismiss, promise]);
 
-  // Register singleton handle
+  // Register singleton handle. Cleanup only nulls the slot when it still
+  // points at this provider's handle, so unmounting one provider while
+  // another is still mounted does not clear the singleton.
   useEffect(() => {
     _singletonHandle = handle;
     return () => {
-      _singletonHandle = null;
+      if (_singletonHandle === handle) {
+        _singletonHandle = null;
+      }
     };
   }, [handle]);
 
@@ -539,10 +663,7 @@ export function ToastProvider({
             <ToastItemComponent
               key={toast.id}
               toast={toast}
-              onDismiss={() => {
-                toast.onClose?.();
-                dismiss(toast.id);
-              }}
+              onDismiss={() => dismiss(toast.id)}
               onExited={() => removeToast(toast.id)}
             />
           ))}
