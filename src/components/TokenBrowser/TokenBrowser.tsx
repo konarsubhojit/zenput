@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { useTheme } from '../../context/ThemeProvider';
 import { palette } from '../../tokens/colors';
 import {
@@ -18,6 +18,7 @@ import { densityTokens } from '../../tokens/density';
 import { recipes } from '../../tokens/recipes';
 import { defaultComponentTokens } from '../../tokens/components';
 import { typographyPresets } from '../../tokens/typographyPresets';
+import { toKebabCase } from '../../tokens/index';
 import styles from './TokenBrowser.module.css';
 
 type TokenCategory =
@@ -68,6 +69,7 @@ function RecipeVariantSection({
 export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) {
   const [category, setCategory] = useState<TokenCategory>(defaultCategory);
   const [copied, setCopied] = useState<string | null>(null);
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { semantic, mode, density, cssVars, components: themeComponents } = useTheme();
 
   // Merge theme.components overrides on top of the defaults so the Component
@@ -84,17 +86,20 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
     return merged;
   }, [themeComponents]);
 
-  const handleCopy = useCallback(
-    (varName: string) => {
-      if (typeof navigator !== 'undefined' && navigator.clipboard) {
-        navigator.clipboard.writeText(varName).then(() => {
-          setCopied(varName);
-          setTimeout(() => setCopied((prev) => (prev === varName ? null : prev)), 1500);
-        });
-      }
-    },
-    []
-  );
+  const handleCopy = useCallback((varName: string) => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(varName).then(() => {
+        setCopied(varName);
+        if (copyTimerRef.current !== null) {
+          clearTimeout(copyTimerRef.current);
+        }
+        copyTimerRef.current = setTimeout(() => {
+          setCopied((prev) => (prev === varName ? null : prev));
+          copyTimerRef.current = null;
+        }, 1500);
+      });
+    }
+  }, []);
 
   const categories: Array<{ id: TokenCategory; label: string }> = [
     { id: 'colors', label: 'Semantic Colors' },
@@ -112,24 +117,27 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
     { id: 'components', label: 'Component Tokens' },
   ];
 
-  const renderColorSwatch = (name: string, value: string) => (
-    <div
-      key={name}
-      className={styles.tokenItem}
-      title="Click to copy CSS variable name"
-      onClick={() => handleCopy(`--zp-color-${name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').replace(/([a-zA-Z])([0-9])/g, '$1-$2').toLowerCase()}`)}
-      style={{ cursor: 'pointer' }}
-    >
-      <div className={styles.colorSwatch} style={{ backgroundColor: value }} />
-      <div className={styles.tokenDetails}>
-        <div className={styles.tokenName}>{name}</div>
-        <div className={styles.tokenValue}>{value}</div>
-        {copied === `--zp-color-${name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').replace(/([a-zA-Z])([0-9])/g, '$1-$2').toLowerCase()}` && (
-          <div className={styles.tokenValue} aria-live="polite">Copied!</div>
-        )}
+  const renderColorSwatch = (name: string, value: string) => {
+    const cssVarName = `--zp-color-${toKebabCase(name)}`;
+    return (
+      <div
+        key={name}
+        className={styles.tokenItem}
+        title="Click to copy CSS variable name"
+        onClick={() => handleCopy(cssVarName)}
+        style={{ cursor: 'pointer' }}
+      >
+        <div className={styles.colorSwatch} style={{ backgroundColor: value }} />
+        <div className={styles.tokenDetails}>
+          <div className={styles.tokenName}>{name}</div>
+          <div className={styles.tokenValue}>{value}</div>
+          {copied === cssVarName && (
+            <div className={styles.tokenValue} aria-live="polite">Copied!</div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderToken = (name: string, value: string | number) => (
     <div

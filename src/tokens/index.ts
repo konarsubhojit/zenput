@@ -50,11 +50,19 @@ export const semanticByMode: Record<ThemeMode, SemanticColors> = {
   highContrast: highContrastSemantic,
 };
 
-function kebab(value: string): string {
+/** Convert a camelCase or mixed identifier to kebab-case.
+ * Handles letter→uppercase and letter→digit transitions so keys like
+ * `surfaceRaised` → `surface-raised` and `surface0` → `surface-0`. */
+export function toKebabCase(value: string): string {
   return value
     .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
     .replace(/([a-zA-Z])([0-9])/g, '$1-$2')
     .toLowerCase();
+}
+
+/** @internal Module-private alias used by buildCssVariables. */
+function kebab(value: string): string {
+  return toKebabCase(value);
 }
 
 /** Spacing-token keys may contain dots (e.g. `"0.5"`), which are not
