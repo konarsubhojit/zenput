@@ -6,7 +6,7 @@
  * Not exported from the public package surface — use the concrete Dialog /
  * Drawer components instead.
  */
-import React, { useCallback, useId, useMemo, useRef } from 'react';
+import React, { useCallback, useId, useMemo, useRef, useState } from 'react';
 import { useDisclosure } from '../../../hooks/useDisclosure';
 
 export interface OverlayPanelState {
@@ -52,8 +52,8 @@ export function useOverlayPanelState({
   const titleId = useId();
   const descriptionId = useId();
 
-  const [hasTitle, setHasTitle] = React.useState(false);
-  const [hasDescription, setHasDescription] = React.useState(false);
+  const [hasTitle, setHasTitle] = useState(false);
+  const [hasDescription, setHasDescription] = useState(false);
 
   const setOpenBool = useCallback((next: boolean) => setOpen(next), [setOpen]);
   const setTriggerNode = useCallback((node: HTMLElement | null) => {
