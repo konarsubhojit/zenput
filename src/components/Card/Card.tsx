@@ -46,12 +46,14 @@ export function Card({
   onClick,
   href,
   tabIndex,
+  type,
 }: CardProps): React.ReactElement {
   const Component: React.ElementType = as ?? (interactive ? (href ? 'a' : 'button') : 'div');
 
   // Only forward `href` when rendering an `<a>` (or a custom component which
-  // may consume it); only forward `type="button"` when rendering a native
-  // `<button>` so React doesn't warn about invalid DOM attributes.
+  // may consume it); only forward `type` when rendering a native `<button>` so
+  // React doesn't warn about invalid DOM attributes. Default `type` to
+  // `'button'` for native buttons to prevent accidental form submission.
   const isAnchor = Component === 'a';
   const isNativeButton = Component === 'button';
   const extraProps: Record<string, unknown> = {};
@@ -59,7 +61,7 @@ export function Card({
     extraProps.href = href;
   }
   if (isNativeButton) {
-    extraProps.type = 'button';
+    extraProps.type = type ?? 'button';
   }
 
   return (

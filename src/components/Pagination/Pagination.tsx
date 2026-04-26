@@ -16,8 +16,17 @@ export function buildPaginationItems(
 ): (number | 'ellipsis')[] {
   if (total <= 0) return [];
 
+  // Normalize counts so that negative or non-finite values cannot reach
+  // `Array.from({ length })` and trigger a RangeError.
+  const safeBoundary = Number.isFinite(boundaryCount)
+    ? Math.max(0, Math.floor(boundaryCount))
+    : 1;
+  const safeSibling = Number.isFinite(siblingCount)
+    ? Math.max(0, Math.floor(siblingCount))
+    : 1;
+
   // When total pages is small enough to show all without ellipsis, return them all.
-  const threshold = 2 * boundaryCount + 2 * siblingCount + 3;
+  const threshold = 2 * safeBoundary + 2 * safeSibling + 3;
   if (total <= threshold) {
     return Array.from({ length: total }, (_, i) => i + 1);
   }
@@ -26,16 +35,19 @@ export function buildPaginationItems(
   const clamped = Math.min(Math.max(current, 1), total);
 
   // Build the full set of page numbers that should always be visible.
-  const startPages = Array.from({ length: boundaryCount }, (_, i) => i + 1);
-  const endPages = Array.from({ length: boundaryCount }, (_, i) => total - boundaryCount + 1 + i);
+  const startPages = Array.from({ length: safeBoundary }, (_, i) => i + 1);
+  const endPages = Array.from(
+    { length: safeBoundary },
+    (_, i) => total - safeBoundary + 1 + i
+  );
 
   const siblingsStart = Math.max(
-    boundaryCount + 1,
-    clamped - siblingCount
+    safeBoundary + 1,
+    clamped - safeSibling
   );
   const siblingsEnd = Math.min(
-    total - boundaryCount,
-    clamped + siblingCount
+    total - safeBoundary,
+    clamped + safeSibling
   );
 
   const siblingPages = Array.from(

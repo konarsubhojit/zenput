@@ -26,6 +26,17 @@ describe('buildPaginationItems', () => {
     expect(items).toContain(5);
     expect(items.filter((i) => i !== 'ellipsis')).toHaveLength(5);
   });
+
+  it('does not throw when boundaryCount/siblingCount are negative', () => {
+    expect(() => buildPaginationItems(5, 20, -3, -2)).not.toThrow();
+    const items = buildPaginationItems(5, 20, -3, -2);
+    // Negative counts collapse to 0; only the current page (clamped) should remain.
+    expect(items).toContain(5);
+  });
+
+  it('does not throw when boundaryCount/siblingCount are non-finite', () => {
+    expect(() => buildPaginationItems(5, 20, NaN, Number.POSITIVE_INFINITY)).not.toThrow();
+  });
 });
 
 describe('Pagination', () => {

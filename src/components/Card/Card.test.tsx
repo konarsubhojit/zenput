@@ -64,6 +64,16 @@ describe('Card', () => {
     expect(link).toHaveAttribute('href', '/x');
     expect(link).not.toHaveAttribute('type');
   });
+
+  it('defaults type="button" when explicitly rendered as a native button', () => {
+    render(<Card as="button">Action</Card>);
+    expect(screen.getByRole('button')).toHaveAttribute('type', 'button');
+  });
+
+  it('respects an explicit type prop on a native button root', () => {
+    render(<Card as="button" type="submit">Submit</Card>);
+    expect(screen.getByRole('button')).toHaveAttribute('type', 'submit');
+  });
 });
 
 describe('CardHeader', () => {

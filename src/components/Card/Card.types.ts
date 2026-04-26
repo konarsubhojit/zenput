@@ -29,6 +29,11 @@ export interface CardProps {
   href?: string;
   /** tabIndex forwarded to root when interactive. */
   tabIndex?: number;
+  /**
+   * Button type. Only forwarded when the resolved root is a `<button>`. Defaults
+   * to `'button'` to prevent accidental form submission when used inside a `<form>`.
+   */
+  type?: 'button' | 'submit' | 'reset';
 }
 
 export interface CardHeaderProps {
