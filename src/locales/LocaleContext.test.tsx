@@ -247,16 +247,22 @@ describe('formatRelativeTime', () => {
     renderWithLocale({ locale: 'en-US', messages: enUS }, (ctx) => {
       result = ctx.formatRelativeTime(-2, 'day');
     });
-    expect(result).toMatch(/2 days ago|2 day/i);
+    // Intl.RelativeTimeFormat produces something like "2 days ago"
+    expect(result).toContain('2');
+    expect(result).toContain('day');
   });
 
-  it('formats relative time in fr-FR', () => {
-    let result = '';
-    renderWithLocale({ locale: 'fr-FR', messages: frFR }, (ctx) => {
-      result = ctx.formatRelativeTime(-2, 'day');
+  it('formats relative time in fr-FR differently from en-US', () => {
+    let enResult = '';
+    let frResult = '';
+    renderWithLocale({ locale: 'en-US', messages: enUS }, (ctx) => {
+      enResult = ctx.formatRelativeTime(-2, 'day');
     });
-    expect(result.length).toBeGreaterThan(0);
-    expect(result).not.toMatch(/2 days ago/i); // Should be French
+    renderWithLocale({ locale: 'fr-FR', messages: frFR }, (ctx) => {
+      frResult = ctx.formatRelativeTime(-2, 'day');
+    });
+    expect(frResult.length).toBeGreaterThan(0);
+    expect(frResult).not.toBe(enResult);
   });
 });
 

@@ -11,14 +11,22 @@ const _dtfCache = new Map<string, Intl.DateTimeFormat>();
 const _nfCache = new Map<string, Intl.NumberFormat>();
 const _rtfCache = new Map<string, Intl.RelativeTimeFormat>();
 
+/** Stable JSON string for cache keys — sorts object keys to avoid order-dependent misses. */
+function _stableKey(options: object | null | undefined): string {
+  if (options == null) return 'null';
+  return JSON.stringify(
+    Object.fromEntries(Object.entries(options as Record<string, unknown>).sort())
+  );
+}
+
 function _cachedDTF(locale: string, options?: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
-  const key = `${locale}::${JSON.stringify(options ?? null)}`;
+  const key = `${locale}::${_stableKey(options)}`;
   if (!_dtfCache.has(key)) _dtfCache.set(key, new Intl.DateTimeFormat(locale, options));
   return _dtfCache.get(key)!;
 }
 
 function _cachedNF(locale: string, options?: Intl.NumberFormatOptions): Intl.NumberFormat {
-  const key = `${locale}::${JSON.stringify(options ?? null)}`;
+  const key = `${locale}::${_stableKey(options)}`;
   if (!_nfCache.has(key)) _nfCache.set(key, new Intl.NumberFormat(locale, options));
   return _nfCache.get(key)!;
 }
@@ -27,7 +35,7 @@ function _cachedRTF(
   locale: string,
   options?: Intl.RelativeTimeFormatOptions
 ): Intl.RelativeTimeFormat {
-  const key = `${locale}::${JSON.stringify(options ?? null)}`;
+  const key = `${locale}::${_stableKey(options)}`;
   if (!_rtfCache.has(key)) _rtfCache.set(key, new Intl.RelativeTimeFormat(locale, options));
   return _rtfCache.get(key)!;
 }
@@ -36,6 +44,14 @@ function _cachedRTF(
 // Interpolation helper  ({key} → value)
 // ---------------------------------------------------------------------------
 
+/**
+ * Replaces `{key}` placeholders in a template string with values from `params`.
+ *
+ * The regex /\{(\w+)\}/g is intentionally simple and does not exhibit
+ * catastrophic backtracking: `\w+` is a non-nested greedy quantifier on a
+ * fixed-width character class, making it safe for all inputs. Templates are
+ * always sourced from the internal message catalog, never from untrusted input.
+ */
 export function interpolate(
   template: string,
   params?: Record<string, string | number>
