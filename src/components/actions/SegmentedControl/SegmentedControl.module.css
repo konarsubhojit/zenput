@@ -107,7 +107,7 @@
 
 .toggleGroup .item {
   border-radius: 0;
-  border-right: var(--zp-border-width-1) solid var(--zp-color-border);
+  border-inline-end: var(--zp-border-width-1) solid var(--zp-color-border);
 }
 
 .toggleGroup .item:first-child {
@@ -116,7 +116,7 @@
 
 .toggleGroup .item:last-child {
   border-radius: 0 var(--sc-radius) var(--sc-radius) 0;
-  border-right: none;
+  border-inline-end: none;
 }
 
 .toggleGroup .toggleItem.itemSelected {

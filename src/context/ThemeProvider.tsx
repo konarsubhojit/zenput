@@ -53,6 +53,9 @@ export interface Theme {
   cssVars?: Record<string, string>;
 }
 
+/** Text direction. Matches the HTML `dir` attribute values. */
+export type Direction = 'ltr' | 'rtl' | 'auto';
+
 interface ThemeContextValue {
   theme: Theme;
   mode: ThemeMode;
@@ -60,6 +63,8 @@ interface ThemeContextValue {
   density: DensityScale;
   components: ComponentTokensMap;
   cssVars: Record<string, string>;
+  /** Text direction applied to the ThemeProvider wrapper. */
+  dir: Direction;
 }
 
 const defaultMode: ThemeMode = 'light';
@@ -75,6 +80,7 @@ const ThemeContext = createContext<ThemeContextValue>({
   density: defaultDensity,
   components: defaultComponents,
   cssVars: defaultCssVars,
+  dir: 'ltr',
 });
 
 /**
@@ -136,6 +142,16 @@ interface ThemeProviderProps {
    * the wrapper.
    */
   as?: keyof React.JSX.IntrinsicElements | React.ElementType;
+  /**
+   * Text direction for all descendant components. Mirrors the HTML `dir`
+   * attribute and is exposed via the `useDirection()` hook so components
+   * can adapt their layout and keyboard interactions.
+   *
+   * - `'ltr'` — left-to-right (default)
+   * - `'rtl'` — right-to-left (Arabic, Hebrew, Persian, Urdu, …)
+   * - `'auto'` — browser auto-detection based on content
+   */
+  dir?: Direction;
   children: React.ReactNode;
 }
 
@@ -146,6 +162,7 @@ const EMPTY_THEME: Theme = Object.freeze({}) as Theme;
 export function ThemeProvider({
   theme = EMPTY_THEME,
   as = 'div',
+  dir = 'ltr',
   children,
 }: Readonly<ThemeProviderProps>): React.JSX.Element {
   const { mode, semantic, density, components, cssVars } = useMemo(
@@ -157,15 +174,15 @@ export function ThemeProvider({
   const mergedVars = useMemo(() => ({ ...cssVars, ...legacy }), [cssVars, legacy]);
 
   const contextValue = useMemo<ThemeContextValue>(
-    () => ({ theme, mode, semantic, density, components, cssVars: mergedVars }),
-    [theme, mode, semantic, density, components, mergedVars]
+    () => ({ theme, mode, semantic, density, components, cssVars: mergedVars, dir }),
+    [theme, mode, semantic, density, components, mergedVars, dir]
   );
 
   const WrapperComponent = as as React.ElementType;
 
   return (
     <ThemeContext.Provider value={contextValue}>
-      <WrapperComponent data-zp-theme={mode} style={mergedVars as CSSProperties}>
+      <WrapperComponent data-zp-theme={mode} dir={dir} style={mergedVars as CSSProperties}>
         {children}
       </WrapperComponent>
     </ThemeContext.Provider>
@@ -174,6 +191,26 @@ export function ThemeProvider({
 
 export function useTheme(): ThemeContextValue {
   return useContext(ThemeContext);
+}
+
+/**
+ * Returns the text direction (`'ltr'`, `'rtl'`, or `'auto'`) from the
+ * nearest `ThemeProvider`. Defaults to `'ltr'` when used outside a provider.
+ *
+ * Use this hook in components that need to adapt their layout, icon
+ * orientation, or keyboard interactions based on the reading direction.
+ *
+ * @example
+ * ```tsx
+ * function MyComponent() {
+ *   const dir = useDirection();
+ *   const isRtl = dir === 'rtl';
+ *   return <div style={{ marginInlineStart: isRtl ? '1rem' : undefined }}>…</div>;
+ * }
+ * ```
+ */
+export function useDirection(): Direction {
+  return useContext(ThemeContext).dir;
 }
 
 /**
