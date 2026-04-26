@@ -33,8 +33,9 @@ describe('Avatar', () => {
   });
 
   it('renders status indicator', () => {
-    render(<Avatar name="A" status="online" />);
-    expect(screen.getByLabelText('online')).toBeInTheDocument();
+    render(<Avatar name="Ada Lovelace" status="online" />);
+    // Status is included in the parent's accessible label
+    expect(screen.getByRole('img', { name: 'Ada Lovelace, online' })).toBeInTheDocument();
   });
 
   it('falls back to fallbackIcon when no name or src', () => {
@@ -51,11 +52,11 @@ describe('Avatar', () => {
     expect(screen.getByText('AL')).toBeInTheDocument();
   });
 
-  it('applies colorByName style', () => {
+  it('applies colorByName style with white text for contrast', () => {
     render(<Avatar name="Ada Lovelace" colorByName />);
     const el = screen.getByRole('img');
-    // backgroundColor should be set from colorByName
-    expect(el).toHaveStyle({ backgroundColor: expect.any(String) });
+    // backgroundColor and white text color should be set from colorByName
+    expect(el).toHaveStyle({ backgroundColor: expect.any(String), color: '#fff' });
   });
 });
 

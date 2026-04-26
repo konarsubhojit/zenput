@@ -14,17 +14,19 @@ const meta: Meta<typeof SegmentedControl> = {
 export default meta;
 type Story = StoryObj<typeof SegmentedControl>;
 
+function DefaultExample() {
+  const [v, setV] = useState('day');
+  return (
+    <SegmentedControl value={v} onChange={setV} aria-label="Time period">
+      <SegmentedControlItem value="day">Day</SegmentedControlItem>
+      <SegmentedControlItem value="week">Week</SegmentedControlItem>
+      <SegmentedControlItem value="month">Month</SegmentedControlItem>
+    </SegmentedControl>
+  );
+}
+
 export const Default: Story = {
-  render: () => {
-    const [v, setV] = useState('day');
-    return (
-      <SegmentedControl value={v} onChange={setV} aria-label="Time period">
-        <SegmentedControlItem value="day">Day</SegmentedControlItem>
-        <SegmentedControlItem value="week">Week</SegmentedControlItem>
-        <SegmentedControlItem value="month">Month</SegmentedControlItem>
-      </SegmentedControl>
-    );
-  },
+  render: () => <DefaultExample />,
 };
 
 export const Sizes: Story = {
@@ -61,28 +63,32 @@ export const WithDisabledItem: Story = {
   ),
 };
 
+function ToggleGroupSingleExample() {
+  const [v, setV] = useState('bold');
+  return (
+    <ToggleGroup type="single" value={v} onValueChange={setV} aria-label="Text formatting">
+      <ToggleGroupItem value="bold">B</ToggleGroupItem>
+      <ToggleGroupItem value="italic">I</ToggleGroupItem>
+      <ToggleGroupItem value="underline">U</ToggleGroupItem>
+    </ToggleGroup>
+  );
+}
+
 export const ToggleGroupSingle: StoryObj = {
-  render: () => {
-    const [v, setV] = useState('bold');
-    return (
-      <ToggleGroup type="single" value={v} onValueChange={setV} aria-label="Text formatting">
-        <ToggleGroupItem value="bold">B</ToggleGroupItem>
-        <ToggleGroupItem value="italic">I</ToggleGroupItem>
-        <ToggleGroupItem value="underline">U</ToggleGroupItem>
-      </ToggleGroup>
-    );
-  },
+  render: () => <ToggleGroupSingleExample />,
 };
 
+function ToggleGroupMultipleExample() {
+  const [v, setV] = useState<string[]>(['bold']);
+  return (
+    <ToggleGroup type="multiple" value={v} onValueChange={setV} aria-label="Text formatting">
+      <ToggleGroupItem value="bold">B</ToggleGroupItem>
+      <ToggleGroupItem value="italic">I</ToggleGroupItem>
+      <ToggleGroupItem value="underline">U</ToggleGroupItem>
+    </ToggleGroup>
+  );
+}
+
 export const ToggleGroupMultiple: StoryObj = {
-  render: () => {
-    const [v, setV] = useState<string[]>(['bold']);
-    return (
-      <ToggleGroup type="multiple" value={v} onValueChange={setV} aria-label="Text formatting">
-        <ToggleGroupItem value="bold">B</ToggleGroupItem>
-        <ToggleGroupItem value="italic">I</ToggleGroupItem>
-        <ToggleGroupItem value="underline">U</ToggleGroupItem>
-      </ToggleGroup>
-    );
-  },
+  render: () => <ToggleGroupMultipleExample />,
 };

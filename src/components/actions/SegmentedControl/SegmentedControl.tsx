@@ -147,6 +147,7 @@ export function SegmentedControl({
 
   return (
     <SegmentedControlContext.Provider value={{ value: selected, onSelect, size, baseId }}>
+      {/* eslint-disable-next-line jsx-a11y/interactive-supports-focus -- radiogroup focus is handled by roving tabindex on child radio buttons */}
       <div
         ref={groupRef}
         role="radiogroup"
@@ -396,6 +397,7 @@ export function ToggleGroup(props: ToggleGroupProps): React.ReactElement {
 
   return (
     <ToggleGroupContext.Provider value={{ isSelected, toggle, size, baseId }}>
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- keyboard handler enables arrow-key navigation between toggle items */}
       <div
         ref={groupRef}
         role="group"

@@ -86,6 +86,11 @@ export const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(function Avatar(
   const bgColor =
     colorByName && name ? BG_COLORS[colorIndexFromName(name)] : undefined;
 
+  // Build an accessible label that includes both name and status so screen
+  // readers announce the full context (e.g. "Ada Lovelace, online").
+  const accessibleLabel =
+    name && status ? `${name}, ${status}` : name ?? undefined;
+
   return (
     <span
       ref={ref}
@@ -95,8 +100,12 @@ export const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(function Avatar(
         styles[`shape-${shape}`],
         className
       )}
-      style={bgColor && !showImg ? { ...style, backgroundColor: bgColor } : style}
-      aria-label={name}
+      style={
+        bgColor && !showImg
+          ? { ...style, backgroundColor: bgColor, color: '#fff' }
+          : style
+      }
+      aria-label={accessibleLabel}
       role="img"
       {...rest}
     >
@@ -119,7 +128,7 @@ export const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(function Avatar(
       {status && (
         <span
           className={classNames(styles.status, styles[`status-${status}`])}
-          aria-label={status}
+          aria-hidden="true"
         />
       )}
     </span>
