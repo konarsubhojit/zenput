@@ -17,6 +17,7 @@ export interface TypographyPreset {
   fontWeight: string;
   lineHeight: string;
   letterSpacing: string;
+  textTransform?: string;
 }
 
 const sans = 'var(--zp-font-family-sans)';
@@ -58,7 +59,7 @@ export const typographyPresets = {
   'body-md': createPreset('var(--zp-font-size-md)', regular, normal, lsNormal),
   'body-sm': createPreset('var(--zp-font-size-sm)', regular, normal, lsNormal),
   caption: createPreset('var(--zp-font-size-xs)', regular, normal, lsNormal),
-  overline: createPreset('var(--zp-font-size-xs)', semibold, normal, lsWider),
+  overline: { ...createPreset('var(--zp-font-size-xs)', semibold, normal, lsWider), textTransform: 'uppercase' },
   code: createPreset('var(--zp-font-size-sm)', regular, relaxed, lsNormal, mono),
 } as const satisfies Record<string, TypographyPreset>;
 

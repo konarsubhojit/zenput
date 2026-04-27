@@ -325,7 +325,7 @@ export const darkSemantic: SemanticColors = {
   border: neutral['700'],
   borderStrong: neutral['600'],
   borderSubtle: neutral['800'],
-  borderInverse: neutral['900'],
+  borderInverse: neutral['50'],
   borderFocus: blue['400'],
 
   focusRing: blue['400'],

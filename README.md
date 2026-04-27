@@ -499,7 +499,7 @@ Each elevation level maps to a named shadow token:
 
 #### Typography presets
 
-Semantic typography presets are available as `.zp-text-*` CSS utility classes (import `zenput/styles/typography.css`).
+Semantic typography presets are available as `.zp-text-*` CSS utility classes.
 
 | Class | Use case |
 |-------|----------|

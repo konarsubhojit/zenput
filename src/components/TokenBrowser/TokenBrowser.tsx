@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useTheme } from '../../context/ThemeProvider';
 import { palette } from '../../tokens/colors';
 import {
@@ -86,10 +86,10 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
     return merged;
   }, [themeComponents]);
 
-  const handleCopy = useCallback((varName: string) => {
+  const handleCopy = useCallback((id: string, textToCopy: string) => {
     if (typeof navigator === 'undefined' || !navigator.clipboard) return;
-    navigator.clipboard.writeText(varName).then(() => {
-      setCopied(varName);
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      setCopied(id);
       if (copyTimerRef.current !== null) {
         clearTimeout(copyTimerRef.current);
       }
@@ -100,6 +100,16 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
         setCopied(null);
       }, 1500);
     });
+  }, []);
+
+  // Clear pending copy timer on unmount to prevent state updates on
+  // unmounted components.
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current !== null) {
+        clearTimeout(copyTimerRef.current);
+      }
+    };
   }, []);
 
   const categories: Array<{ id: TokenCategory; label: string }> = [
@@ -120,19 +130,20 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
 
   const renderColorSwatch = (name: string, value: string) => {
     const cssVarName = `--zp-color-${toKebabCase(name)}`;
+    const id = `${category}:${name}`;
     return (
       <button
         key={name}
         type="button"
         className={styles.tokenItem}
         title={`Click to copy: ${cssVarName}`}
-        onClick={() => handleCopy(cssVarName)}
+        onClick={() => handleCopy(id, cssVarName)}
       >
         <div className={styles.colorSwatch} style={{ backgroundColor: value }} />
         <div className={styles.tokenDetails}>
           <div className={styles.tokenName}>{name}</div>
           <div className={styles.tokenValue}>{value}</div>
-          {copied === cssVarName && (
+          {copied === id && (
             <div className={styles.tokenValue} aria-live="polite">Copied!</div>
           )}
         </div>
@@ -140,23 +151,26 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
     );
   };
 
-  const renderToken = (name: string, value: string | number) => (
-    <button
-      key={name}
-      type="button"
-      className={styles.tokenItem}
-      title={`Click to copy: ${String(value)}`}
-      onClick={() => handleCopy(String(value))}
-    >
-      <div className={styles.tokenDetails}>
-        <div className={styles.tokenName}>{name}</div>
-        <div className={styles.tokenValue}>{String(value)}</div>
-        {copied === String(value) && (
-          <div className={styles.tokenValue} aria-live="polite">Copied!</div>
-        )}
-      </div>
-    </button>
-  );
+  const renderToken = (name: string, value: string | number) => {
+    const id = `${category}:${name}`;
+    return (
+      <button
+        key={name}
+        type="button"
+        className={styles.tokenItem}
+        title={`Click to copy: ${String(value)}`}
+        onClick={() => handleCopy(id, String(value))}
+      >
+        <div className={styles.tokenDetails}>
+          <div className={styles.tokenName}>{name}</div>
+          <div className={styles.tokenValue}>{String(value)}</div>
+          {copied === id && (
+            <div className={styles.tokenValue} aria-live="polite">Copied!</div>
+          )}
+        </div>
+      </button>
+    );
+  };
 
   const renderContent = () => {
     switch (category) {
