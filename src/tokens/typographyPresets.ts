@@ -19,105 +19,48 @@ export interface TypographyPreset {
   letterSpacing: string;
 }
 
+const sans = 'var(--zp-font-family-sans)';
+const mono = 'var(--zp-font-family-mono)';
+
+function createPreset(
+  fontSize: string,
+  fontWeight: string,
+  lineHeight: string,
+  letterSpacing: string,
+  fontFamily = sans
+): TypographyPreset {
+  return { fontFamily, fontSize, fontWeight, lineHeight, letterSpacing };
+}
+
+// Shorthand aliases for repeated token values.
+const bold = 'var(--zp-font-weight-bold)';
+const semibold = 'var(--zp-font-weight-semibold)';
+const regular = 'var(--zp-font-weight-regular)';
+const tight = 'var(--zp-line-height-tight)';
+const snug = 'var(--zp-line-height-snug)';
+const normal = 'var(--zp-line-height-normal)';
+const relaxed = 'var(--zp-line-height-relaxed)';
+const lsTight = 'var(--zp-letter-spacing-tight)';
+const lsNormal = 'var(--zp-letter-spacing-normal)';
+const lsWide = 'var(--zp-letter-spacing-wide)';
+const lsWider = 'var(--zp-letter-spacing-wider)';
+
 export const typographyPresets = {
-  'display-lg': {
-    fontFamily: 'var(--zp-font-family-sans)',
-    fontSize: 'var(--zp-font-size-5xl)',
-    fontWeight: 'var(--zp-font-weight-bold)',
-    lineHeight: 'var(--zp-line-height-tight)',
-    letterSpacing: 'var(--zp-letter-spacing-tight)',
-  },
-  'display-md': {
-    fontFamily: 'var(--zp-font-family-sans)',
-    fontSize: 'var(--zp-font-size-4xl)',
-    fontWeight: 'var(--zp-font-weight-bold)',
-    lineHeight: 'var(--zp-line-height-tight)',
-    letterSpacing: 'var(--zp-letter-spacing-tight)',
-  },
-  'heading-1': {
-    fontFamily: 'var(--zp-font-family-sans)',
-    fontSize: 'var(--zp-font-size-3xl)',
-    fontWeight: 'var(--zp-font-weight-bold)',
-    lineHeight: 'var(--zp-line-height-tight)',
-    letterSpacing: 'var(--zp-letter-spacing-tight)',
-  },
-  'heading-2': {
-    fontFamily: 'var(--zp-font-family-sans)',
-    fontSize: 'var(--zp-font-size-2xl)',
-    fontWeight: 'var(--zp-font-weight-semibold)',
-    lineHeight: 'var(--zp-line-height-snug)',
-    letterSpacing: 'var(--zp-letter-spacing-tight)',
-  },
-  'heading-3': {
-    fontFamily: 'var(--zp-font-family-sans)',
-    fontSize: 'var(--zp-font-size-xl)',
-    fontWeight: 'var(--zp-font-weight-semibold)',
-    lineHeight: 'var(--zp-line-height-snug)',
-    letterSpacing: 'var(--zp-letter-spacing-normal)',
-  },
-  'heading-4': {
-    fontFamily: 'var(--zp-font-family-sans)',
-    fontSize: 'var(--zp-font-size-lg)',
-    fontWeight: 'var(--zp-font-weight-semibold)',
-    lineHeight: 'var(--zp-line-height-snug)',
-    letterSpacing: 'var(--zp-letter-spacing-normal)',
-  },
-  'heading-5': {
-    fontFamily: 'var(--zp-font-family-sans)',
-    fontSize: 'var(--zp-font-size-md)',
-    fontWeight: 'var(--zp-font-weight-semibold)',
-    lineHeight: 'var(--zp-line-height-normal)',
-    letterSpacing: 'var(--zp-letter-spacing-normal)',
-  },
-  'heading-6': {
-    fontFamily: 'var(--zp-font-family-sans)',
-    fontSize: 'var(--zp-font-size-sm)',
-    fontWeight: 'var(--zp-font-weight-semibold)',
-    lineHeight: 'var(--zp-line-height-normal)',
-    letterSpacing: 'var(--zp-letter-spacing-wide)',
-  },
-  'body-lg': {
-    fontFamily: 'var(--zp-font-family-sans)',
-    fontSize: 'var(--zp-font-size-lg)',
-    fontWeight: 'var(--zp-font-weight-regular)',
-    lineHeight: 'var(--zp-line-height-relaxed)',
-    letterSpacing: 'var(--zp-letter-spacing-normal)',
-  },
-  'body-md': {
-    fontFamily: 'var(--zp-font-family-sans)',
-    fontSize: 'var(--zp-font-size-md)',
-    fontWeight: 'var(--zp-font-weight-regular)',
-    lineHeight: 'var(--zp-line-height-normal)',
-    letterSpacing: 'var(--zp-letter-spacing-normal)',
-  },
-  'body-sm': {
-    fontFamily: 'var(--zp-font-family-sans)',
-    fontSize: 'var(--zp-font-size-sm)',
-    fontWeight: 'var(--zp-font-weight-regular)',
-    lineHeight: 'var(--zp-line-height-normal)',
-    letterSpacing: 'var(--zp-letter-spacing-normal)',
-  },
-  caption: {
-    fontFamily: 'var(--zp-font-family-sans)',
-    fontSize: 'var(--zp-font-size-xs)',
-    fontWeight: 'var(--zp-font-weight-regular)',
-    lineHeight: 'var(--zp-line-height-normal)',
-    letterSpacing: 'var(--zp-letter-spacing-normal)',
-  },
-  overline: {
-    fontFamily: 'var(--zp-font-family-sans)',
-    fontSize: 'var(--zp-font-size-xs)',
-    fontWeight: 'var(--zp-font-weight-semibold)',
-    lineHeight: 'var(--zp-line-height-normal)',
-    letterSpacing: 'var(--zp-letter-spacing-wider)',
-  },
-  code: {
-    fontFamily: 'var(--zp-font-family-mono)',
-    fontSize: 'var(--zp-font-size-sm)',
-    fontWeight: 'var(--zp-font-weight-regular)',
-    lineHeight: 'var(--zp-line-height-relaxed)',
-    letterSpacing: 'var(--zp-letter-spacing-normal)',
-  },
+  'display-lg': createPreset('var(--zp-font-size-5xl)', bold, tight, lsTight),
+  'display-md': createPreset('var(--zp-font-size-4xl)', bold, tight, lsTight),
+  'heading-1': createPreset('var(--zp-font-size-3xl)', bold, tight, lsTight),
+  'heading-2': createPreset('var(--zp-font-size-2xl)', semibold, snug, lsTight),
+  'heading-3': createPreset('var(--zp-font-size-xl)', semibold, snug, lsNormal),
+  'heading-4': createPreset('var(--zp-font-size-lg)', semibold, snug, lsNormal),
+  'heading-5': createPreset('var(--zp-font-size-md)', semibold, normal, lsNormal),
+  'heading-6': createPreset('var(--zp-font-size-sm)', semibold, normal, lsWide),
+  'body-lg': createPreset('var(--zp-font-size-lg)', regular, relaxed, lsNormal),
+  'body-md': createPreset('var(--zp-font-size-md)', regular, normal, lsNormal),
+  'body-sm': createPreset('var(--zp-font-size-sm)', regular, normal, lsNormal),
+  caption: createPreset('var(--zp-font-size-xs)', regular, normal, lsNormal),
+  overline: createPreset('var(--zp-font-size-xs)', semibold, normal, lsWider),
+  code: createPreset('var(--zp-font-size-sm)', regular, relaxed, lsNormal, mono),
 } as const satisfies Record<string, TypographyPreset>;
 
 export type TypographyPresetName = keyof typeof typographyPresets;
+

@@ -7,8 +7,55 @@
  * running `npx vitest run --update-snapshot`.
  */
 import { describe, it, expect } from 'vitest';
-import { buildCssVariables } from './index';
+import { buildCssVariables, toKebabCase, normalizeSpacingKey, cssVar } from './index';
 import { lightSemantic, darkSemantic, highContrastSemantic } from './colors';
+
+describe('toKebabCase', () => {
+  it('converts camelCase to kebab-case', () => {
+    expect(toKebabCase('surfaceRaised')).toBe('surface-raised');
+    expect(toKebabCase('textPrimary')).toBe('text-primary');
+  });
+
+  it('handles letter→digit transitions', () => {
+    expect(toKebabCase('surface0')).toBe('surface-0');
+    expect(toKebabCase('surface4')).toBe('surface-4');
+    expect(toKebabCase('heading1')).toBe('heading-1');
+  });
+
+  it('lowercases the result', () => {
+    expect(toKebabCase('FontSize')).toBe('font-size');
+  });
+
+  it('leaves already-kebab-cased strings unchanged', () => {
+    expect(toKebabCase('border-width')).toBe('border-width');
+  });
+});
+
+describe('normalizeSpacingKey', () => {
+  it('replaces dots with dashes', () => {
+    expect(normalizeSpacingKey('0.5')).toBe('0-5');
+    expect(normalizeSpacingKey('1.5')).toBe('1-5');
+  });
+
+  it('leaves integer keys unchanged', () => {
+    expect(normalizeSpacingKey('4')).toBe('4');
+  });
+});
+
+describe('cssVar', () => {
+  it('returns a CSS var() reference', () => {
+    expect(cssVar('color-brand')).toBe('var(--zp-color-brand)');
+    expect(cssVar('space-4')).toBe('var(--zp-space-4)');
+  });
+
+  it('includes a fallback when provided', () => {
+    expect(cssVar('color-brand', '#fff')).toBe('var(--zp-color-brand, #fff)');
+  });
+
+  it('normalizes dot-containing keys', () => {
+    expect(cssVar('space-0.5')).toBe('var(--zp-space-0-5)');
+  });
+});
 
 describe('buildCssVariables — CSS variable key snapshot', () => {
   it('emits the expected full set of keys in light mode', () => {

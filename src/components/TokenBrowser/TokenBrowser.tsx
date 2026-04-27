@@ -87,18 +87,19 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
   }, [themeComponents]);
 
   const handleCopy = useCallback((varName: string) => {
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(varName).then(() => {
-        setCopied(varName);
-        if (copyTimerRef.current !== null) {
-          clearTimeout(copyTimerRef.current);
-        }
-        copyTimerRef.current = setTimeout(() => {
-          setCopied((prev) => (prev === varName ? null : prev));
-          copyTimerRef.current = null;
-        }, 1500);
-      });
-    }
+    if (typeof navigator === 'undefined' || !navigator.clipboard) return;
+    navigator.clipboard.writeText(varName).then(() => {
+      setCopied(varName);
+      if (copyTimerRef.current !== null) {
+        clearTimeout(copyTimerRef.current);
+      }
+      // clearTimeout above ensures only one timer is active at a time, so
+      // setCopied(null) always clears the most recently copied entry.
+      copyTimerRef.current = setTimeout(() => {
+        copyTimerRef.current = null;
+        setCopied(null);
+      }, 1500);
+    });
   }, []);
 
   const categories: Array<{ id: TokenCategory; label: string }> = [
