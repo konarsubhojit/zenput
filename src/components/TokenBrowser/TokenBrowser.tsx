@@ -42,9 +42,9 @@ interface TokenBrowserProps {
 }
 
 interface RecipeVariantSectionProps {
-  name: string;
-  variantStyles: Record<string, string>;
-  renderToken: (key: string, value: string | number) => React.ReactNode;
+  readonly name: string;
+  readonly variantStyles: Record<string, string>;
+  readonly renderToken: (key: string, value: string | number) => React.ReactNode;
 }
 
 function RecipeVariantSection({
@@ -120,12 +120,12 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
   const renderColorSwatch = (name: string, value: string) => {
     const cssVarName = `--zp-color-${toKebabCase(name)}`;
     return (
-      <div
+      <button
         key={name}
+        type="button"
         className={styles.tokenItem}
-        title="Click to copy CSS variable name"
+        title={`Click to copy: ${cssVarName}`}
         onClick={() => handleCopy(cssVarName)}
-        style={{ cursor: 'pointer' }}
       >
         <div className={styles.colorSwatch} style={{ backgroundColor: value }} />
         <div className={styles.tokenDetails}>
@@ -135,17 +135,17 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
             <div className={styles.tokenValue} aria-live="polite">Copied!</div>
           )}
         </div>
-      </div>
+      </button>
     );
   };
 
   const renderToken = (name: string, value: string | number) => (
-    <div
+    <button
       key={name}
+      type="button"
       className={styles.tokenItem}
-      title="Click to copy value"
+      title={`Click to copy: ${String(value)}`}
       onClick={() => handleCopy(String(value))}
-      style={{ cursor: 'pointer' }}
     >
       <div className={styles.tokenDetails}>
         <div className={styles.tokenName}>{name}</div>
@@ -154,7 +154,7 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
           <div className={styles.tokenValue} aria-live="polite">Copied!</div>
         )}
       </div>
-    </div>
+    </button>
   );
 
   const renderContent = () => {
