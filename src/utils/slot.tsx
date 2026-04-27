@@ -65,7 +65,7 @@ export type SlotProps = React.HTMLAttributes<HTMLElement> & {
  * </Button>
  * ```
  */
-export const Slot = React.forwardRef<HTMLElement, SlotProps>(function Slot(
+export const Slot = React.forwardRef<Element, SlotProps>(function Slot(
   { children, ...slotProps },
   forwardedRef
 ) {
@@ -77,16 +77,14 @@ export const Slot = React.forwardRef<HTMLElement, SlotProps>(function Slot(
   // We read it from props first (React 19) and fall back to the legacy location.
   const childProps = children.props as AnyProps;
   const childRef =
-    (childProps.ref as React.Ref<HTMLElement> | undefined) ??
-    ((children as unknown as { ref?: React.Ref<HTMLElement> }).ref as
-      | React.Ref<HTMLElement>
-      | undefined);
+    (childProps.ref as React.Ref<Element> | undefined) ??
+    ((children as unknown as { ref?: React.Ref<Element> }).ref as React.Ref<Element> | undefined);
 
   const merged = mergeProps(slotProps as AnyProps, childProps);
 
   // Merge the forwarded ref with any existing ref on the child.
   if (forwardedRef || childRef) {
-    merged.ref = (node: HTMLElement | null) => {
+    merged.ref = (node: Element | null) => {
       assignRef(forwardedRef, node);
       assignRef(childRef, node);
     };
