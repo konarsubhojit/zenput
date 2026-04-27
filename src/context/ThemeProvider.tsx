@@ -363,10 +363,14 @@ export function ThemeProvider({
   }, [detectHighContrast]);
 
   // ── Resolve the actual ThemeMode ──────────────────────────────────
-  // When detectHighContrast transitions false → true, the systemHighContrast
-  // state may not have been updated by the event listener yet. Read the
-  // current OS value directly so the mode is correct on the first render
-  // after the prop changes. The state handles all subsequent changes.
+  // `systemHighContrast` state is kept in sync via the event listener for
+  // ongoing OS changes. We also call `matchesHighContrast()` directly here
+  // to cover the one-render window when `detectHighContrast` transitions
+  // false → true: the effect hasn't subscribed yet so the state may still
+  // be false while the OS has high contrast active. Once the effect fires
+  // and the event listener is registered, all future changes go through
+  // `systemHighContrast` state. The extra matchMedia read is negligible
+  // since useMemo only recomputes when its dependencies change.
   const resolvedMode = useMemo<ThemeMode>(
     () =>
       resolveColorMode(

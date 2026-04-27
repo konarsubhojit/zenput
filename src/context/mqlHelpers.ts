@@ -1,7 +1,7 @@
 /**
  * @internal — helpers for subscribing to MediaQueryList change events.
  *
- * Older browsers (Safari < 14, IE 11) expose `addListener`/`removeListener`
+ * Older browsers (Safari < 14) expose `addListener`/`removeListener`
  * instead of the modern `addEventListener`/`removeEventListener`. We feature-
  * detect and fall back so the rest of the codebase can use a single API.
  */
