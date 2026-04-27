@@ -5,8 +5,6 @@ import { TokenBrowser } from './TokenBrowser';
 
 /** Wrap TokenBrowser in ThemeProvider so useTheme() works. */
 const renderWithTheme = (ui: React.ReactElement) => render(<ThemeProvider>{ui}</ThemeProvider>);
-let originalClipboardDescriptor: PropertyDescriptor | undefined;
-
 const mockClipboard = () => {
   const writeText = vi.fn().mockResolvedValue(undefined);
   Object.defineProperty(navigator, 'clipboard', {
@@ -16,15 +14,17 @@ const mockClipboard = () => {
   return writeText;
 };
 
-const restoreClipboard = () => {
-  if (originalClipboardDescriptor) {
-    Object.defineProperty(navigator, 'clipboard', originalClipboardDescriptor);
-    return;
-  }
-  Reflect.deleteProperty(navigator, 'clipboard');
-};
-
 describe('TokenBrowser', () => {
+  let originalClipboardDescriptor: PropertyDescriptor | undefined;
+
+  const restoreClipboard = () => {
+    if (originalClipboardDescriptor) {
+      Object.defineProperty(navigator, 'clipboard', originalClipboardDescriptor);
+      return;
+    }
+    Reflect.deleteProperty(navigator, 'clipboard');
+  };
+
   beforeEach(() => {
     originalClipboardDescriptor = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
   });

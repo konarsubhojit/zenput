@@ -163,7 +163,8 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
 
   const renderToken = (name: string, value: string | number, copyContext?: string) => {
     const textToCopy = String(value);
-    const id = [category, copyContext, name].filter(Boolean).join(':');
+    const normalizedContext = copyContext ? toKebabCase(copyContext.replace(/\s+/g, '-')) : undefined;
+    const id = [category, normalizedContext, name].filter(Boolean).join(':');
     const labelName = copyContext ? `${copyContext} ${name}` : name;
     return (
       <button
