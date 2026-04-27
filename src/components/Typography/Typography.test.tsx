@@ -114,6 +114,17 @@ describe('Typography', () => {
       expect(screen.getByText('inline').tagName).toBe('SPAN');
     });
 
+    it('does not forward target or rel when rendered as a non-anchor element', () => {
+      render(
+        <Link as="span" external>
+          not-a-link
+        </Link>
+      );
+      const el = screen.getByText('not-a-link');
+      expect(el).not.toHaveAttribute('target');
+      expect(el).not.toHaveAttribute('rel');
+    });
+
     it('renders the single child element via `asChild`', () => {
       render(
         <Link asChild>

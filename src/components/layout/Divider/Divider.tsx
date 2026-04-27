@@ -2,6 +2,7 @@ import React, { forwardRef } from 'react';
 import { classNames } from '../../../utils';
 import { Slot } from '../../../utils/slot';
 import type { PolymorphicProps, PolymorphicRef } from '../../../types/polymorphic';
+import { createPolymorphicComponent } from '../../../types/polymorphic';
 import styles from './Divider.module.css';
 
 export type DividerOrientation = 'horizontal' | 'vertical';
@@ -25,7 +26,8 @@ type DividerComponent = <C extends React.ElementType = 'div'>(
  * Horizontal or vertical divider. Use `label` to render a centered
  * inline label with divider lines on either side. Polymorphic via `as`/`asChild`.
  */
-export const Divider = forwardRef(function Divider(
+export const Divider = createPolymorphicComponent<DividerComponent>(
+  forwardRef(function Divider(
   {
     as,
     asChild,
@@ -73,9 +75,9 @@ export const Divider = forwardRef(function Divider(
       {...rest}
     />
   );
-}) as unknown as DividerComponent & { displayName?: string };
-
-(Divider as { displayName?: string }).displayName = 'Divider';
+}),
+'Divider'
+);
 
 /** @deprecated Use `DividerOwnProps` or the component's inferred props instead. */
 export type DividerProps = PolymorphicProps<'div', DividerOwnProps>;

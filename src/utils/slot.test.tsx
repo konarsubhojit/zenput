@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import React, { createRef } from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Slot } from './slot';
@@ -77,8 +78,43 @@ describe('Slot', () => {
     expect(childRef.current).toBe(el);
   });
 
-  it('returns null when given no valid React element child', () => {
+  it('returns null (with a dev warning) when given no valid React element child', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { container } = render(<Slot>{null}</Slot>);
     expect(container.firstChild).toBeNull();
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('Slot requires a single valid'));
+    warn.mockRestore();
+  });
+
+  it('throws when given React.Fragment as a child', () => {
+    expect(() =>
+      render(
+        <Slot>
+          <>
+            <span>a</span>
+            <span>b</span>
+          </>
+        </Slot>
+      )
+    ).toThrow('Slot does not accept React.Fragment');
+  });
+
+  it('skips the slot handler when the child handler calls preventDefault', () => {
+    const order: string[] = [];
+    const slotClick = () => order.push('slot');
+    const childClick = (e: React.MouseEvent) => {
+      e.preventDefault();
+      order.push('child');
+    };
+
+    render(
+      <Slot onClick={slotClick}>
+        <button type="button" onClick={childClick}>
+          click
+        </button>
+      </Slot>
+    );
+    fireEvent.click(screen.getByRole('button'));
+    expect(order).toEqual(['child']);
   });
 });

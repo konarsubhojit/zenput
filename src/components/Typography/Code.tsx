@@ -2,6 +2,7 @@ import React, { forwardRef } from 'react';
 import { classNames } from '../../utils';
 import { Slot } from '../../utils/slot';
 import type { PolymorphicProps, PolymorphicRef } from '../../types/polymorphic';
+import { createPolymorphicComponent } from '../../types/polymorphic';
 import styles from './Typography.module.css';
 
 export interface CodeOwnProps {
@@ -13,7 +14,8 @@ type CodeComponent = <C extends React.ElementType = 'code'>(
 ) => React.ReactElement | null;
 
 /** Inline monospace code snippet. Polymorphic via `as`/`asChild`. */
-export const Code = forwardRef(function Code(
+export const Code = createPolymorphicComponent<CodeComponent>(
+  forwardRef(function Code(
   { as, asChild, className, children, ...rest }: PolymorphicProps<React.ElementType, CodeOwnProps>,
   ref: React.ForwardedRef<Element>
 ) {
@@ -23,9 +25,9 @@ export const Code = forwardRef(function Code(
       {children}
     </Component>
   );
-}) as unknown as CodeComponent & { displayName?: string };
-
-(Code as { displayName?: string }).displayName = 'Code';
+}),
+'Code'
+);
 
 /** @deprecated Use `CodeOwnProps` or the component's inferred props instead. */
 export type CodeProps = PolymorphicProps<'code', CodeOwnProps>;

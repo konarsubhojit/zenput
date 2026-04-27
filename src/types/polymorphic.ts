@@ -43,3 +43,25 @@ export type PolymorphicPropsWithRef<C extends React.ElementType, Props = object>
   C,
   Props
 > & { ref?: PolymorphicRef<C> };
+
+/**
+ * Casts a `forwardRef` result to a typed polymorphic component signature and
+ * assigns its `displayName` in one call — eliminating the repeated
+ * `as unknown as T & { displayName?: string }` boilerplate.
+ *
+ * @example
+ * ```tsx
+ * export const Box = createPolymorphicComponent<BoxComponent>(
+ *   forwardRef(function Box(…) { … }),
+ *   'Box',
+ * );
+ * ```
+ */
+export function createPolymorphicComponent<T>(
+  component: unknown,
+  displayName: string
+): T & { displayName: string } {
+  const c = component as T & { displayName: string };
+  c.displayName = displayName;
+  return c;
+}

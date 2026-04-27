@@ -1,4 +1,5 @@
 import React from 'react';
+import { warnOnce } from './warnOnce';
 
 type AnyProps = Record<string, unknown>;
 
@@ -7,7 +8,8 @@ type AnyProps = Record<string, unknown>;
  * - `className` values are concatenated (slot first, then child).
  * - `style` objects are merged (child properties win on conflicts).
  * - Matching event handlers are composed: the child handler fires first,
- *   then the slot handler.
+ *   then the slot handler — **unless the child called `event.preventDefault()`**,
+ *   in which case the slot handler is skipped.
  * - All other props: child value wins.
  */
 function mergeProps(slotProps: AnyProps, childProps: AnyProps): AnyProps {
@@ -31,6 +33,16 @@ function mergeProps(slotProps: AnyProps, childProps: AnyProps): AnyProps {
     ) {
       merged[key] = (...args: unknown[]) => {
         (childVal as (...a: unknown[]) => void)(...args);
+        // Skip the slot handler if the child handler cancelled the event.
+        const firstArg = args[0];
+        if (
+          firstArg != null &&
+          typeof firstArg === 'object' &&
+          'defaultPrevented' in firstArg &&
+          (firstArg as { defaultPrevented: boolean }).defaultPrevented
+        ) {
+          return;
+        }
         (slotVal as (...a: unknown[]) => void)(...args);
       };
     } else {
@@ -49,7 +61,13 @@ function assignRef<T>(ref: React.Ref<T> | undefined, node: T | null): void {
   }
 }
 
-export type SlotProps = React.HTMLAttributes<HTMLElement> & {
+/**
+ * Props accepted by `Slot`. Using `Record<string, unknown>` as the base
+ * (rather than `HTMLAttributes<HTMLElement>`) lets consumers pass arbitrary
+ * props — including non-HTML props like `href`, `to`, or framework-specific
+ * attributes — without type assertions.
+ */
+export type SlotProps = Record<string, unknown> & {
   children?: React.ReactNode;
 };
 
@@ -64,13 +82,27 @@ export type SlotProps = React.HTMLAttributes<HTMLElement> & {
  *   <NextLink href="/x">Go</NextLink>
  * </Button>
  * ```
+ *
+ * ⚠️ `React.Fragment` is not a valid child — pass a single concrete element.
  */
 export const Slot = React.forwardRef<Element, SlotProps>(function Slot(
   { children, ...slotProps },
   forwardedRef
 ) {
   if (!React.isValidElement(children)) {
+    warnOnce(
+      'Slot:invalid-child',
+      'Slot requires a single valid React element as its child when used with asChild. ' +
+        `Received: ${children === null ? 'null' : typeof children}. Rendering nothing.`
+    );
     return null;
+  }
+
+  if (children.type === React.Fragment) {
+    throw new Error(
+      'Slot does not accept React.Fragment as a child. ' +
+        'Pass a single non-Fragment element when using asChild.'
+    );
   }
 
   // In React 19+ `ref` is a regular prop; in React <19 it lives on `element.ref`.

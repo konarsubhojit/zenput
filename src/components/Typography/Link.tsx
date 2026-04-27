@@ -2,6 +2,7 @@ import React, { forwardRef } from 'react';
 import { classNames } from '../../utils';
 import { Slot } from '../../utils/slot';
 import type { PolymorphicProps, PolymorphicRef } from '../../types/polymorphic';
+import { createPolymorphicComponent } from '../../types/polymorphic';
 import styles from './Typography.module.css';
 
 export interface LinkOwnProps {
@@ -18,7 +19,8 @@ type LinkComponent = <C extends React.ElementType = 'a'>(
  * Styled anchor primitive. Use for navigation and inline links. For
  * button-like actions prefer `<Button>`. Polymorphic via `as`/`asChild`.
  */
-export const Link = forwardRef(function Link(
+export const Link = createPolymorphicComponent<LinkComponent>(
+  forwardRef(function Link(
   {
     as,
     asChild,
@@ -35,6 +37,10 @@ export const Link = forwardRef(function Link(
   ref: React.ForwardedRef<Element>
 ) {
   const Component: React.ElementType = asChild ? Slot : (as ?? 'a');
+  // Forward target/rel (and the `external` convenience) only when the element is
+  // an anchor or an unknown custom component. For known non-anchor DOM elements
+  // (e.g. as="span", as="button") omit them to avoid invalid DOM attribute warnings.
+  const isAnchorLike = asChild || typeof (as ?? 'a') !== 'string' || (as ?? 'a') === 'a';
   const resolvedTarget = external ? '_blank' : target;
   const resolvedRel =
     resolvedTarget === '_blank' ? [rel, 'noopener', 'noreferrer'].filter(Boolean).join(' ') : rel;
@@ -42,16 +48,15 @@ export const Link = forwardRef(function Link(
     <Component
       ref={ref}
       className={classNames(styles.link, className)}
-      target={resolvedTarget}
-      rel={resolvedRel}
+      {...(isAnchorLike ? { target: resolvedTarget, rel: resolvedRel } : {})}
       {...rest}
     >
       {children}
     </Component>
   );
-}) as unknown as LinkComponent & { displayName?: string };
-
-(Link as { displayName?: string }).displayName = 'Link';
+}),
+'Link'
+);
 
 /** @deprecated Use `LinkOwnProps` or the component's inferred props instead. */
 export type LinkProps = PolymorphicProps<'a', LinkOwnProps>;

@@ -3,6 +3,7 @@ import { classNames } from '../../../utils';
 import { Slot } from '../../../utils/slot';
 import { Spinner } from '../../feedback/Spinner';
 import type { PolymorphicProps, PolymorphicRef } from '../../../types/polymorphic';
+import { createPolymorphicComponent } from '../../../types/polymorphic';
 import styles from './Button.module.css';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'subtle' | 'outline' | 'ghost' | 'danger';
@@ -60,7 +61,8 @@ export type ButtonProps =
  * tech) and a decorative spinner is rendered. Pass `loadingLabel` to
  * override the accessible name with a localized "loading" phrase.
  */
-export const Button = forwardRef(function Button(
+export const Button = createPolymorphicComponent<ButtonComponent>(
+  forwardRef(function Button(
   {
     as,
     asChild,
@@ -111,6 +113,7 @@ export const Button = forwardRef(function Button(
         className={buttonClassName}
         aria-busy={loading ? true : ariaBusy}
         aria-label={resolvedAriaLabel}
+        {...(isDisabled ? { 'aria-disabled': true, 'data-disabled': '' } : {})}
         {...rest}
       >
         {children}
@@ -124,7 +127,11 @@ export const Button = forwardRef(function Button(
   return (
     <Component
       ref={ref}
-      {...(isNativeButton ? { type: type ?? 'button', disabled: isDisabled } : {})}
+      {...(isNativeButton
+        ? { type: type ?? 'button', disabled: isDisabled }
+        : isDisabled
+          ? { 'aria-disabled': true, 'data-disabled': '' }
+          : {})}
       aria-busy={loading ? true : ariaBusy}
       aria-label={resolvedAriaLabel}
       className={buttonClassName}
@@ -149,7 +156,6 @@ export const Button = forwardRef(function Button(
       </span>
     </Component>
   );
-}) as unknown as ButtonComponent & { displayName?: string };
-
-(Button as { displayName?: string }).displayName = 'Button';
-
+}),
+'Button'
+);

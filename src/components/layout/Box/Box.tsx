@@ -3,6 +3,7 @@ import { classNames } from '../../../utils';
 import { Slot } from '../../../utils/slot';
 import { normalizeSpacingKey } from '../../../tokens';
 import type { PolymorphicProps, PolymorphicRef } from '../../../types/polymorphic';
+import { createPolymorphicComponent } from '../../../types/polymorphic';
 import styles from './Box.module.css';
 
 export type SpacingValue =
@@ -94,7 +95,8 @@ function colorToken(v: string | undefined): string | undefined {
  * Low-level styled container. Accepts spacing/color/radius/shadow
  * props that map to design tokens. Polymorphic via `as`/`asChild`.
  */
-export const Box = forwardRef(function Box(
+export const Box = createPolymorphicComponent<BoxComponent>(
+  forwardRef(function Box(
   {
     as,
     asChild,
@@ -152,6 +154,6 @@ export const Box = forwardRef(function Box(
       {children}
     </Component>
   );
-}) as unknown as BoxComponent & { displayName?: string };
-
-(Box as { displayName?: string }).displayName = 'Box';
+}),
+'Box'
+);

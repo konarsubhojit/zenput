@@ -110,6 +110,38 @@ describe('Button', () => {
     expect(el.className).toMatch(/variant-secondary/);
   });
 
+  it('adds aria-disabled when disabled and using asChild', () => {
+    render(
+      <Button asChild disabled>
+        <a href="/x">link</a>
+      </Button>
+    );
+    const el = screen.getByRole('link', { name: 'link' });
+    expect(el).toHaveAttribute('aria-disabled', 'true');
+    expect(el).toHaveAttribute('data-disabled');
+  });
+
+  it('adds aria-disabled when loading and using asChild', () => {
+    render(
+      <Button asChild loading>
+        <a href="/x">link</a>
+      </Button>
+    );
+    const el = screen.getByRole('link', { name: 'link' });
+    expect(el).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('adds aria-disabled when disabled and using non-native as', () => {
+    render(
+      <Button as="a" href="/x" disabled>
+        link
+      </Button>
+    );
+    const el = screen.getByText('link').closest('a')!;
+    expect(el).toHaveAttribute('aria-disabled', 'true');
+    expect(el).toHaveAttribute('data-disabled');
+  });
+
   it('composes onClick handlers when using `asChild`', () => {
     const parentClick = vi.fn();
     const childClick = vi.fn();

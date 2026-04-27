@@ -2,6 +2,7 @@ import React, { forwardRef } from 'react';
 import { classNames } from '../../utils';
 import { Slot } from '../../utils/slot';
 import type { PolymorphicProps, PolymorphicRef } from '../../types/polymorphic';
+import { createPolymorphicComponent } from '../../types/polymorphic';
 import styles from './Typography.module.css';
 
 export type TextSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl';
@@ -45,7 +46,8 @@ type TextComponent = <C extends React.ElementType = 'span'>(
  * render as `<p>`, `<label>`, etc. Use `asChild` to merge styles onto a
  * single child element.
  */
-export const Text = forwardRef(function Text(
+export const Text = createPolymorphicComponent<TextComponent>(
+  forwardRef(function Text(
   {
     as,
     asChild,
@@ -82,6 +84,6 @@ export const Text = forwardRef(function Text(
       {children}
     </Component>
   );
-}) as unknown as TextComponent & { displayName?: string };
-
-(Text as { displayName?: string }).displayName = 'Text';
+}),
+'Text'
+);
