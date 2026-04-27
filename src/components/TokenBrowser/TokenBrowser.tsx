@@ -43,6 +43,7 @@ interface TokenBrowserProps {
 
 interface RecipeVariantSectionProps {
   readonly name: string;
+  readonly copyContext: string;
   readonly variantStyles: Record<string, string>;
   readonly renderToken: (
     key: string,
@@ -53,6 +54,7 @@ interface RecipeVariantSectionProps {
 
 function RecipeVariantSection({
   name,
+  copyContext,
   variantStyles,
   renderToken,
 }: RecipeVariantSectionProps): React.ReactElement {
@@ -60,7 +62,9 @@ function RecipeVariantSection({
     <div className={styles.variantSection}>
       <div className={styles.variantName}>{name}</div>
       <div className={styles.tokenGrid}>
-        {Object.entries(variantStyles).map(([key, value]) => renderToken(key, value))}
+        {Object.entries(variantStyles).map(([key, value]) =>
+          renderToken(key, value, copyContext)
+        )}
       </div>
     </div>
   );
@@ -435,10 +439,9 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
                       <RecipeVariantSection
                         key={variantName}
                         name={variantName}
+                        copyContext={`${recipeName} ${variantName}`}
                         variantStyles={variantStyles}
-                        renderToken={(key, value) =>
-                          renderToken(key, value, `${recipeName} ${variantName}`)
-                        }
+                        renderToken={renderToken}
                       />
                     ))}
                   </div>
