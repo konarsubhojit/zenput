@@ -18,6 +18,11 @@ export interface CardProps {
   padding?: CardPadding;
   /** Polymorphic: override the root element tag. Defaults to 'div'. */
   as?: React.ElementType;
+  /**
+   * When `true`, merges card styles onto the single child element instead of
+   * rendering an extra DOM node (Radix-style `asChild` pattern).
+   */
+  asChild?: boolean;
   /** Additional CSS class. */
   className?: string;
   /** Additional inline style. */

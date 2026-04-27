@@ -33,6 +33,22 @@ describe('Divider', () => {
     render(<Divider label="or" strong />);
     expect(screen.getByRole('separator').className).toMatch(/labelWrapperStrong/);
   });
+
+  it('supports polymorphic `as`', () => {
+    render(<Divider as="hr" data-testid="d" />);
+    expect(screen.getByTestId('d').tagName).toBe('HR');
+  });
+
+  it('renders the single child element via `asChild`', () => {
+    render(
+      <Divider asChild>
+        <hr data-testid="hr" />
+      </Divider>
+    );
+    const el = screen.getByTestId('hr');
+    expect(el.tagName).toBe('HR');
+    expect(el.className).toMatch(/divider/);
+  });
 });
 
 describe('a11y (axe)', () => {
