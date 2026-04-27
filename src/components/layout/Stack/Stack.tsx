@@ -1,7 +1,9 @@
 import React, { forwardRef } from 'react';
 import { classNames } from '../../../utils';
+import { Slot } from '../../../utils/slot';
 import { normalizeSpacingKey } from '../../../tokens';
 import type { PolymorphicProps, PolymorphicRef } from '../../../types/polymorphic';
+import { createPolymorphicComponent } from '../../../types/polymorphic';
 import type { SpacingValue } from '../Box/Box';
 import styles from './Stack.module.css';
 
@@ -49,11 +51,13 @@ type StackComponent = <C extends React.ElementType = 'div'>(
 
 /**
  * Flex container with a `gap`. Use `HStack` / `VStack` as convenient
- * aliases. Polymorphic via `as`.
+ * aliases. Polymorphic via `as`/`asChild`.
  */
-export const Stack = forwardRef(function Stack(
+export const Stack = createPolymorphicComponent<StackComponent>(
+  forwardRef(function Stack(
   {
     as,
+    asChild,
     direction = 'column',
     gap = '2',
     align,
@@ -67,7 +71,7 @@ export const Stack = forwardRef(function Stack(
   }: PolymorphicProps<React.ElementType, StackOwnProps>,
   ref: React.ForwardedRef<Element>
 ) {
-  const Component: React.ElementType = as ?? 'div';
+  const Component: React.ElementType = asChild ? Slot : (as ?? 'div');
   const resolvedStyle: React.CSSProperties = {
     flexDirection: direction,
     gap: `var(--zp-space-${normalizeSpacingKey(gap)})`,
@@ -90,34 +94,36 @@ export const Stack = forwardRef(function Stack(
       {children}
     </Component>
   );
-}) as unknown as StackComponent & { displayName?: string };
-
-(Stack as { displayName?: string }).displayName = 'Stack';
+}),
+'Stack'
+);
 
 type HStackComponent = <C extends React.ElementType = 'div'>(
   props: PolymorphicProps<C, Omit<StackOwnProps, 'direction'>> & { ref?: PolymorphicRef<C> }
 ) => React.ReactElement | null;
 
 /** Horizontal stack — `Stack` with `direction="row"`. */
-export const HStack = forwardRef(function HStack(
-  props: PolymorphicProps<React.ElementType, Omit<StackOwnProps, 'direction'>>,
-  ref: React.ForwardedRef<Element>
-) {
-  return <Stack ref={ref} {...props} direction="row" />;
-}) as unknown as HStackComponent & { displayName?: string };
-
-(HStack as { displayName?: string }).displayName = 'HStack';
+export const HStack = createPolymorphicComponent<HStackComponent>(
+  forwardRef(function HStack(
+    props: PolymorphicProps<React.ElementType, Omit<StackOwnProps, 'direction'>>,
+    ref: React.ForwardedRef<Element>
+  ) {
+    return <Stack ref={ref} {...props} direction="row" />;
+  }),
+  'HStack'
+);
 
 type VStackComponent = <C extends React.ElementType = 'div'>(
   props: PolymorphicProps<C, Omit<StackOwnProps, 'direction'>> & { ref?: PolymorphicRef<C> }
 ) => React.ReactElement | null;
 
 /** Vertical stack — `Stack` with `direction="column"` (the default). */
-export const VStack = forwardRef(function VStack(
-  props: PolymorphicProps<React.ElementType, Omit<StackOwnProps, 'direction'>>,
-  ref: React.ForwardedRef<Element>
-) {
-  return <Stack ref={ref} {...props} direction="column" />;
-}) as unknown as VStackComponent & { displayName?: string };
-
-(VStack as { displayName?: string }).displayName = 'VStack';
+export const VStack = createPolymorphicComponent<VStackComponent>(
+  forwardRef(function VStack(
+    props: PolymorphicProps<React.ElementType, Omit<StackOwnProps, 'direction'>>,
+    ref: React.ForwardedRef<Element>
+  ) {
+    return <Stack ref={ref} {...props} direction="column" />;
+  }),
+  'VStack'
+);
