@@ -91,6 +91,18 @@ describe('Card', () => {
     );
     expect(screen.getByRole('button')).toHaveAttribute('type', 'submit');
   });
+
+  it('renders the single child element via `asChild`', () => {
+    render(
+      <Card asChild variant="elevated">
+        <article>article card</article>
+      </Card>
+    );
+    const el = screen.getByText('article card');
+    expect(el.tagName).toBe('ARTICLE');
+    expect(el.className).toMatch(/card/);
+    expect(el.className).toMatch(/variantElevated/);
+  });
 });
 
 describe('CardHeader', () => {

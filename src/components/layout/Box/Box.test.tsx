@@ -20,6 +20,19 @@ describe('Box', () => {
     expect(screen.getByTestId('s').tagName).toBe('SECTION');
   });
 
+  it('renders the single child element via `asChild`', () => {
+    render(
+      <Box asChild data-testid="b" p="4">
+        <section>content</section>
+      </Box>
+    );
+    const el = screen.getByText('content');
+    // asChild clones the child (section) — Box wrapper div is NOT rendered
+    expect(el.tagName).toBe('SECTION');
+    // The box class is merged onto the section
+    expect(el.className).toMatch(/box/);
+  });
+
   it('maps spacing props to token CSS vars', () => {
     render(
       <Box data-testid="b" p="4" mx="2">

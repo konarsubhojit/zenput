@@ -1,6 +1,8 @@
 import React, { forwardRef } from 'react';
 import { classNames } from '../../utils';
+import { Slot } from '../../utils/slot';
 import type { PolymorphicProps, PolymorphicRef } from '../../types/polymorphic';
+import { createPolymorphicComponent } from '../../types/polymorphic';
 import styles from './Typography.module.css';
 
 export type TextSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl';
@@ -41,11 +43,14 @@ type TextComponent = <C extends React.ElementType = 'span'>(
 
 /**
  * Polymorphic inline text primitive. Defaults to `<span>`; use `as` to
- * render as `<p>`, `<label>`, etc.
+ * render as `<p>`, `<label>`, etc. Use `asChild` to merge styles onto a
+ * single child element.
  */
-export const Text = forwardRef(function Text(
+export const Text = createPolymorphicComponent<TextComponent>(
+  forwardRef(function Text(
   {
     as,
+    asChild,
     size = 'md',
     weight = 'regular',
     tone = 'neutral',
@@ -59,7 +64,7 @@ export const Text = forwardRef(function Text(
   }: PolymorphicProps<React.ElementType, TextOwnProps>,
   ref: React.ForwardedRef<Element>
 ) {
-  const Component: React.ElementType = as ?? 'span';
+  const Component: React.ElementType = asChild ? Slot : (as ?? 'span');
   return (
     <Component
       ref={ref}
@@ -79,6 +84,6 @@ export const Text = forwardRef(function Text(
       {children}
     </Component>
   );
-}) as unknown as TextComponent & { displayName?: string };
-
-(Text as { displayName?: string }).displayName = 'Text';
+}),
+'Text'
+);
