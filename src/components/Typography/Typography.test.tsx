@@ -44,6 +44,18 @@ describe('Typography', () => {
       expect(el.className).toMatch(/underline/);
       expect(el.className).toMatch(/truncate/);
     });
+
+    it('renders the single child element via `asChild`', () => {
+      render(
+        <Text asChild size="lg">
+          <p>paragraph</p>
+        </Text>
+      );
+      const el = screen.getByText('paragraph');
+      expect(el.tagName).toBe('P');
+      expect(el.className).toMatch(/text/);
+      expect(el.className).toMatch(/size-lg/);
+    });
   });
 
   describe('Heading', () => {
@@ -65,6 +77,17 @@ describe('Typography', () => {
       );
       expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
     });
+
+    it('renders the single child element via `asChild`', () => {
+      render(
+        <Heading asChild level={1}>
+          <h3>section</h3>
+        </Heading>
+      );
+      // asChild clones the child (h3), not h1
+      expect(screen.getByRole('heading', { level: 3 })).toBeInTheDocument();
+      expect(screen.getByText('section').className).toMatch(/weight-semibold/);
+    });
   });
 
   describe('Link', () => {
@@ -85,6 +108,33 @@ describe('Typography', () => {
       expect(link.getAttribute('rel')).toContain('noopener');
       expect(link.getAttribute('rel')).toContain('noreferrer');
     });
+
+    it('supports polymorphic `as`', () => {
+      render(<Link as="span">inline</Link>);
+      expect(screen.getByText('inline').tagName).toBe('SPAN');
+    });
+
+    it('does not forward target or rel when rendered as a non-anchor element', () => {
+      render(
+        <Link as="span" external>
+          not-a-link
+        </Link>
+      );
+      const el = screen.getByText('not-a-link');
+      expect(el).not.toHaveAttribute('target');
+      expect(el).not.toHaveAttribute('rel');
+    });
+
+    it('renders the single child element via `asChild`', () => {
+      render(
+        <Link asChild>
+          <button type="button">action</button>
+        </Link>
+      );
+      const el = screen.getByRole('button', { name: 'action' });
+      expect(el.tagName).toBe('BUTTON');
+      expect(el.className).toMatch(/link/);
+    });
   });
 
   describe('Code', () => {
@@ -92,12 +142,44 @@ describe('Typography', () => {
       const { container } = render(<Code>x</Code>);
       expect(container.querySelector('code')).toBeInTheDocument();
     });
+
+    it('supports polymorphic `as`', () => {
+      render(<Code as="span">inline</Code>);
+      expect(screen.getByText('inline').tagName).toBe('SPAN');
+    });
+
+    it('renders the single child element via `asChild`', () => {
+      render(
+        <Code asChild>
+          <samp>sample</samp>
+        </Code>
+      );
+      const el = screen.getByText('sample');
+      expect(el.tagName).toBe('SAMP');
+      expect(el.className).toMatch(/code/);
+    });
   });
 
   describe('Kbd', () => {
     it('renders a <kbd> element', () => {
       const { container } = render(<Kbd>Ctrl</Kbd>);
       expect(container.querySelector('kbd')).toBeInTheDocument();
+    });
+
+    it('supports polymorphic `as`', () => {
+      render(<Kbd as="span">Shift</Kbd>);
+      expect(screen.getByText('Shift').tagName).toBe('SPAN');
+    });
+
+    it('renders the single child element via `asChild`', () => {
+      render(
+        <Kbd asChild>
+          <abbr>Esc</abbr>
+        </Kbd>
+      );
+      const el = screen.getByText('Esc');
+      expect(el.tagName).toBe('ABBR');
+      expect(el.className).toMatch(/kbd/);
     });
   });
 });
