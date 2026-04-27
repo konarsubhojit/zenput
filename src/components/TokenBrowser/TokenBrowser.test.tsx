@@ -5,7 +5,7 @@ import { TokenBrowser } from './TokenBrowser';
 
 /** Wrap TokenBrowser in ThemeProvider so useTheme() works. */
 const renderWithTheme = (ui: React.ReactElement) => render(<ThemeProvider>{ui}</ThemeProvider>);
-const originalClipboard = navigator.clipboard;
+const originalClipboardDescriptor = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
 
 const mockClipboard = () => {
   const writeText = vi.fn().mockResolvedValue(undefined);
@@ -16,14 +16,19 @@ const mockClipboard = () => {
   return writeText;
 };
 
+const restoreClipboard = () => {
+  if (originalClipboardDescriptor) {
+    Object.defineProperty(navigator, 'clipboard', originalClipboardDescriptor);
+    return;
+  }
+  Reflect.deleteProperty(navigator, 'clipboard');
+};
+
 describe('TokenBrowser', () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.restoreAllMocks();
-    Object.defineProperty(navigator, 'clipboard', {
-      configurable: true,
-      value: originalClipboard,
-    });
+    restoreClipboard();
   });
 
   it('renders without crashing', () => {
@@ -103,7 +108,7 @@ describe('TokenBrowser', () => {
     renderWithTheme(<TokenBrowser defaultCategory="typographyPresets" />);
     expect(
       screen.getByRole('button', {
-        name: 'Copy display-lg fontFamily token value var(--zp-font-family-sans) to clipboard',
+        name: 'Copy display-lg fontFamily to clipboard',
       })
     ).toBeInTheDocument();
   });
@@ -115,7 +120,7 @@ describe('TokenBrowser', () => {
 
     fireEvent.click(
       screen.getByRole('button', {
-        name: 'Copy display-lg fontFamily token value var(--zp-font-family-sans) to clipboard',
+        name: 'Copy display-lg fontFamily to clipboard',
       })
     );
 
@@ -127,7 +132,7 @@ describe('TokenBrowser', () => {
 
     fireEvent.click(
       screen.getByRole('button', {
-        name: 'Copy heading-1 fontFamily token value var(--zp-font-family-sans) to clipboard',
+        name: 'Copy heading-1 fontFamily to clipboard',
       })
     );
 

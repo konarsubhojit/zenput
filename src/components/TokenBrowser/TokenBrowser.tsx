@@ -167,7 +167,7 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
         type="button"
         className={styles.tokenItem}
         title={`Click to copy: ${textToCopy}`}
-        aria-label={`Copy ${labelName} token value ${textToCopy} to clipboard`}
+        aria-label={`Copy ${labelName} to clipboard`}
         onClick={() => handleCopy(id, textToCopy)}
       >
         <div className={styles.tokenDetails}>
