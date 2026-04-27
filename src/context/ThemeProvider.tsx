@@ -4,7 +4,6 @@ import React, {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
   CSSProperties,
 } from 'react';
@@ -17,6 +16,7 @@ import {
   DensityScale,
   ComponentTokensMap,
 } from '../tokens';
+import { mqlAddListener, mqlRemoveListener } from './mqlHelpers';
 
 /**
  * User-facing color mode. Extends {@link ThemeMode} with `'system'`,
@@ -83,14 +83,21 @@ export interface ColorModeContextValue {
   toggle: () => void;
 }
 
-interface ThemeContextValue {
+/**
+ * Public shape of the theme context returned by {@link useTheme}.
+ */
+export interface ThemeContextValue {
   theme: Theme;
   mode: ThemeMode;
   semantic: SemanticColors;
   density: DensityScale;
   components: ComponentTokensMap;
   cssVars: Record<string, string>;
-  /** @internal — true when inside an actual ThemeProvider (vs. default context). */
+}
+
+/** @internal — extends the public ThemeContextValue with the _hasProvider
+ *  sentinel used by nested ThemeProviders to detect nesting. */
+interface InternalThemeContextValue extends ThemeContextValue {
   _hasProvider: boolean;
 }
 
@@ -100,7 +107,7 @@ const defaultSemantic = semanticByMode[defaultMode];
 const defaultComponents: ComponentTokensMap = {};
 const defaultCssVars = buildCssVariables(defaultSemantic, defaultDensity, defaultComponents);
 
-const ThemeContext = createContext<ThemeContextValue>({
+const ThemeContext = createContext<InternalThemeContextValue>({
   theme: {},
   mode: defaultMode,
   semantic: defaultSemantic,
@@ -139,6 +146,21 @@ function getStorageApi(type: 'localStorage' | 'sessionStorage'): Storage | null 
   }
 }
 
+/**
+ * Safely read a value from Web Storage, returning `null` on any error
+ * (e.g. Safari Private Mode raises a `SecurityError` on `getItem`).
+ */
+function safeStorageGet(
+  storageType: 'localStorage' | 'sessionStorage',
+  key: string
+): string | null {
+  try {
+    return getStorageApi(storageType)?.getItem(key) ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** Read the OS dark-mode preference safely (returns false in SSR). */
 function matchesDarkScheme(): boolean {
   if (typeof window === 'undefined') return false;
@@ -162,12 +184,14 @@ function matchesHighContrast(): boolean {
 /**
  * Resolve a user-selected `ColorMode` to the `ThemeMode` actually applied.
  *
+ * Keep in sync with the inline script produced by `getColorModeScript`.
+ *
  * @param mode - User-selected mode (may be `'system'`).
  * @param systemDark - Whether the OS prefers dark.
  * @param systemHighContrast - Whether the OS prefers high contrast AND
  *   `detectHighContrast` is enabled.
  */
-function resolveColorMode(
+export function resolveColorMode(
   mode: ColorMode,
   systemDark: boolean,
   systemHighContrast: boolean
@@ -181,17 +205,20 @@ function resolveColorMode(
  * Create a resolved theme object. Accepts partial overrides and falls
  * back to the mode's default semantic palette.
  *
- * The `mode` field must be a resolved {@link ThemeMode} (not `'system'`).
+ * **Note:** `theme.mode` must be a resolved {@link ThemeMode} (not
+ * `'system'`). If `'system'` is passed it is treated as `'light'` (the
+ * SSR-safe default). In practice `ThemeProvider` always passes the
+ * resolved mode, so callers using this function directly should pass a
+ * concrete `ThemeMode`.
  */
-export function createTheme(theme: Theme = {}): {
+export function createTheme(theme: Omit<Theme, 'mode'> & { mode?: ThemeMode } = {}): {
   mode: ThemeMode;
   semantic: SemanticColors;
   density: DensityScale;
   components: ComponentTokensMap;
   cssVars: Record<string, string>;
 } {
-  const rawMode = (theme.mode ?? defaultMode) as string;
-  const mode: ThemeMode = rawMode === 'system' ? 'light' : (rawMode as ThemeMode);
+  const mode: ThemeMode = theme.mode ?? defaultMode;
   const density = theme.density ?? defaultDensity;
   const components = theme.components ?? defaultComponents;
   const semantic: SemanticColors = {
@@ -241,8 +268,9 @@ interface ThemeProviderProps {
   as?: keyof React.JSX.IntrinsicElements | React.ElementType;
   children: React.ReactNode;
   /**
-   * When set, the resolved color mode is persisted to storage under this
-   * key and rehydrated on mount. Works with `mode="system"`.
+   * When set, the user-selected color mode (which may be `'system'`) is
+   * persisted to storage under this key and rehydrated on mount, taking
+   * priority over `theme.mode`. Works with `mode="system"`.
    */
   storageKey?: string;
   /**
@@ -273,24 +301,34 @@ export function ThemeProvider({
   const parentCtx = useContext(ThemeContext);
   const isNested = parentCtx._hasProvider;
 
-  // ── Determine the initial color mode ──────────────────────────────
-  // Priority: stored value → theme.mode prop → inherited from parent → 'light'
-  const [colorMode, setColorModeState] = useState<ColorMode>(() => {
+  // ── User mode override ─────────────────────────────────────────────
+  // Track an explicit user-selected mode (from storage or setMode calls).
+  // When null, the effective color mode falls through to theme.mode or the
+  // parent provider's resolved mode.
+  const [userMode, setUserMode] = useState<ColorMode | null>(() => {
     if (storageKey) {
-      const stored = getStorageApi(storage)?.getItem(storageKey);
+      // safeStorageGet wraps getItem in try/catch so it never throws
+      // even in environments like Safari Private Mode.
+      const stored = safeStorageGet(storage, storageKey);
       if (stored && isValidColorMode(stored)) return stored;
     }
-    if (theme.mode) return theme.mode;
-    if (isNested) {
-      // Inherit parent's resolved mode so nested providers don't accidentally
-      // reset back to light.
-      return parentCtx.mode;
-    }
-    return 'light';
+    return null;
   });
+
+  // ── Effective color mode (derived, no effect needed) ──────────────
+  // Priority: explicit user override → theme.mode prop → parent's resolved
+  // mode (reactive) → 'light'.
+  // Deriving from parentCtx.mode makes nested providers automatically track
+  // parent mode changes without any extra effects or state.
+  const colorMode: ColorMode =
+    userMode ?? theme.mode ?? (isNested ? parentCtx.mode : 'light');
 
   // ── System preference detection ────────────────────────────────────
   const [systemDark, setSystemDark] = useState<boolean>(matchesDarkScheme);
+
+  // Track systemHighContrast as state so event-listener updates trigger
+  // re-renders. The state is initialized from the OS value when
+  // detectHighContrast is true, and updated via the event listener below.
   const [systemHighContrast, setSystemHighContrast] = useState<boolean>(() =>
     detectHighContrast ? matchesHighContrast() : false
   );
@@ -306,39 +344,36 @@ export function ThemeProvider({
     try {
       darkMql = window.matchMedia('(prefers-color-scheme: dark)');
       onDarkChange = (e: MediaQueryListEvent) => setSystemDark(e.matches);
-      darkMql.addEventListener('change', onDarkChange);
+      mqlAddListener(darkMql, onDarkChange);
 
       if (detectHighContrast) {
         contrastMql = window.matchMedia('(prefers-contrast: more)');
         onContrastChange = (e: MediaQueryListEvent) => setSystemHighContrast(e.matches);
-        contrastMql.addEventListener('change', onContrastChange);
+        mqlAddListener(contrastMql, onContrastChange);
       }
 
       return () => {
-        if (darkMql && onDarkChange) darkMql.removeEventListener('change', onDarkChange);
-        if (contrastMql && onContrastChange)
-          contrastMql.removeEventListener('change', onContrastChange);
+        if (darkMql && onDarkChange) mqlRemoveListener(darkMql, onDarkChange);
+        if (contrastMql && onContrastChange) mqlRemoveListener(contrastMql, onContrastChange);
       };
     } catch {
-      // matchMedia not available (test env, old browser, etc.)
+      // matchMedia not available (old browser, test env, etc.)
       return undefined;
     }
   }, [detectHighContrast]);
 
-  // ── Sync colorMode when theme.mode prop changes ────────────────────
-  const prevThemeModeRef = useRef<ColorMode | undefined>(theme.mode);
-  useEffect(() => {
-    if (theme.mode !== prevThemeModeRef.current) {
-      prevThemeModeRef.current = theme.mode;
-      if (theme.mode) {
-        setColorModeState(theme.mode);
-      }
-    }
-  }, [theme.mode]);
-
   // ── Resolve the actual ThemeMode ──────────────────────────────────
+  // When detectHighContrast transitions false → true, the systemHighContrast
+  // state may not have been updated by the event listener yet. Read the
+  // current OS value directly so the mode is correct on the first render
+  // after the prop changes. The state handles all subsequent changes.
   const resolvedMode = useMemo<ThemeMode>(
-    () => resolveColorMode(colorMode, systemDark, detectHighContrast && systemHighContrast),
+    () =>
+      resolveColorMode(
+        colorMode,
+        systemDark,
+        detectHighContrast && (systemHighContrast || matchesHighContrast())
+      ),
     [colorMode, systemDark, systemHighContrast, detectHighContrast]
   );
 
@@ -363,7 +398,7 @@ export function ThemeProvider({
   // ── Color mode control API ─────────────────────────────────────────
   const setMode = useCallback(
     (next: ColorMode) => {
-      setColorModeState(next);
+      setUserMode(next);
       if (storageKey) {
         try {
           getStorageApi(storage)?.setItem(storageKey, next);
@@ -385,7 +420,7 @@ export function ThemeProvider({
   );
 
   // ── Theme context value ────────────────────────────────────────────
-  const contextValue = useMemo<ThemeContextValue>(
+  const contextValue = useMemo<InternalThemeContextValue>(
     () => ({
       theme,
       mode: resolvedMode,

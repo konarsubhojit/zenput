@@ -15,6 +15,18 @@ export interface GetColorModeScriptOptions {
    * Which storage type to read from. Default: `'localStorage'`.
    */
   storage?: 'localStorage' | 'sessionStorage';
+  /**
+   * When `true`, the script will also check `prefers-contrast: more` and
+   * set `data-zp-theme="highContrast"` when active (before falling back
+   * to `dark`/`light`).
+   *
+   * **Must match** the `detectHighContrast` prop passed to `<ThemeProvider>`
+   * to avoid a flash between the pre-hydration attribute and the mode that
+   * React eventually applies.
+   *
+   * Default: `false`.
+   */
+  detectHighContrast?: boolean;
 }
 
 /**
@@ -25,6 +37,9 @@ export interface GetColorModeScriptOptions {
  * The script reads the persisted mode from storage and the OS preference,
  * then sets `data-zp-theme` on `<html>` so CSS variables are already
  * correct at first paint — preventing a flash of the wrong colour scheme.
+ *
+ * The resolution algorithm mirrors {@link resolveColorMode} in
+ * `ThemeProvider.tsx` — keep the two in sync if the logic changes.
  *
  * ### Next.js App Router example (`app/layout.tsx`)
  *
@@ -58,9 +73,24 @@ export function getColorModeScript({
   storageKey,
   defaultMode = 'light',
   storage = 'localStorage',
+  detectHighContrast = false,
 }: GetColorModeScriptOptions): string {
   const validModes: ColorMode[] = ['light', 'dark', 'highContrast', 'system'];
   const validModesJson = JSON.stringify(validModes);
+
+  // Build the system-resolution block.
+  // Mirrors resolveColorMode() — keep in sync if the logic changes.
+  const systemResolution = detectHighContrast
+    ? `try {
+      resolved = window.matchMedia('(prefers-contrast: more)').matches
+        ? 'highContrast'
+        : window.matchMedia('(prefers-color-scheme: dark)').matches
+          ? 'dark'
+          : 'light';
+    } catch(e) { resolved = 'light'; }`
+    : `try {
+      resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    } catch(e) { resolved = 'light'; }`;
 
   return `(function(){
   var validModes=${validModesJson};
@@ -74,14 +104,9 @@ export function getColorModeScript({
   var mode = (stored && validModes.indexOf(stored) !== -1) ? stored : ${JSON.stringify(defaultMode)};
   var resolved = mode;
   if (mode === 'system') {
-    try {
-      resolved = window.matchMedia('(prefers-contrast: more)').matches
-        ? 'highContrast'
-        : window.matchMedia('(prefers-color-scheme: dark)').matches
-          ? 'dark'
-          : 'light';
-    } catch(e) { resolved = 'light'; }
+    ${systemResolution}
   }
   try { document.documentElement.setAttribute('data-zp-theme', resolved); } catch(e){}
 })();`;
 }
+

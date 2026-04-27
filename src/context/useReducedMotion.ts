@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { mqlAddListener, mqlRemoveListener } from './mqlHelpers';
 
 /**
  * Returns `true` when the user has requested reduced motion via the OS
@@ -44,8 +45,8 @@ export function useReducedMotion(): boolean {
       return;
     }
     const handler = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
-    mql.addEventListener('change', handler);
-    return () => mql.removeEventListener('change', handler);
+    mqlAddListener(mql, handler);
+    return () => mqlRemoveListener(mql, handler);
   }, []);
 
   return reducedMotion;

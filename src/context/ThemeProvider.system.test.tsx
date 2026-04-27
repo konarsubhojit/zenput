@@ -45,6 +45,29 @@ function makeMockMql(initial: boolean): MockMql {
   return mql;
 }
 
+/** Create a mock MQL that ONLY exposes the legacy addListener/removeListener API. */
+function makeLegacyMockMql(initial: boolean): MockMql & {
+  addListener: ReturnType<typeof vi.fn>;
+  removeListener: ReturnType<typeof vi.fn>;
+} {
+  const mql = makeMockMql(initial) as MockMql & {
+    addListener: ReturnType<typeof vi.fn>;
+    removeListener: ReturnType<typeof vi.fn>;
+    addEventListener: undefined;
+    removeEventListener: undefined;
+  };
+  // Simulate old browser: override addEventListener/removeEventListener
+  (mql as unknown as Record<string, unknown>).addEventListener = undefined;
+  (mql as unknown as Record<string, unknown>).removeEventListener = undefined;
+  mql.addListener = vi.fn((_fn: MqlListener) => {
+    mql._listeners.push(_fn);
+  });
+  mql.removeListener = vi.fn((_fn: MqlListener) => {
+    mql._listeners = mql._listeners.filter((l) => l !== _fn);
+  });
+  return mql;
+}
+
 /**
  * Install a mock `window.matchMedia` function that dispatches to `getHandler`.
  * Returns a restore function.
@@ -437,6 +460,29 @@ describe('Nested ThemeProvider', () => {
     expect(result.current.mode).toBe('dark');
     expect(result.current.density).toBe('compact');
   });
+
+  it('inner provider tracks parent mode changes dynamically', () => {
+    let setParentMode: ((m: import('./ThemeProvider').ColorMode) => void) | null = null;
+
+    const Parent = ({ children }: { children: React.ReactNode }) => {
+      const [mode, setMode] = React.useState<import('./ThemeProvider').ColorMode>('dark');
+      setParentMode = setMode;
+      return <ThemeProvider theme={{ mode }}>{children}</ThemeProvider>;
+    };
+
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <Parent>
+        {/* Inner provider with no explicit mode — should track the parent */}
+        <ThemeProvider>{children}</ThemeProvider>
+      </Parent>
+    );
+
+    const { result } = renderHook(() => useTheme(), { wrapper });
+    expect(result.current.mode).toBe('dark');
+
+    act(() => setParentMode!('light'));
+    expect(result.current.mode).toBe('light');
+  });
 });
 
 // ── SSR safety (no window) ────────────────────────────────────────────────────
@@ -465,6 +511,21 @@ describe('SSR safety', () => {
   it('getColorModeScript handles "system" defaultMode', () => {
     const script = getColorModeScript({ storageKey: 'theme', defaultMode: 'system' });
     expect(script).toContain('prefers-color-scheme: dark');
+  });
+
+  it('getColorModeScript does NOT check prefers-contrast by default', () => {
+    const script = getColorModeScript({ storageKey: 'theme', defaultMode: 'system' });
+    expect(script).not.toContain('prefers-contrast');
+  });
+
+  it('getColorModeScript checks prefers-contrast when detectHighContrast=true', () => {
+    const script = getColorModeScript({
+      storageKey: 'theme',
+      defaultMode: 'system',
+      detectHighContrast: true,
+    });
+    expect(script).toContain('prefers-contrast: more');
+    expect(script).toContain('highContrast');
   });
 });
 
@@ -507,5 +568,48 @@ describe('useReducedMotion', () => {
 
     act(() => mql._fire(false));
     expect(result.current).toBe(false);
+  });
+});
+
+// ── mqlHelpers legacy addListener fallback ────────────────────────────────────
+
+import { mqlAddListener, mqlRemoveListener } from './mqlHelpers';
+
+describe('mqlHelpers', () => {
+  it('mqlAddListener uses addEventListener when available', () => {
+    const mql = makeMockMql(false);
+    const handler = vi.fn();
+    mqlAddListener(mql as unknown as MediaQueryList, handler);
+    expect(mql.addEventListener).toHaveBeenCalledWith('change', handler);
+  });
+
+  it('mqlRemoveListener uses removeEventListener when available', () => {
+    const mql = makeMockMql(false);
+    const handler = vi.fn();
+    mqlRemoveListener(mql as unknown as MediaQueryList, handler);
+    expect(mql.removeEventListener).toHaveBeenCalledWith('change', handler);
+  });
+
+  it('mqlAddListener falls back to addListener on legacy MQL', () => {
+    const mql = makeLegacyMockMql(false);
+    const handler = vi.fn();
+    mqlAddListener(mql as unknown as MediaQueryList, handler);
+    expect(mql.addListener).toHaveBeenCalledWith(handler);
+  });
+
+  it('mqlRemoveListener falls back to removeListener on legacy MQL', () => {
+    const mql = makeLegacyMockMql(false);
+    const handler = vi.fn();
+    mqlRemoveListener(mql as unknown as MediaQueryList, handler);
+    expect(mql.removeListener).toHaveBeenCalledWith(handler);
+  });
+
+  it('legacy addListener receives change events', () => {
+    const mql = makeLegacyMockMql(false);
+    const handler = vi.fn();
+    mqlAddListener(mql as unknown as MediaQueryList, handler);
+
+    act(() => mql._fire(true));
+    expect(handler).toHaveBeenCalledWith({ matches: true });
   });
 });
