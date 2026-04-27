@@ -1,12 +1,31 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ThemeProvider } from '../../context/ThemeProvider';
 import { TokenBrowser } from './TokenBrowser';
 
 /** Wrap TokenBrowser in ThemeProvider so useTheme() works. */
 const renderWithTheme = (ui: React.ReactElement) => render(<ThemeProvider>{ui}</ThemeProvider>);
+const originalClipboard = navigator.clipboard;
+
+const mockClipboard = () => {
+  const writeText = vi.fn().mockResolvedValue(undefined);
+  Object.defineProperty(navigator, 'clipboard', {
+    configurable: true,
+    value: { writeText },
+  });
+  return writeText;
+};
 
 describe('TokenBrowser', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: originalClipboard,
+    });
+  });
+
   it('renders without crashing', () => {
     renderWithTheme(<TokenBrowser />);
     expect(screen.getByText('Design Tokens Browser')).toBeInTheDocument();
@@ -71,6 +90,86 @@ describe('TokenBrowser', () => {
       'aria-pressed',
       'true'
     );
+  });
+
+  it('labels color swatches with the copy action and copied CSS variable', () => {
+    renderWithTheme(<TokenBrowser />);
+    expect(
+      screen.getByRole('button', { name: 'Copy --zp-color-brand to clipboard' })
+    ).toBeInTheDocument();
+  });
+
+  it('labels token rows with the copy action and token context', () => {
+    renderWithTheme(<TokenBrowser defaultCategory="typographyPresets" />);
+    expect(
+      screen.getByRole('button', {
+        name: 'Copy display-lg fontFamily token value var(--zp-font-family-sans) to clipboard',
+      })
+    ).toBeInTheDocument();
+  });
+
+  it('shows copied feedback only for the clicked token when values are shared', async () => {
+    const writeText = mockClipboard();
+    const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout');
+    renderWithTheme(<TokenBrowser defaultCategory="typographyPresets" />);
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Copy display-lg fontFamily token value var(--zp-font-family-sans) to clipboard',
+      })
+    );
+
+    await waitFor(() => {
+      expect(writeText).toHaveBeenCalledWith('var(--zp-font-family-sans)');
+    });
+    expect(await screen.findByText('Copied!')).toBeInTheDocument();
+    expect(screen.getAllByText('Copied!')).toHaveLength(1);
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Copy heading-1 fontFamily token value var(--zp-font-family-sans) to clipboard',
+      })
+    );
+
+    await waitFor(() => {
+      expect(writeText).toHaveBeenCalledTimes(2);
+      expect(writeText).toHaveBeenLastCalledWith('var(--zp-font-family-sans)');
+    });
+    expect(clearTimeoutSpy).toHaveBeenCalled();
+    expect(screen.getAllByText('Copied!')).toHaveLength(1);
+  });
+
+  it('clears copied feedback after the copy timeout expires', async () => {
+    mockClipboard();
+    renderWithTheme(<TokenBrowser />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copy --zp-color-brand to clipboard' }));
+
+    expect(await screen.findByText('Copied!')).toBeInTheDocument();
+
+    await waitFor(
+      () => {
+        expect(screen.queryByText('Copied!')).not.toBeInTheDocument();
+      },
+      { timeout: 2000 }
+    );
+  });
+
+  it('clears the pending copy timer on unmount', async () => {
+    const writeText = mockClipboard();
+    const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout');
+    const { unmount } = renderWithTheme(<TokenBrowser />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copy --zp-color-brand to clipboard' }));
+
+    await waitFor(() => {
+      expect(writeText).toHaveBeenCalledWith('--zp-color-brand');
+    });
+    expect(await screen.findByText('Copied!')).toBeInTheDocument();
+
+    unmount();
+
+    expect(clearTimeoutSpy).toHaveBeenCalled();
   });
 
   it('renders the Spacing category', () => {

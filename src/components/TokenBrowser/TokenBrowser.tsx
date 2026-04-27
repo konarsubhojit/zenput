@@ -44,7 +44,11 @@ interface TokenBrowserProps {
 interface RecipeVariantSectionProps {
   readonly name: string;
   readonly variantStyles: Record<string, string>;
-  readonly renderToken: (key: string, value: string | number) => React.ReactNode;
+  readonly renderToken: (
+    key: string,
+    value: string | number,
+    copyContext?: string
+  ) => React.ReactNode;
 }
 
 function RecipeVariantSection({
@@ -108,6 +112,7 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
     return () => {
       if (copyTimerRef.current !== null) {
         clearTimeout(copyTimerRef.current);
+        copyTimerRef.current = null;
       }
     };
   }, []);
@@ -137,6 +142,7 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
         type="button"
         className={styles.tokenItem}
         title={`Click to copy: ${cssVarName}`}
+        aria-label={`Copy ${cssVarName} to clipboard`}
         onClick={() => handleCopy(id, cssVarName)}
       >
         <div className={styles.colorSwatch} style={{ backgroundColor: value }} />
@@ -151,19 +157,22 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
     );
   };
 
-  const renderToken = (name: string, value: string | number) => {
-    const id = `${category}:${name}`;
+  const renderToken = (name: string, value: string | number, copyContext?: string) => {
+    const textToCopy = String(value);
+    const id = [category, copyContext, name].filter(Boolean).join(':');
+    const labelName = copyContext ? `${copyContext} ${name}` : name;
     return (
       <button
         key={name}
         type="button"
         className={styles.tokenItem}
-        title={`Click to copy: ${String(value)}`}
-        onClick={() => handleCopy(id, String(value))}
+        title={`Click to copy: ${textToCopy}`}
+        aria-label={`Copy ${labelName} token value ${textToCopy} to clipboard`}
+        onClick={() => handleCopy(id, textToCopy)}
       >
         <div className={styles.tokenDetails}>
           <div className={styles.tokenName}>{name}</div>
-          <div className={styles.tokenValue}>{String(value)}</div>
+          <div className={styles.tokenValue}>{textToCopy}</div>
           {copied === id && (
             <div className={styles.tokenValue} aria-live="polite">Copied!</div>
           )}
@@ -203,31 +212,41 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
             <div className={styles.section}>
               <h3 className={styles.sectionTitle}>Font Families</h3>
               <div className={styles.tokenGrid}>
-                {Object.entries(fontFamilies).map(([key, value]) => renderToken(key, value))}
+                {Object.entries(fontFamilies).map(([key, value]) =>
+                  renderToken(key, value, 'Font Families')
+                )}
               </div>
             </div>
             <div className={styles.section}>
               <h3 className={styles.sectionTitle}>Font Sizes</h3>
               <div className={styles.tokenGrid}>
-                {Object.entries(fontSizes).map(([key, value]) => renderToken(key, value))}
+                {Object.entries(fontSizes).map(([key, value]) =>
+                  renderToken(key, value, 'Font Sizes')
+                )}
               </div>
             </div>
             <div className={styles.section}>
               <h3 className={styles.sectionTitle}>Font Weights</h3>
               <div className={styles.tokenGrid}>
-                {Object.entries(fontWeights).map(([key, value]) => renderToken(key, value))}
+                {Object.entries(fontWeights).map(([key, value]) =>
+                  renderToken(key, value, 'Font Weights')
+                )}
               </div>
             </div>
             <div className={styles.section}>
               <h3 className={styles.sectionTitle}>Line Heights</h3>
               <div className={styles.tokenGrid}>
-                {Object.entries(lineHeights).map(([key, value]) => renderToken(key, value))}
+                {Object.entries(lineHeights).map(([key, value]) =>
+                  renderToken(key, value, 'Line Heights')
+                )}
               </div>
             </div>
             <div className={styles.section}>
               <h3 className={styles.sectionTitle}>Letter Spacings</h3>
               <div className={styles.tokenGrid}>
-                {Object.entries(letterSpacings).map(([key, value]) => renderToken(key, value))}
+                {Object.entries(letterSpacings).map(([key, value]) =>
+                  renderToken(key, value, 'Letter Spacings')
+                )}
               </div>
             </div>
           </div>
@@ -260,7 +279,9 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
                   </div>
                 </div>
                 <div className={styles.tokenGrid}>
-                  {Object.entries(preset).map(([prop, value]) => renderToken(prop, value))}
+                  {Object.entries(preset).map(([prop, value]) =>
+                    renderToken(prop, value, presetName)
+                  )}
                 </div>
               </div>
             ))}
@@ -323,13 +344,17 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
             <div className={styles.section}>
               <h3 className={styles.sectionTitle}>Elevation</h3>
               <div className={styles.tokenGrid}>
-                {Object.entries(elevation).map(([key, value]) => renderToken(key, value))}
+                {Object.entries(elevation).map(([key, value]) =>
+                  renderToken(key, value, 'Elevation')
+                )}
               </div>
             </div>
             <div className={styles.section}>
               <h3 className={styles.sectionTitle}>Border Widths</h3>
               <div className={styles.tokenGrid}>
-                {Object.entries(borderWidths).map(([key, value]) => renderToken(key, value))}
+                {Object.entries(borderWidths).map(([key, value]) =>
+                  renderToken(key, value, 'Border Widths')
+                )}
               </div>
             </div>
           </div>
@@ -341,13 +366,17 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
             <div className={styles.section}>
               <h3 className={styles.sectionTitle}>Durations</h3>
               <div className={styles.tokenGrid}>
-                {Object.entries(durations).map(([key, value]) => renderToken(key, value))}
+                {Object.entries(durations).map(([key, value]) =>
+                  renderToken(key, value, 'Durations')
+                )}
               </div>
             </div>
             <div className={styles.section}>
               <h3 className={styles.sectionTitle}>Easings</h3>
               <div className={styles.tokenGrid}>
-                {Object.entries(easings).map(([key, value]) => renderToken(key, value))}
+                {Object.entries(easings).map(([key, value]) =>
+                  renderToken(key, value, 'Easings')
+                )}
               </div>
             </div>
           </div>
@@ -375,7 +404,7 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
                 <h3 className={styles.sectionTitle}>{densityKey}</h3>
                 <div className={styles.tokenGrid}>
                   {Object.entries(densityValues).map(([key, value]) =>
-                    renderToken(key, String(value))
+                    renderToken(key, String(value), densityKey)
                   )}
                 </div>
               </div>
@@ -393,7 +422,9 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
                   <div className={styles.subsection}>
                     <h4 className={styles.subsectionTitle}>Base</h4>
                     <div className={styles.tokenGrid}>
-                      {Object.entries(recipe.base).map(([key, value]) => renderToken(key, value))}
+                      {Object.entries(recipe.base).map(([key, value]) =>
+                        renderToken(key, value, `${recipeName} Base`)
+                      )}
                     </div>
                   </div>
                 )}
@@ -405,7 +436,9 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
                         key={variantName}
                         name={variantName}
                         variantStyles={variantStyles}
-                        renderToken={renderToken}
+                        renderToken={(key, value) =>
+                          renderToken(key, value, `${recipeName} ${variantName}`)
+                        }
                       />
                     ))}
                   </div>
@@ -422,7 +455,9 @@ export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) 
               <div key={componentName} className={styles.section}>
                 <h3 className={styles.sectionTitle}>{componentName}</h3>
                 <div className={styles.tokenGrid}>
-                  {Object.entries(tokens).map(([key, value]) => renderToken(key, String(value)))}
+                  {Object.entries(tokens).map(([key, value]) =>
+                    renderToken(key, String(value), componentName)
+                  )}
                 </div>
               </div>
             ))}
