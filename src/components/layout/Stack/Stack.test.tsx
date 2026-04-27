@@ -46,6 +46,28 @@ describe('Stack', () => {
     expect(el.style.alignItems).toBe('center');
     expect(el.style.justifyContent).toBe('space-between');
   });
+
+  it('supports polymorphic `as`', () => {
+    render(
+      <Stack as="ul" data-testid="s">
+        <li>item</li>
+      </Stack>
+    );
+    expect(screen.getByTestId('s').tagName).toBe('UL');
+  });
+
+  it('renders the single child element via `asChild`', () => {
+    render(
+      <Stack asChild gap="4">
+        <ul>
+          <li>item</li>
+        </ul>
+      </Stack>
+    );
+    const el = screen.getByRole('list');
+    expect(el.tagName).toBe('UL');
+    expect(el.className).toMatch(/stack/);
+  });
 });
 
 describe('a11y (axe)', () => {
