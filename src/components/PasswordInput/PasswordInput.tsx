@@ -22,7 +22,7 @@ interface StrengthIndicatorProps {
   strength: number;
 }
 
-function StrengthIndicator({ strength }: StrengthIndicatorProps): React.ReactElement {
+function StrengthIndicator({ strength }: Readonly<StrengthIndicatorProps>): React.ReactElement {
   return (
     <>
       <div className={classNames(styles.strengthBar, styles[`strength${strength}`])}>

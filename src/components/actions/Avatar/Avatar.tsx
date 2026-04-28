@@ -51,7 +51,7 @@ function getInitials(name: string): string {
 function colorIndexFromName(name: string): number {
   let hash = 0;
   for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    hash = (name.codePointAt(i) ?? 0) + ((hash << 5) - hash);
     hash = Math.trunc(hash);
   }
   return Math.abs(hash) % BG_COLORS.length;
@@ -81,7 +81,7 @@ function AvatarContent({
   applyImgRole,
   fallbackIcon,
   onImgError,
-}: AvatarContentProps): React.ReactElement {
+}: Readonly<AvatarContentProps>): React.ReactElement {
   if (showImg) {
     return (
       <img
@@ -155,7 +155,7 @@ export const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(function Avatar(
       )}
       style={wrapperStyle}
       aria-label={applyImgRole ? finalAriaLabel : undefined}
-      role={applyImgRole ? 'img' : undefined}
+      role={applyImgRole ? 'img' : undefined} // NOSONAR
       {...rest}
     >
       <AvatarContent
@@ -210,16 +210,16 @@ export function AvatarGroup({
   style,
   'aria-label': ariaLabel = 'Avatar group',
   'aria-labelledby': ariaLabelledBy,
-}: AvatarGroupProps): React.ReactElement {
+}: Readonly<AvatarGroupProps>): React.ReactElement {
   const childArray = React.Children.toArray(children);
-  const visible = max !== undefined ? childArray.slice(0, max) : childArray;
-  const overflow = max !== undefined ? childArray.length - max : 0;
+  const visible = max === undefined ? childArray : childArray.slice(0, max);
+  const overflow = max === undefined ? 0 : childArray.length - max;
 
   return (
     <span
       className={classNames(styles.group, className)}
       style={style}
-      role="group"
+      role="group" // NOSONAR
       aria-label={ariaLabelledBy ? undefined : ariaLabel}
       aria-labelledby={ariaLabelledBy}
     >

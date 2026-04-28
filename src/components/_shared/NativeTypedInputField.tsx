@@ -111,7 +111,7 @@ export const NativeTypedInputField = forwardRef<HTMLInputElement, NativeTypedInp
           styles.wrapper,
           styles[size],
           styles[variant],
-          validationState !== 'default' ? styles[validationState] : undefined,
+          validationState === 'default' ? undefined : styles[validationState],
           fullWidth ? styles.fullWidth : undefined,
           wrapperClassName
         )}

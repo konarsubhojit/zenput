@@ -40,10 +40,10 @@ export default function ZenputClientDemo() {
         />
 
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <Button variant="filled" size="md">
+          <Button variant="primary" size="md">
             Submit
           </Button>
-          <Badge label="New" />
+          <Badge tone="brand">New</Badge>
           <Spinner size="sm" />
         </div>
 

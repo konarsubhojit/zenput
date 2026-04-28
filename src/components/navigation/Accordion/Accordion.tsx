@@ -80,10 +80,11 @@ export function Accordion({
 
   const [internalOpen, setInternalOpen] = useState<string[]>(getInitialOpen);
 
-  const openItems = useMemo<string[]>(
-    () => (isControlled ? (Array.isArray(value) ? value : value ? [value] : []) : internalOpen),
-    [isControlled, value, internalOpen]
-  );
+  const openItems = useMemo<string[]>(() => {
+    if (!isControlled) return internalOpen;
+    if (Array.isArray(value)) return value;
+    return value ? [value] : [];
+  }, [isControlled, value, internalOpen]);
 
   const toggle = useCallback(
     (itemValue: string) => {

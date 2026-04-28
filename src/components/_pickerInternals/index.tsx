@@ -56,7 +56,7 @@ export function ClearButton({
   'aria-label': ariaLabel,
   className,
   onClear,
-}: ClearButtonProps): React.ReactElement {
+}: Readonly<ClearButtonProps>): React.ReactElement {
   return (
     <button
       type="button"
@@ -123,7 +123,7 @@ export function PickerFieldShell({
   helperTextClassName,
   helperTextStyle,
   children,
-}: PickerFieldShellProps): React.ReactElement {
+}: Readonly<PickerFieldShellProps>): React.ReactElement {
   const { activeMessage, messageClass } = getValidationMessage(
     validationState,
     helperText,
@@ -138,7 +138,7 @@ export function PickerFieldShell({
         inputStyles.wrapper,
         inputStyles[size],
         inputStyles[variant],
-        validationState !== 'default' ? inputStyles[validationState] : undefined,
+        validationState === 'default' ? undefined : inputStyles[validationState],
         wrapperClassName
       )}
       style={wrapperStyle}

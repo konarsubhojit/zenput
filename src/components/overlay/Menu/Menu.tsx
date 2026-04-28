@@ -413,7 +413,7 @@ export function MenuRadioGroup({
   value,
   onValueChange,
   children,
-}: MenuRadioGroupProps): React.ReactElement {
+}: Readonly<MenuRadioGroupProps>): React.ReactElement {
   const ctxValue = useMemo(() => ({ value, onValueChange }), [value, onValueChange]);
   return (
     <MenuRadioGroupContext.Provider value={ctxValue}>{children}</MenuRadioGroupContext.Provider>

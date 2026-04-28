@@ -67,7 +67,7 @@ function DateRangePickerPanel({
   locale,
   weekStartsOn,
   presets,
-}: DateRangePickerPanelProps): React.ReactElement {
+}: Readonly<DateRangePickerPanelProps>): React.ReactElement {
   return (
     <div className={styles.panel}>
       {presets && presets.length > 0 && (
@@ -126,7 +126,7 @@ function DateRangePickerPanel({
 
 // Panel wrapper that closes the popover on preset selection and after the
 // end date is chosen (range complete).
-function DateRangePickerPanelWrapper(props: DateRangePickerPanelProps): React.ReactElement {
+function DateRangePickerPanelWrapper(props: Readonly<DateRangePickerPanelProps>): React.ReactElement {
   const { setOpen } = usePopoverState();
   const { onPreset, onSelect, phase } = props;
 
@@ -187,7 +187,7 @@ export function DateRangePicker({
   labelStyle,
   helperTextClassName,
   helperTextStyle,
-}: DateRangePickerProps): React.ReactElement {
+}: Readonly<DateRangePickerProps>): React.ReactElement {
   const isControlled = controlledValue !== undefined;
   const [internalValue, setInternalValue] = useState<DateRange>(
     defaultValue ?? { start: null, end: null }
@@ -299,7 +299,7 @@ export function DateRangePicker({
             className={classNames(
               inputStyles.input,
               styles.trigger,
-              !displayText ? styles.placeholder : undefined
+              displayText ? undefined : styles.placeholder
             )}
           >
             <span className={styles.triggerText}>{displayText || placeholder}</span>

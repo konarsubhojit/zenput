@@ -30,7 +30,7 @@ function CountryDialSelect({
   value,
   onChange,
   disabled,
-}: CountryDialSelectProps): React.ReactElement {
+}: Readonly<CountryDialSelectProps>): React.ReactElement {
   return (
     <select
       className={styles.dialCodeSelect}

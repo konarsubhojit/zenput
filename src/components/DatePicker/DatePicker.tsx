@@ -63,7 +63,7 @@ function DatePickerPanel({
   locale,
   weekStartsOn,
   presets,
-}: DatePickerPanelProps): React.ReactElement {
+}: Readonly<DatePickerPanelProps>): React.ReactElement {
   const { setOpen } = usePopoverState();
 
   const handleSelect = useCallback(
@@ -139,7 +139,7 @@ export function DatePicker({
   labelStyle,
   helperTextClassName,
   helperTextStyle,
-}: DatePickerProps): React.ReactElement {
+}: Readonly<DatePickerProps>): React.ReactElement {
   // Controlled vs uncontrolled state.
   const isControlled = controlledValue !== undefined;
   const [internalValue, setInternalValue] = useState<Date | null>(defaultValue ?? null);
@@ -235,7 +235,7 @@ export function DatePicker({
             className={classNames(
               inputStyles.input,
               styles.trigger,
-              !displayText ? styles.placeholder : undefined
+              displayText ? undefined : styles.placeholder
             )}
           >
             <span className={styles.triggerText}>{displayText || placeholder}</span>
