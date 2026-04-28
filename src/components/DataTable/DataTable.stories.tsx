@@ -585,6 +585,7 @@ export const WithControlledExpansion: Story = {
 
 export const RTL: StoryObj<typeof DataTable> = {
   name: 'RTL — right-to-left DataTable',
+  globals: { direction: 'rtl' },
   render: () => {
     const rtlColumns: DataTableColumn<Employee>[] = [
       { key: 'id', header: 'المعرّف', width: '60px' },
@@ -599,13 +600,11 @@ export const RTL: StoryObj<typeof DataTable> = {
       { id: 3, name: 'محمد إبراهيم', department: 'التسويق', role: 'مدير تسويق', status: 'غير نشط', salary: 105000 },
     ];
     return (
-      <div dir="rtl">
-        <DataTable
-          columns={rtlColumns}
-          data={rtlEmployees}
-          rowKey={(row) => row.id}
-        />
-      </div>
+      <DataTable
+        columns={rtlColumns}
+        data={rtlEmployees}
+        rowKey={(row) => row.id}
+      />
     );
   },
 };

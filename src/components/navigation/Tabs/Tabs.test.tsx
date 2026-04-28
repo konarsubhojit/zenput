@@ -270,26 +270,23 @@ describe('Tabs a11y (axe)', () => {
 });
 
 describe('Tabs RTL keyboard navigation', () => {
-  it('navigates forward with ArrowLeft in RTL mode', () => {
+  it('ArrowRight (LTR default) still moves to next tab outside a ThemeProvider', () => {
     render(
-      <div dir="rtl">
-        <Tabs defaultValue="tab1">
-          <TabList aria-label="RTL tabs">
-            <Tab value="tab1">Tab 1</Tab>
-            <Tab value="tab2">Tab 2</Tab>
-          </TabList>
-          <TabPanels>
-            <TabPanel value="tab1">Content 1</TabPanel>
-            <TabPanel value="tab2">Content 2</TabPanel>
-          </TabPanels>
-        </Tabs>
-      </div>
+      <Tabs defaultValue="tab1">
+        <TabList aria-label="LTR tabs">
+          <Tab value="tab1">Tab 1</Tab>
+          <Tab value="tab2">Tab 2</Tab>
+        </TabList>
+        <TabPanels>
+          <TabPanel value="tab1">Content 1</TabPanel>
+          <TabPanel value="tab2">Content 2</TabPanel>
+        </TabPanels>
+      </Tabs>
     );
-    // In RTL mode the ThemeProvider is not wrapping, so the Tabs component
-    // uses its own internal direction detection via useDirection which defaults
-    // to 'ltr' outside a ThemeProvider. The dir attribute on the container
-    // does not affect the hook. We test via ThemeProvider instead.
-    expect(screen.getByText('Content 1')).toBeInTheDocument();
+    // Without a ThemeProvider, direction defaults to 'ltr', so ArrowRight = forward
+    const tablist = screen.getByRole('tablist');
+    fireEvent.keyDown(tablist, { key: 'ArrowRight' });
+    expect(screen.getByText('Content 2')).toBeInTheDocument();
   });
 
   it('ArrowLeft navigates to next tab in RTL ThemeProvider context', async () => {

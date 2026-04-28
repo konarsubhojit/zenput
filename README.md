@@ -244,7 +244,156 @@ Switch between light, dark, and high-contrast modes:
 </ThemeProvider>
 ```
 
-Available modes: `'light'` (default), `'dark'`, `'highContrast'`
+Available modes: `'light'` (default), `'dark'`, `'highContrast'`, `'system'`
+
+#### System Mode (OS Preference)
+
+Use `mode="system"` to automatically follow the OS `prefers-color-scheme` preference. The resolved mode updates live when the user changes their OS setting:
+
+```tsx
+<ThemeProvider theme={{ mode: 'system' }}>
+  {/* Automatically light or dark based on OS preference */}
+</ThemeProvider>
+```
+
+#### Persistence with `storageKey`
+
+Pass `storageKey` to persist the user's mode choice across page loads. The stored value takes precedence over the `theme.mode` prop on subsequent visits:
+
+```tsx
+<ThemeProvider theme={{ mode: 'system' }} storageKey="zp-theme">
+  {/* User's last chosen mode is remembered */}
+</ThemeProvider>
+```
+
+Use `storage="sessionStorage"` to scope persistence to the current browser session:
+
+```tsx
+<ThemeProvider theme={{ mode: 'light' }} storageKey="zp-theme" storage="sessionStorage">
+  {/* ... */}
+</ThemeProvider>
+```
+
+#### `useColorMode()` Hook
+
+Read and control the color mode from any descendant component:
+
+```tsx
+import { useColorMode } from 'zenput';
+
+function ThemeToggle() {
+  const { mode, resolvedMode, setMode, toggle } = useColorMode();
+
+  return (
+    <button onClick={toggle}>
+      Current: {resolvedMode} (selected: {mode})
+    </button>
+  );
+}
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `mode` | `ColorMode` | User-selected mode (may be `'system'`). |
+| `resolvedMode` | `ThemeMode` | Actual applied mode (`'light' \| 'dark' \| 'highContrast'`). |
+| `setMode(mode)` | `(mode: ColorMode) => void` | Change the mode (persists if `storageKey` is set). |
+| `toggle()` | `() => void` | Toggle between `'light'` and `'dark'`. |
+
+#### High-Contrast Auto-Detection
+
+When `detectHighContrast` is enabled alongside `mode="system"`, the provider automatically switches to `'highContrast'` when the OS `prefers-contrast: more` media feature is active:
+
+```tsx
+<ThemeProvider theme={{ mode: 'system' }} detectHighContrast>
+  {/* ... */}
+</ThemeProvider>
+```
+
+#### Anti-Flash Script (Next.js App Router)
+
+Prevent a flash of the wrong colour scheme during server-side rendering by injecting an inline script into `<head>` before React hydrates. Use `getColorModeScript` to generate the script string:
+
+```tsx
+// app/layout.tsx
+import Script from 'next/script';
+import { ThemeProvider, getColorModeScript } from 'zenput';
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <head>
+        <Script
+          id="zp-color-mode"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: getColorModeScript({ storageKey: 'zp-theme', defaultMode: 'system' }),
+          }}
+        />
+      </head>
+      <body>
+        {/* storageKey must match the script's storageKey */}
+        <ThemeProvider theme={{ mode: 'system' }} storageKey="zp-theme" as="main">
+          {children}
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+The script sets `data-zp-theme` on `<html>` before the first paint so your CSS variables are already correct when the page renders. This eliminates the flash even when the user prefers dark mode or has a stored preference.
+
+#### `useReducedMotion()` Hook
+
+Detect the OS `prefers-reduced-motion: reduce` preference and disable animations accordingly. All built-in Zenput animations already honour this media feature via the `--zp-duration-*` CSS custom properties:
+
+```tsx
+import { useReducedMotion } from 'zenput';
+
+function AnimatedCard() {
+  const reduced = useReducedMotion();
+  return (
+    <div
+      style={{
+        transition: reduced ? 'none' : 'transform var(--zp-duration-normal) var(--zp-easing-standard)',
+      }}
+    >
+      {/* ... */}
+    </div>
+  );
+}
+```
+
+#### Nested `ThemeProvider`
+
+Nest `ThemeProvider` to apply a different theme to a specific section of your UI. The inner provider inherits the parent's resolved mode by default and merges CSS tokens — the child's values override the parent's:
+
+```tsx
+<ThemeProvider theme={{ mode: 'dark' }}>
+  {/* Dark mode throughout */}
+  <main>
+    <ThemeProvider
+      theme={{
+        components: {
+          button: { borderRadius: '9999px' },
+        },
+      }}
+    >
+      {/* Still dark mode, but with pill-shaped buttons in this section */}
+    </ThemeProvider>
+  </main>
+</ThemeProvider>
+```
+
+Custom CSS variables from parent providers are inherited and can be overridden:
+
+```tsx
+<ThemeProvider theme={{ cssVars: { '--brand-accent': '#6366f1' } }}>
+  <ThemeProvider theme={{ cssVars: { '--brand-accent': '#8b5cf6' } }}>
+    {/* --brand-accent is '#8b5cf6' here */}
+  </ThemeProvider>
+</ThemeProvider>
+```
 
 #### Density Scaling
 
@@ -389,9 +538,63 @@ import { ThemeProvider, TokenBrowser } from 'zenput';
 
 ### Design Token Reference
 
-#### Overlay / z-index / elevation tokens
+The following CSS custom properties are emitted by `ThemeProvider` and available for advanced customisation.
 
-The following CSS custom properties are emitted by `ThemeProvider` and available for advanced customisation:
+#### Focus ring (`--zp-focus-ring-*`)
+
+| Custom property | Default value | Notes |
+|-----------------|---------------|-------|
+| `--zp-focus-ring-width` | `2px` | Outline width |
+| `--zp-focus-ring-offset` | `2px` | Outline offset |
+| `--zp-focus-ring-style` | `solid` | Outline style |
+| `--zp-focus-ring-color` | `var(--zp-color-focus-ring)` | Tracks the semantic focus-ring color |
+
+The global `.zp-focus-ring:focus-visible` utility class in `src/styles/globals.css` uses these tokens so all interactive elements stay in sync automatically.
+
+#### Surface levels (`--zp-color-surface-*`)
+
+| Custom property | Light | Dark | High-contrast |
+|-----------------|-------|------|---------------|
+| `--zp-color-surface-0` | `#ffffff` | `#0b0f17` | `#000000` |
+| `--zp-color-surface-1` | `#ffffff` | `#121826` | `#000000` |
+| `--zp-color-surface-2` | `#f9fafb` | `#1a2132` | `#000000` |
+| `--zp-color-surface-3` | `#f3f4f6` | `#222b3d` | `#000000` |
+| `--zp-color-surface-4` | `#e5e7eb` | `#2b3548` | `#000000` |
+
+Use these in Card, Dialog, Popover, and Menu surfaces to express depth.
+
+#### Semantic state triplets
+
+Each state (`success`, `warning`, `danger`, `info`, `neutral`) exposes a *bg-subtle*, *bg-solid*, and *text-on-solid* triplet. These are the canonical tokens for Toast, Alert, Banner, and Tag variants.
+
+| Custom property pattern | Purpose |
+|-------------------------|---------|
+| `--zp-color-{state}-bg-subtle` | Light background wash |
+| `--zp-color-{state}-bg-solid` | Vivid filled background |
+| `--zp-color-{state}-text-on-solid` | Text / icon on the filled bg |
+
+#### Neutral semantic state
+
+| Custom property | Light | Dark |
+|-----------------|-------|------|
+| `--zp-color-neutral` | `#6b7280` | `#9ca3af` |
+| `--zp-color-neutral-subtle` | `#f3f4f6` | `rgba(156, 163, 175, 0.16)` |
+| `--zp-color-neutral-text` | `#374151` | `#d1d5db` |
+| `--zp-color-neutral-bg-subtle` | `#f3f4f6` | `rgba(156, 163, 175, 0.16)` |
+| `--zp-color-neutral-bg-solid` | `#6b7280` | `#9ca3af` |
+| `--zp-color-neutral-text-on-solid` | `#ffffff` | `#ffffff` |
+
+#### Border tokens
+
+| Custom property | Purpose |
+|-----------------|---------|
+| `--zp-color-border` | Default border |
+| `--zp-color-border-subtle` | Subtle / muted border |
+| `--zp-color-border-strong` | Emphasized border |
+| `--zp-color-border-inverse` | White border on dark surfaces |
+| `--zp-color-border-focus` | Focus indicator border |
+
+#### Overlay / z-index / elevation tokens
 
 #### Z-index scale (`--zp-z-*`)
 
@@ -405,7 +608,9 @@ The following CSS custom properties are emitted by `ThemeProvider` and available
 | `--zp-z-sticky` | `1100` | Sticky headers/footers |
 | `--zp-z-banner` | `1200` | Banners/notifications |
 | `--zp-z-overlay` | `1300` | Generic overlays |
+| `--zp-z-drawer` | `1350` | Drawer / side-sheet |
 | `--zp-z-modal` | `1400` | Modal dialogs |
+| `--zp-z-dialog` | `1400` | Dialog (alias for modal) |
 | `--zp-z-popover` | `1500` | Popovers |
 | `--zp-z-skip-nav` | `1600` | Skip-navigation links |
 | `--zp-z-toast` | `1700` | Toast notifications |
@@ -413,14 +618,51 @@ The following CSS custom properties are emitted by `ThemeProvider` and available
 
 #### Elevation scale (`--zp-elevation-*`)
 
-| Custom property | Description |
-|-----------------|-------------|
-| `--zp-elevation-0` | No shadow |
-| `--zp-elevation-1` | Extra-small shadow |
-| `--zp-elevation-2` | Small shadow |
-| `--zp-elevation-3` | Medium shadow |
-| `--zp-elevation-4` | Large shadow |
-| `--zp-elevation-5` | Extra-large shadow |
+Each elevation level maps to a named shadow token:
+
+| Custom property | Shadow token | Description |
+|-----------------|--------------|-------------|
+| `--zp-elevation-0` | `shadow.none` | No shadow |
+| `--zp-elevation-1` | `shadow.xs` | Extra-small shadow |
+| `--zp-elevation-2` | `shadow.sm` | Small shadow |
+| `--zp-elevation-3` | `shadow.md` | Medium shadow |
+| `--zp-elevation-4` | `shadow.lg` | Large shadow |
+| `--zp-elevation-5` | `shadow.xl` | Extra-large shadow |
+
+#### Radius aliases
+
+| Custom property | Value | Usage |
+|-----------------|-------|-------|
+| `--zp-radius-pill` | `9999px` | Pill-shaped buttons and badges |
+| `--zp-radius-card` | `8px` | Card / panel surfaces |
+
+#### Motion (`--zp-easing-*`)
+
+| Custom property | Curve | Usage |
+|-----------------|-------|-------|
+| `--zp-easing-standard` | `cubic-bezier(0.4, 0, 0.2, 1)` | Default transitions |
+| `--zp-easing-emphasized` | `cubic-bezier(0.2, 0, 0, 1)` | Emphasized motion |
+| `--zp-easing-decelerate` | `cubic-bezier(0, 0, 0.2, 1)` | Entrance animations |
+| `--zp-easing-accelerate` | `cubic-bezier(0.4, 0, 1, 1)` | Exit animations |
+| `--zp-easing-bounce` | `cubic-bezier(0.34, 1.56, 0.64, 1)` | Playful overshoot (popover open) |
+
+#### Typography presets
+
+Semantic typography presets are available as `.zp-text-*` CSS utility classes.
+
+| Class | Use case |
+|-------|----------|
+| `.zp-text-display-lg` | Hero / splash headings |
+| `.zp-text-display-md` | Section splash headings |
+| `.zp-text-heading-1` … `.zp-text-heading-6` | Page / section headings |
+| `.zp-text-body-lg` | Large body copy |
+| `.zp-text-body-md` | Default body copy |
+| `.zp-text-body-sm` | Small / dense body copy |
+| `.zp-text-caption` | Labels beneath images/charts |
+| `.zp-text-overline` | ALL-CAPS category labels |
+| `.zp-text-code` | Inline or block code snippets |
+
+All classes reference `--zp-*` CSS custom properties, so they automatically adapt to the active theme.
 
 #### Overlay backdrop (`--zp-overlay`)
 

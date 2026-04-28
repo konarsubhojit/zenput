@@ -111,11 +111,17 @@
 }
 
 .toggleGroup .item:first-child {
-  border-radius: var(--sc-radius) 0 0 var(--sc-radius);
+  border-start-start-radius: var(--sc-radius);
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+  border-end-start-radius: var(--sc-radius);
 }
 
 .toggleGroup .item:last-child {
-  border-radius: 0 var(--sc-radius) var(--sc-radius) 0;
+  border-start-start-radius: 0;
+  border-start-end-radius: var(--sc-radius);
+  border-end-end-radius: var(--sc-radius);
+  border-end-start-radius: 0;
   border-inline-end: none;
 }
 

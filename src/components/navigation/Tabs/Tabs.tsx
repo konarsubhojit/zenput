@@ -119,7 +119,12 @@ export function TabList({ children, className, ...rest }: TabListProps): React.R
       const isHorizontal = orientation === 'horizontal';
       // In RTL mode, ArrowRight moves to the previous (visually left) tab
       // and ArrowLeft moves to the next (visually right) tab.
-      const isRtl = dir === 'rtl';
+      // When dir === 'auto', check the computed direction of the list element
+      // so keyboard nav matches whatever direction the browser resolved.
+      let isRtl = dir === 'rtl';
+      if (dir === 'auto' && listRef.current) {
+        isRtl = getComputedStyle(listRef.current).direction === 'rtl';
+      }
 
       // Gather enabled values at event-time so disabled tabs are skipped.
       const enabledValues = tabValues.filter((v) => {

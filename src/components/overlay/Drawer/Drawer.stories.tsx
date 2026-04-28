@@ -63,22 +63,21 @@ export const Sides: Story = {
 
 export const RTL: Story = {
   name: 'RTL — right-to-left Drawer',
+  globals: { direction: 'rtl' },
   render: () => (
-    <div dir="rtl">
-      <Drawer>
-        <DrawerTrigger>افتح الدرج</DrawerTrigger>
-        <DrawerContent side="right">
-          <DrawerHeader>
-            <DrawerTitle>إعدادات الفلتر</DrawerTitle>
-          </DrawerHeader>
-          <DrawerBody>
-            <p>يمكنك اختيار الفلاتر من هنا.</p>
-          </DrawerBody>
-          <DrawerFooter>
-            <DrawerClose>تم</DrawerClose>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
-    </div>
+    <Drawer>
+      <DrawerTrigger>افتح الدرج</DrawerTrigger>
+      <DrawerContent side="right">
+        <DrawerHeader>
+          <DrawerTitle>إعدادات الفلتر</DrawerTitle>
+        </DrawerHeader>
+        <DrawerBody>
+          <p>يمكنك اختيار الفلاتر من هنا.</p>
+        </DrawerBody>
+        <DrawerFooter>
+          <DrawerClose>تم</DrawerClose>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   ),
 };

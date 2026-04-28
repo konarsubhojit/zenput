@@ -46,8 +46,9 @@ export const Sides: Story = {
 
 export const RTL: Story = {
   name: 'RTL — right-to-left Popover',
+  globals: { direction: 'rtl' },
   render: () => (
-    <div dir="rtl" style={{ display: 'flex', gap: 16, padding: 80 }}>
+    <div style={{ display: 'flex', gap: 16, padding: 80 }}>
       <Popover>
         <PopoverTrigger>افتح النافذة</PopoverTrigger>
         <PopoverContent>

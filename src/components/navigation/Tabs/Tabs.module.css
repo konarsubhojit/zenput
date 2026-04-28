@@ -77,7 +77,10 @@
   border-inline-end: 2px solid transparent;
   margin-inline-end: -2px;
   text-align: start;
-  border-radius: var(--zp-radius-sm, 4px) 0 0 var(--zp-radius-sm, 4px);
+  border-start-start-radius: var(--zp-radius-sm, 4px);
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+  border-end-start-radius: var(--zp-radius-sm, 4px);
   padding: 0.625rem 1.25rem 0.625rem 1rem;
 }
 

@@ -33,11 +33,20 @@ const THEMES: Record<string, Theme> = {
   },
 };
 
+const VALID_DIRECTIONS: ReadonlySet<Direction> = new Set<Direction>(['ltr', 'rtl', 'auto']);
+
+function resolveDirection(value: unknown): Direction {
+  if (typeof value === 'string' && VALID_DIRECTIONS.has(value as Direction)) {
+    return value as Direction;
+  }
+  return 'ltr';
+}
+
 const withThemeProvider: Decorator = (Story, context) => {
   const themeName = context.globals.theme || 'Default';
   const theme = THEMES[themeName] || {};
   const bgColor = theme.bgColor;
-  const dir = (context.globals.direction || 'ltr') as Direction;
+  const dir = resolveDirection(context.globals.direction);
   return (
     <div style={{ padding: '1.5rem', backgroundColor: bgColor || 'transparent' }}>
       <ThemeProvider theme={theme} dir={dir}>
