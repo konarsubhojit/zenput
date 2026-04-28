@@ -96,16 +96,22 @@ export function useFocusTrap({
     const initialTarget = initialFocusRef?.current ?? tabbable[0] ?? null;
 
     // Track whether we added tabindex so we can clean it up on deactivation.
+    // The container must be programmatically focusable whenever there are no
+    // tabbable children — this is needed both for the autoFocus path (which
+    // focuses the container directly) and for the Tab-key handler (which calls
+    // container.focus() when getTabbable returns an empty list). We set the
+    // attribute regardless of autoFocus so the Tab handler always has a valid
+    // focus target.
     const addedTabindex = !container.hasAttribute('tabindex');
+    if (!initialTarget && addedTabindex) {
+      container.setAttribute('tabindex', '-1');
+    }
 
     if (autoFocus) {
       if (initialTarget) {
         initialTarget.focus();
       } else {
         // No tabbable children — focus the container itself.
-        if (addedTabindex) {
-          container.setAttribute('tabindex', '-1');
-        }
         container.focus();
       }
     }

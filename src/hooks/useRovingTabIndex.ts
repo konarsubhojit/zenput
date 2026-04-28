@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useLayoutEffect, useRef } from 'react';
 
 export type RovingOrientation = 'horizontal' | 'vertical' | 'both';
 
@@ -76,8 +76,11 @@ export function useRovingTabIndex({
   containerRef,
 }: UseRovingTabIndexOptions): UseRovingTabIndexResult {
   // Keep a stable ref to avoid re-creating onKeyDown on every render.
+  // Updated via useLayoutEffect so it runs after render but before user interactions.
   const stateRef = useRef({ items, activeItem, onNavigate, loop, disabledItems, containerRef, orientation });
-  stateRef.current = { items, activeItem, onNavigate, loop, disabledItems, containerRef, orientation };
+  useLayoutEffect(() => {
+    stateRef.current = { items, activeItem, onNavigate, loop, disabledItems, containerRef, orientation };
+  });
 
   const getTabIndex = useCallback(
     (item: string): 0 | -1 => (item === activeItem ? 0 : -1),
@@ -140,7 +143,6 @@ export function useRovingTabIndex({
         el?.focus();
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return { getTabIndex, onKeyDown };

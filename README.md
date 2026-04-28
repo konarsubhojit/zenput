@@ -749,7 +749,7 @@ Props:
 Mount **one** `<LiveRegion>` near your app root. Use `useAnnounce()` anywhere in the tree to
 push polite or assertive messages into an `aria-live` region.
 
-Features: one mounted region per app, message queue, debounced re-announcement of identical
+Features: one mounted region per app, debounced re-announcement of identical
 messages (clears then re-sets so screen readers re-read).
 
 ```tsx

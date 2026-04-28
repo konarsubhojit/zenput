@@ -42,6 +42,7 @@ describe('FocusScope', () => {
 
   it('does not auto-focus when autoFocus=false', () => {
     render(
+      // eslint-disable-next-line jsx-a11y/no-autofocus -- testing the autoFocus prop of FocusScope (not a native HTML autofocus)
       <FocusScope trapped autoFocus={false}>
         <button data-testid="btn">btn</button>
       </FocusScope>

@@ -29,6 +29,7 @@ function Harness({ items, defaultActive, orientation, loop, disabledItems }: Har
   });
 
   return (
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- roving-tabindex container handles arrow-key navigation
     <div ref={containerRef} role="group" onKeyDown={onKeyDown} data-testid="container">
       {items.map((id) => (
         <button
@@ -120,5 +121,14 @@ describe('useRovingTabIndex', () => {
     fireEvent.keyDown(screen.getByTestId('container'), { key: 'Enter' });
     // Active stays at 'b'
     expect(screen.getByTestId('item-b')).toHaveAttribute('tabindex', '0');
+  });
+
+  it('focuses the DOM element matching the next item when containerRef is provided', () => {
+    render(<Harness items={['a', 'b', 'c']} defaultActive="a" orientation="horizontal" />);
+    // Focus the first item so the container has a focused child
+    screen.getByTestId('item-a').focus();
+    fireEvent.keyDown(screen.getByTestId('container'), { key: 'ArrowRight' });
+    // The hook should have called .focus() on item-b via the containerRef
+    expect(document.activeElement).toBe(screen.getByTestId('item-b'));
   });
 });

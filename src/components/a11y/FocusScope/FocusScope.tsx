@@ -1,8 +1,8 @@
 import React, { useRef } from 'react';
 import { useFocusTrap } from '../../../hooks/useFocusTrap';
 
-export interface FocusScopeProps {
-  children: React.ReactNode;
+export type FocusScopeProps = {
+  children?: React.ReactNode;
   /**
    * When `true`, focus is trapped inside the scope (Tab / Shift+Tab cycle
    * within the contained tabbable elements). Default: `false`.
@@ -14,8 +14,9 @@ export interface FocusScopeProps {
    */
   restoreFocus?: boolean;
   /**
-   * When `true`, the first tabbable element inside the scope is focused
-   * automatically when `trapped` becomes `true`. Default: `true`.
+   * When `true` (default), the first tabbable element inside the scope (or
+   * `initialFocusRef` if provided) receives focus automatically when `trapped`
+   * becomes `true`. Set to `false` to suppress automatic focus movement.
    */
   autoFocus?: boolean;
   /**
@@ -24,16 +25,26 @@ export interface FocusScopeProps {
    * pulled back into the scope if it moves outside.
    */
   clickOutsideDeactivates?: boolean;
-  /** Element ref to focus when the scope activates. Overrides `autoFocus`. */
+  /**
+   * Ref to the element that should receive focus when the scope activates.
+   * Only takes effect when `autoFocus` is `true` (the default).
+   * When omitted, the first tabbable child receives focus.
+   */
   initialFocusRef?: React.RefObject<HTMLElement | null>;
-  /** Element ref to restore focus to when the scope deactivates. Overrides `restoreFocus`. */
+  /**
+   * Ref to the element that focus is restored to when the scope deactivates.
+   * Only takes effect when `restoreFocus` is `true` (the default).
+   * When omitted, focus returns to the element that was active before the scope was trapped.
+   */
   returnFocusRef?: React.RefObject<HTMLElement | null>;
-  /** Rendered as a `<div>` by default. Override with any element type. */
-  as?: React.ElementType;
-  className?: string;
-  style?: React.CSSProperties;
-  [key: string]: unknown;
-}
+  /**
+   * HTML element tag to render as the container. Defaults to `'div'`.
+   * Only intrinsic HTML elements are accepted because a ref must be
+   * attached to drive the focus trap — function components that don't
+   * forward refs would silently break trapping.
+   */
+  as?: keyof React.JSX.IntrinsicElements;
+} & Omit<React.HTMLAttributes<HTMLElement>, 'autoFocus'>;
 
 /**
  * Declarative wrapper around `useFocusTrap`. Renders a container element
@@ -60,8 +71,9 @@ export function FocusScope({
 }: FocusScopeProps): React.ReactElement {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Internal refs used when the consumer has not provided explicit refs.
-  // useFocusTrap ignores undefined refs and falls back to its own logic.
+  // Only pass the external refs to useFocusTrap when the corresponding
+  // boolean flag is enabled. useFocusTrap falls back to its own defaults
+  // when the refs are undefined.
   const initialFocusRef = autoFocus ? externalInitialFocusRef : undefined;
   const returnFocusRef = restoreFocus ? externalReturnFocusRef : undefined;
 
@@ -75,6 +87,9 @@ export function FocusScope({
   });
 
   return (
+    // @ts-expect-error — the `as` prop is constrained to intrinsic elements
+    // (which all support ref forwarding), but TypeScript cannot narrow the
+    // dynamic ref type here without per-element generics.
     <Tag ref={containerRef} {...rest}>
       {children}
     </Tag>
