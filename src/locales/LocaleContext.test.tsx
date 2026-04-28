@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, renderHook, screen } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
@@ -69,23 +69,13 @@ describe('interpolate', () => {
 
 describe('useLocale — no provider', () => {
   it('returns en-US locale', () => {
-    let ctx!: ReturnType<typeof useLocale>;
-    function Grabber() {
-      ctx = useLocale();
-      return null;
-    }
-    render(<Grabber />);
-    expect(ctx.locale).toBe('en-US');
+    const { result } = renderHook(() => useLocale());
+    expect(result.current.locale).toBe('en-US');
   });
 
   it('t() returns the en-US default for a known key', () => {
-    let ctx!: ReturnType<typeof useLocale>;
-    function Grabber() {
-      ctx = useLocale();
-      return null;
-    }
-    render(<Grabber />);
-    expect(ctx.t('autoComplete.noOptions')).toBe(enUS['autoComplete.noOptions']);
+    const { result } = renderHook(() => useLocale());
+    expect(result.current.t('autoComplete.noOptions')).toBe(enUS['autoComplete.noOptions']);
   });
 });
 
