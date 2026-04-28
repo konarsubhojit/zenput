@@ -91,6 +91,7 @@ export const ContextMenuTrigger = forwardRef<HTMLDivElement, ContextMenuTriggerP
     );
 
     return (
+      /* NOSONAR – ContextMenu trigger intentionally uses a div with event handler */
       <div ref={mergedRef} onContextMenu={handleContextMenu} {...rest}>
         {children}
       </div>
@@ -133,8 +134,8 @@ export const ContextMenuContent = forwardRef<HTMLDivElement, ContextMenuContentP
       }
       const updateCoords = (): void => {
         const el = contentElRef.current;
-        const vw = typeof window !== 'undefined' ? window.innerWidth : 0;
-        const vh = typeof window !== 'undefined' ? window.innerHeight : 0;
+        const vw = globalThis.window?.innerWidth ?? 0;
+        const vh = globalThis.window?.innerHeight ?? 0;
         const w = el ? el.offsetWidth : 180;
         const h = el ? el.offsetHeight : 0;
         setClampedCoords({

@@ -57,9 +57,10 @@ export function Card({
   } else {
     interactiveElement = 'button';
   }
+  const defaultElement: React.ElementType = interactive ? interactiveElement : 'div';
   const Component: React.ElementType = asChild
     ? Slot
-    : (as ?? (interactive ? interactiveElement : 'div'));
+    : (as ?? defaultElement);
 
   // Only forward `href` when rendering an `<a>` (or a custom component which
   // may consume it); only forward `type` when rendering a native `<button>` so

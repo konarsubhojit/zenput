@@ -43,6 +43,37 @@ function useTabsContext(): TabsContextValue {
 }
 
 // ---------------------------------------------------------------------------
+// Keyboard navigation helper
+// ---------------------------------------------------------------------------
+
+/**
+ * Determines the next focused tab index given the pressed key, current index,
+ * total count of enabled tabs, orientation, and text direction.
+ * Returns null when the key does not trigger navigation.
+ */
+function getNextTabIndex(
+  key: string,
+  currentIdx: number,
+  count: number,
+  orientation: 'horizontal' | 'vertical',
+  isRtl: boolean
+): number | null {
+  const isHorizontal = orientation === 'horizontal';
+  const forwardKey = isRtl ? 'ArrowLeft' : 'ArrowRight';
+  const backwardKey = isRtl ? 'ArrowRight' : 'ArrowLeft';
+
+  if ((isHorizontal && key === forwardKey) || (!isHorizontal && key === 'ArrowDown')) {
+    return currentIdx < count - 1 ? currentIdx + 1 : 0;
+  }
+  if ((isHorizontal && key === backwardKey) || (!isHorizontal && key === 'ArrowUp')) {
+    return currentIdx > 0 ? currentIdx - 1 : count - 1;
+  }
+  if (key === 'Home') return 0;
+  if (key === 'End') return count - 1;
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // Tabs
 // ---------------------------------------------------------------------------
 
@@ -74,8 +105,13 @@ export function Tabs({
     [isControlled, onChange]
   );
 
+  const ctxValue = useMemo(
+    () => ({ selected, onSelect, orientation, baseId }),
+    [selected, onSelect, orientation, baseId]
+  );
+
   return (
-    <TabsContext.Provider value={{ selected, onSelect, orientation, baseId }}>
+    <TabsContext.Provider value={ctxValue}>
       <div
         className={classNames(styles.tabs, styles[orientation], className)}
         style={style}
@@ -117,7 +153,6 @@ export function TabList({ children, className, ...rest }: TabListProps): React.R
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
-      const isHorizontal = orientation === 'horizontal';
       // In RTL mode, ArrowRight moves to the previous (visually left) tab
       // and ArrowLeft moves to the next (visually right) tab.
       // When dir === 'auto', check the computed direction of the list element
@@ -141,25 +176,7 @@ export function TabList({ children, className, ...rest }: TabListProps): React.R
       }
 
       const currentIdx = enabledValues.indexOf(selected);
-      let nextIdx: number | null = null;
-
-      // Determine logical "forward" and "backward" keys for horizontal tabs,
-      // accounting for RTL where the visual direction is mirrored.
-      const forwardKey = isRtl ? 'ArrowLeft' : 'ArrowRight';
-      const backwardKey = isRtl ? 'ArrowRight' : 'ArrowLeft';
-
-      if ((isHorizontal && e.key === forwardKey) || (!isHorizontal && e.key === 'ArrowDown')) {
-        nextIdx = currentIdx < enabledValues.length - 1 ? currentIdx + 1 : 0;
-      } else if (
-        (isHorizontal && e.key === backwardKey) ||
-        (!isHorizontal && e.key === 'ArrowUp')
-      ) {
-        nextIdx = currentIdx > 0 ? currentIdx - 1 : enabledValues.length - 1;
-      } else if (e.key === 'Home') {
-        nextIdx = 0;
-      } else if (e.key === 'End') {
-        nextIdx = enabledValues.length - 1;
-      }
+      const nextIdx = getNextTabIndex(e.key, currentIdx, enabledValues.length, orientation, isRtl);
 
       if (nextIdx !== null) {
         e.preventDefault();

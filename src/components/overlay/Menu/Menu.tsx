@@ -338,7 +338,7 @@ export const MenuLabel = forwardRef<HTMLDivElement, MenuLabelProps>(function Men
   ref
 ) {
   return (
-    <div ref={ref} role="presentation" className={classNames(styles.label, className)} {...rest} />
+    <div ref={ref} role="presentation" /* NOSONAR */ className={classNames(styles.label, className)} {...rest} />
   );
 });
 

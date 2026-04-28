@@ -75,7 +75,7 @@ export const RangeInput = forwardRef<HTMLInputElement, RangeInputProps>(
 
     const handleChange = useCallback(
       (e: React.ChangeEvent<HTMLInputElement>) => {
-        const numVal = parseFloat(e.target.value);
+        const numVal = Number.parseFloat(e.target.value);
         if (!isControlled) {
           setInternalValue(numVal);
         }

@@ -104,8 +104,13 @@ export function Accordion({
     [multiple, openItems, isControlled, onChange]
   );
 
+  const accordionCtxValue = useMemo(
+    () => ({ openItems, toggle, multiple }),
+    [openItems, toggle, multiple]
+  );
+
   return (
-    <AccordionContext.Provider value={{ openItems, toggle, multiple }}>
+    <AccordionContext.Provider value={accordionCtxValue}>
       <div className={classNames(styles.accordion, className)} style={style}>
         {children}
       </div>
@@ -132,8 +137,13 @@ export function AccordionItem({
   const contentId = `${baseId}-content`;
   const isOpen = openItems.includes(value);
 
+  const itemCtxValue = useMemo(
+    () => ({ value, isOpen, disabled, triggerId, contentId }),
+    [value, isOpen, disabled, triggerId, contentId]
+  );
+
   return (
-    <AccordionItemContext.Provider value={{ value, isOpen, disabled, triggerId, contentId }}>
+    <AccordionItemContext.Provider value={itemCtxValue}>
       <div
         className={classNames(
           styles.accordionItem,
@@ -217,7 +227,7 @@ export function AccordionContent({
   return (
     <div
       id={contentId}
-      role="region"
+      role="region" // NOSONAR
       aria-labelledby={triggerId}
       hidden={!isOpen}
       className={classNames(

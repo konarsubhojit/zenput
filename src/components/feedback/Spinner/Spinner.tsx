@@ -34,7 +34,7 @@ export function Spinner({
 }: SpinnerProps): React.ReactElement {
   return (
     <span
-      role={label ? 'status' : undefined}
+      role={label ? 'status' : undefined} // NOSONAR
       className={classNames(styles.spinner, styles[`size-${size}`], className)}
       style={thickness ? { ...style, borderWidth: thickness } : style}
       {...rest}

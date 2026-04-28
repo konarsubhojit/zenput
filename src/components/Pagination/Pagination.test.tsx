@@ -161,7 +161,7 @@ describe('Pagination', () => {
         onPageSizeChange={vi.fn()}
       />
     );
-    expect(screen.getByLabelText('Rows per page')).toBeInTheDocument();
+    expect(screen.getByLabelText('Rows per page:')).toBeInTheDocument();
   });
 
   it('calls onPageSizeChange when a new size is selected', async () => {
@@ -177,7 +177,7 @@ describe('Pagination', () => {
         onPageSizeChange={onSizeChange}
       />
     );
-    await userEvent.selectOptions(screen.getByLabelText('Rows per page'), '20');
+    await userEvent.selectOptions(screen.getByLabelText('Rows per page:'), '20');
     expect(onSizeChange).toHaveBeenCalledWith(20);
   });
 
