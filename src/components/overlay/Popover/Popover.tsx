@@ -62,7 +62,7 @@ export function Popover({
   defaultOpen,
   onOpenChange,
   children,
-}: PopoverProps): React.ReactElement {
+}: Readonly<PopoverProps>): React.ReactElement {
   const { open, setOpen } = useDisclosure({
     open: controlledOpen,
     defaultOpen,

@@ -31,7 +31,7 @@ export function Spinner({
   className,
   style,
   ...rest
-}: SpinnerProps): React.ReactElement {
+}: Readonly<SpinnerProps>): React.ReactElement {
   return (
     <span
       role={label ? 'status' : undefined} // NOSONAR

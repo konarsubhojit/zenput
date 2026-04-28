@@ -2,8 +2,7 @@
 import React, { forwardRef, useCallback, useState } from 'react';
 import { NumberInputProps } from './NumberInput.types';
 import { classNames, getValidationMessage, getValidationMessageClass } from '../../utils';
-import { useFormField } from '../../hooks';
-import { useControllable } from '../../hooks';
+import { useFormField, useControllable } from '../../hooks';
 import styles from './NumberInput.module.css';
 
 function computeDisplayValue(

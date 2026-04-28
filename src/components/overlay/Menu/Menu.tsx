@@ -69,7 +69,7 @@ export function Menu({
   defaultOpen,
   onOpenChange,
   children,
-}: MenuProps): React.ReactElement {
+}: Readonly<MenuProps>): React.ReactElement {
   const { open, setOpen } = useDisclosure({ open: controlledOpen, defaultOpen, onOpenChange });
   const triggerRef = useRef<HTMLElement | null>(null);
   const contentId = useId();
@@ -484,7 +484,7 @@ export interface MenuSubProps {
   children: React.ReactNode;
 }
 
-export function MenuSub({ children }: MenuSubProps): React.ReactElement {
+export function MenuSub({ children }: Readonly<MenuSubProps>): React.ReactElement {
   const { open, setOpen } = useDisclosure();
   const triggerRef = useRef<HTMLElement | null>(null);
   const contentId = useId();

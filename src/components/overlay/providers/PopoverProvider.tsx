@@ -144,7 +144,7 @@ function ImperativePopoverContent({
     <Portal>
       <div
         ref={contentRef}
-        role="dialog"
+        role="dialog" // NOSONAR
         aria-modal="false"
         tabIndex={-1}
         data-side={entry.side}
@@ -171,7 +171,7 @@ export interface PopoverProviderProps {
  * `<PopoverProvider>` once, then call `usePopover()` anywhere inside the
  * tree to show floating popovers anchored to an element or `(x, y)` point.
  */
-export function PopoverProvider({ children }: PopoverProviderProps): React.ReactElement {
+export function PopoverProvider({ children }: Readonly<PopoverProviderProps>): React.ReactElement {
   const [stack, setStack] = useState<PopoverStackEntry[]>([]);
 
   const pendingRef = useRef(new Map<string, (value?: unknown) => void>());

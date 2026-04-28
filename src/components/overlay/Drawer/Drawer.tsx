@@ -59,7 +59,7 @@ export function Drawer({
   closeOnOverlayClick = true,
   closeOnEscape = true,
   children,
-}: DrawerProps): React.ReactElement {
+}: Readonly<DrawerProps>): React.ReactElement {
   const value = useOverlayPanelState({
     open: controlledOpen,
     defaultOpen,

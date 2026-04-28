@@ -49,7 +49,7 @@ export function ProgressBar({
   'aria-label': ariaLabel,
   'aria-labelledby': ariaLabelledBy,
   ...rest
-}: ProgressBarProps): React.ReactElement {
+}: Readonly<ProgressBarProps>): React.ReactElement {
   // Normalize `max` to a non-negative number so consumers can't produce
   // invalid ARIA values (e.g. aria-valuemin=0 with a negative aria-valuenow).
   const safeMax = Math.max(max, 0);

@@ -30,7 +30,7 @@ export const densityTokens: Record<DensityScale, DensityTokens> = {
     minHeight: '2rem', // 32px
   },
   normal: {
-    scale: 1.0,
+    scale: 1,
     paddingSm: '0.5rem', // 8px
     paddingMd: '0.75rem', // 12px
     paddingLg: '1rem', // 16px

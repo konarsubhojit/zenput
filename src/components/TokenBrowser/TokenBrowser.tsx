@@ -58,7 +58,7 @@ function RecipeVariantSection({
   copyContext,
   variantStyles,
   renderToken,
-}: RecipeVariantSectionProps): React.ReactElement {
+}: Readonly<RecipeVariantSectionProps>): React.ReactElement {
   return (
     <div className={styles.variantSection}>
       <div className={styles.variantName}>{name}</div>
@@ -75,7 +75,7 @@ function RecipeVariantSection({
  * Token Browser component for exploring and documenting design tokens.
  * This is primarily intended for documentation and Storybook.
  */
-export function TokenBrowser({ defaultCategory = 'colors' }: TokenBrowserProps) {
+export function TokenBrowser({ defaultCategory = 'colors' }: Readonly<TokenBrowserProps>) {
   const [category, setCategory] = useState<TokenCategory>(defaultCategory);
   const [copied, setCopied] = useState<string | null>(null);
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

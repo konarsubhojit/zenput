@@ -57,7 +57,7 @@ export function Dialog({
   closeOnOverlayClick = true,
   closeOnEscape = true,
   children,
-}: DialogProps): React.ReactElement {
+}: Readonly<DialogProps>): React.ReactElement {
   const value = useOverlayPanelState({
     open: controlledOpen,
     defaultOpen,

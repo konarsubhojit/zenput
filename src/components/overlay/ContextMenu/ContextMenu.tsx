@@ -38,7 +38,7 @@ export function ContextMenu({
   defaultOpen,
   onOpenChange,
   children,
-}: ContextMenuProps): React.ReactElement {
+}: Readonly<ContextMenuProps>): React.ReactElement {
   const { open, setOpen } = useDisclosure({ open: controlledOpen, defaultOpen, onOpenChange });
   const triggerRef = useRef<HTMLElement | null>(null);
   const contentId = useId();

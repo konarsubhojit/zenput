@@ -9,6 +9,6 @@ export function assignRef<T>(forwardedRef: Ref<T> | undefined, node: T | null): 
   if (typeof forwardedRef === 'function') {
     forwardedRef(node);
   } else if (forwardedRef && 'current' in forwardedRef) {
-    (forwardedRef as React.MutableRefObject<T | null>).current = node;
+    (forwardedRef as React.RefObject<T | null>).current = node;
   }
 }

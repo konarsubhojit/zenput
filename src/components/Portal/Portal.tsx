@@ -50,7 +50,7 @@ export function Portal({
   children,
   container,
   disabled = false,
-}: PortalProps): React.ReactElement | null {
+}: Readonly<PortalProps>): React.ReactElement | null {
   // SSR-safe mounting detection via useSyncExternalStore.
   // getServerSnapshot returns false → renders null on server.
   // getClientSnapshot returns true → activates portal on client.

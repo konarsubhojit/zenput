@@ -51,7 +51,7 @@ export function Skeleton({
   style,
   children,
   ...rest
-}: SkeletonProps): React.ReactElement {
+}: Readonly<SkeletonProps>): React.ReactElement {
   if (!loading) {
     return (<>{children}</>) as React.ReactElement;
   }
@@ -98,7 +98,7 @@ export function SkeletonText({
   className,
   style,
   ...rest
-}: SkeletonTextProps): React.ReactElement {
+}: Readonly<SkeletonTextProps>): React.ReactElement {
   return (
     <span
       {...rest}
@@ -137,7 +137,7 @@ export function SkeletonAvatar({
   className,
   style,
   ...rest
-}: SkeletonAvatarProps): React.ReactElement {
+}: Readonly<SkeletonAvatarProps>): React.ReactElement {
   return (
     <Skeleton
       variant="circle"

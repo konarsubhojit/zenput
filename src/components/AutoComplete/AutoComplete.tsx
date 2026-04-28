@@ -71,10 +71,10 @@ export const AutoComplete = forwardRef<HTMLInputElement, AutoCompleteProps>(
 
     const [isOpen, setIsOpen] = useState(false);
     const [highlightedIndex, setHighlightedIndex] = useState(-1);
-    const [inputValue, setInputValue] = useState((defaultValue as string | undefined) ?? '');
+    const [inputValue, setInputValue] = useState(defaultValue ?? '');
 
     const isControlled = value !== undefined;
-    const currentInputValue = isControlled ? (value as string) : inputValue;
+    const currentInputValue = isControlled ? value! : inputValue;
 
     const wrapperRef = useRef<HTMLDivElement>(null);
     const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);

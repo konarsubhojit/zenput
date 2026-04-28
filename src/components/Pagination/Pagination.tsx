@@ -88,7 +88,7 @@ export function Pagination({
   disabled = false,
   className,
   style,
-}: PaginationProps): React.ReactElement {
+}: Readonly<PaginationProps>): React.ReactElement {
   // Normalize inputs so the UI stays consistent if `currentPage`/`pageSize`
   // drift out of range (e.g. when totalCount shrinks).
   const safePageSize = Math.max(1, Math.floor(pageSize) || 1);

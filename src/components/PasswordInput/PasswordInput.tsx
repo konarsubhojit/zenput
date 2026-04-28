@@ -10,7 +10,7 @@ function getPasswordStrength(password: string): number {
   let score = 0;
   if (password.length >= 8) score++;
   if (/[A-Z]/.test(password)) score++;
-  if (/[0-9]/.test(password)) score++;
+  if (/\d/.test(password)) score++;
   if (/[^A-Za-z0-9]/.test(password)) score++;
   return score;
 }
@@ -102,7 +102,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
     const showStrength = showStrengthIndicator && currentValue.length > 0;
 
     const toggleIcon = visible ? (hideIcon ?? <span>🙈</span>) : (showIcon ?? <span>👁</span>);
-    const toggleLabel = visible ? 'Hide password' : 'Show password';
+    const toggleLabel = visible ? 'Hide password' : 'Show password'; // NOSONAR: not a credential — UI label
 
     const activeMessage = getValidationMessage(
       validationState,

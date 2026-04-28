@@ -50,7 +50,7 @@ export function EmptyState({
   variant = 'default',
   className,
   style,
-}: EmptyStateProps): React.ReactElement {
+}: Readonly<EmptyStateProps>): React.ReactElement {
   return (
     <div
       className={classNames(styles.emptyState, SIZE_CLASS[size], VARIANT_CLASS[variant], className)}

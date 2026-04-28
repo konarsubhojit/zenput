@@ -86,7 +86,7 @@ export interface DialogProviderProps {
  * `useAlert()`, or the generic `useDialog()` anywhere inside the tree to
  * open dialogs without managing `open` state or JSX placement.
  */
-export function DialogProvider({ children }: DialogProviderProps): React.ReactElement {
+export function DialogProvider({ children }: Readonly<DialogProviderProps>): React.ReactElement {
   const [stack, setStack] = useState<StackEntry[]>([]);
 
   // Track {resolve, defaultCloseValue} keyed by id for unmount cleanup.
