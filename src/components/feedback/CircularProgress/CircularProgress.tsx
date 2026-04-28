@@ -98,7 +98,7 @@ export function CircularProgress({
         width={diameter}
         height={diameter}
         viewBox={`0 0 ${diameter} ${diameter}`}
-        role="progressbar"
+        role="progressbar" // NOSONAR
         aria-valuenow={indeterminate ? undefined : clampedValue}
         aria-valuemin={0}
         aria-valuemax={safeMax}

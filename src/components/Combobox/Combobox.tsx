@@ -17,6 +17,7 @@ import {
   DROPDOWN_BLUR_DELAY_MS,
 } from '../../utils';
 import { useFormField } from '../../hooks';
+import { useLocale } from '../../locales/LocaleContext';
 import styles from './Combobox.module.css';
 
 const DEFAULT_DEBOUNCE_MS = 300;
@@ -73,6 +74,7 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
   ) => {
     const generatedId = useId();
     const listboxId = `cb-listbox-${generatedId}`;
+    const { t } = useLocale();
 
     const { inputId, helperId, labelProps, inputAriaProps } = useFormField({
       id,
@@ -274,6 +276,63 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
     );
     const messageClass = getValidationMessageClass(validationState, styles);
 
+    // Compute dropdown content before JSX to avoid deeply nested arrow functions (S2004).
+    let dropdownContent: React.ReactNode;
+    if (isLoading) {
+      dropdownContent = (
+        <li className={styles.loadingState} role="status" /* NOSONAR */>
+          {loadingState ?? t('combobox.loading')}
+        </li>
+      );
+    } else if (flatOptions.length === 0) {
+      dropdownContent = (
+        <li className={styles.emptyState}>
+          {emptyState ?? t('combobox.noOptions')}
+        </li>
+      );
+    } else {
+      dropdownContent = Array.from(grouped.entries()).map(([group, opts]) => (
+        <React.Fragment key={group || '__ungrouped'}>
+          {group && (
+            <li
+              className={styles.groupHeader}
+              role="presentation" // NOSONAR
+              aria-hidden="true"
+            >
+              {group}
+            </li>
+          )}
+          {opts.map((opt) => {
+            const flatIdx = flatIndexByValue.get(opt.value) ?? -1;
+            const isSelected = selectedValue?.value === opt.value;
+
+            return (
+              <li
+                key={opt.value}
+                id={`${listboxId}-opt-${flatIdx}`}
+                role="option" // NOSONAR
+                aria-selected={isSelected}
+                aria-disabled={opt.disabled}
+                className={classNames(
+                  styles.option,
+                  flatIdx === highlightedIndex ? styles.optionHighlighted : undefined,
+                  isSelected ? styles.optionSelected : undefined,
+                  opt.disabled ? styles.optionDisabled : undefined
+                )}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  selectOption(opt);
+                }}
+                onMouseEnter={() => setHighlightedIndex(flatIdx)}
+              >
+                {renderOption ? renderOption(opt) : opt.label}
+              </li>
+            );
+          })}
+        </React.Fragment>
+      ));
+    }
+
     return (
       <div
         ref={wrapperRef}
@@ -358,62 +417,7 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
             aria-label={label ?? 'Options'}
             className={styles.dropdown}
           >
-            {(() => {
-              if (isLoading) {
-                return (
-                  <li className={styles.loadingState} role="status" /* NOSONAR */>
-                    {loadingState ?? 'Loading…'}
-                  </li>
-                );
-              }
-              if (flatOptions.length === 0) {
-                return (
-                  <li className={styles.emptyState}>
-                    {emptyState ?? 'No options found'}
-                  </li>
-                );
-              }
-              return Array.from(grouped.entries()).map(([group, opts]) => (
-                <React.Fragment key={group || '__ungrouped'}>
-                  {group && (
-                    <li
-                      className={styles.groupHeader}
-                      role="presentation" // NOSONAR
-                      aria-hidden="true"
-                    >
-                      {group}
-                    </li>
-                  )}
-                  {opts.map((opt) => {
-                    const flatIdx = flatIndexByValue.get(opt.value) ?? -1;
-                    const isSelected = selectedValue?.value === opt.value;
-
-                    return (
-                      <li
-                        key={opt.value}
-                        id={`${listboxId}-opt-${flatIdx}`}
-                        role="option" // NOSONAR
-                        aria-selected={isSelected}
-                        aria-disabled={opt.disabled}
-                        className={classNames(
-                          styles.option,
-                          flatIdx === highlightedIndex ? styles.optionHighlighted : undefined,
-                          isSelected ? styles.optionSelected : undefined,
-                          opt.disabled ? styles.optionDisabled : undefined
-                        )}
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          selectOption(opt);
-                        }}
-                        onMouseEnter={() => setHighlightedIndex(flatIdx)}
-                      >
-                        {renderOption ? renderOption(opt) : opt.label}
-                      </li>
-                    );
-                  })}
-                </React.Fragment>
-              ));
-            })()}
+            {dropdownContent}
           </ul>
         )}
 

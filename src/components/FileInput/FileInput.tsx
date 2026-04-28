@@ -10,6 +10,7 @@ import React, {
 import { FileInputProps } from './FileInput.types';
 import { classNames, getValidationMessage, getValidationMessageClass } from '../../utils';
 import { useFormField } from '../../hooks';
+import { useLocale } from '../../locales/LocaleContext';
 import styles from './FileInput.module.css';
 
 export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
@@ -40,7 +41,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
       helperTextStyle,
       id,
       className,
-      buttonLabel = 'Choose file',
+      buttonLabel,
       showFileNames = true,
       dropzone,
       previewSrc,
@@ -58,6 +59,8 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
     // Always use internalRef for internal reads so that callback refs are supported.
     // Forward via useImperativeHandle so consumers with object or callback refs both work.
     useImperativeHandle(ref, () => internalRef.current as HTMLInputElement);
+
+    const { t } = useLocale();
 
     const [fileNames, setFileNames] = useState<string[]>([]);
     const [isDragActive, setIsDragActive] = useState(false);
@@ -199,7 +202,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
         {dropzone ? (
           <button
             type="button"
-            aria-label={buttonLabel}
+            aria-label={buttonLabel ?? t('fileInput.chooseFile')}
             disabled={disabled}
             className={classNames(
               styles.dropzone,
@@ -214,8 +217,8 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
             onDragLeave={() => setIsDragActive(false)}
             onDrop={handleDrop}
           >
-            <span>📁 {buttonLabel}</span>
-            <span className={styles.dropzoneHint}>or drag and drop files here</span>
+            <span>📁 {buttonLabel ?? t('fileInput.chooseFile')}</span>
+            <span className={styles.dropzoneHint}>{t('fileInput.dragAndDropHint')}</span>
           </button>
         ) : (
           <button
@@ -225,7 +228,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
             onClick={() => internalRef.current?.click()}
             aria-controls={inputId}
           >
-            📁 {buttonLabel}
+            📁 {buttonLabel ?? t('fileInput.chooseFile')}
           </button>
         )}
         {activeSrc && (

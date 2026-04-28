@@ -27,6 +27,11 @@
       "import": "./dist/esm/server/index.js",
       "require": "./dist/cjs/server/index.js",
       "types": "./dist/server/index.d.ts"
+    },
+    "./locales": {
+      "import": "./dist/esm/locales/index.js",
+      "require": "./dist/cjs/locales/index.js",
+      "types": "./dist/locales/index.d.ts"
     }
   },
   "files": [
