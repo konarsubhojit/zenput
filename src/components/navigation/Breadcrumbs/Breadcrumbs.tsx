@@ -1,3 +1,4 @@
+'use client';
 import React from 'react';
 import { classNames } from '../../../utils';
 import styles from './Breadcrumbs.module.css';
@@ -40,7 +41,7 @@ export function Breadcrumbs({
                 </LinkEl>
               ) : (
                 <span
-                  className={classNames(styles.text, isCurrent ? styles.current : undefined)}
+                  className={classNames(styles.text, isCurrent ? styles.current : undefined)} // NOSONAR
                   aria-current={isCurrent ? 'page' : undefined}
                 >
                   {item.label}

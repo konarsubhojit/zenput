@@ -1,3 +1,4 @@
+'use client';
 import React, { useState, useCallback, useRef, useEffect, useMemo, useId } from 'react';
 import {
   DataTableProps,
@@ -10,6 +11,7 @@ import {
 import { classNames } from '../../utils';
 import styles from './DataTable.module.css';
 import { Pagination } from '../Pagination/Pagination';
+import { useLocale } from '../../locales/LocaleContext';
 
 const DEFAULT_SKELETON_ROW_COUNT = 5;
 
@@ -53,17 +55,18 @@ function HeaderLabel({
   isSorted,
   sortDir,
   handleSortClick,
-}: {
+}: Readonly<{
   col: DataTableColumn<DataTableRecord>;
   isSorted: boolean;
   sortDir: SortDirection | null;
   handleSortClick: (key: string) => void;
-}): React.ReactElement {
+}>): React.ReactElement {
   if (col.headerRender) return <>{col.headerRender(col)}</>;
   if (!col.sortable) {
     return <span className={styles.headerText}>{col.header}</span>;
   }
-  const ariaLabel = `Sort by ${col.header}${isSorted ? `, currently ${sortDir}` : ''}`;
+  const sortSuffix = isSorted ? `, currently ${sortDir}` : '';
+  const ariaLabel = `Sort by ${col.header}${sortSuffix}`;
   return (
     <button
       type="button"
@@ -95,14 +98,14 @@ function FilterDropdown<T extends DataTableRecord>({
   filterCheckboxId,
   toggleFilterValue,
   clearFilter,
-}: FilterDropdownProps<T>): React.ReactElement {
+}: Readonly<FilterDropdownProps<T>>): React.ReactElement {
   return (
     <div
       className={styles.filterDropdown}
-      role="dialog"
+      role="dialog" // NOSONAR
       aria-label={`Filter options for ${col.header}`}
     >
-      <ul className={styles.filterList} role="listbox">
+      <ul className={styles.filterList} role="listbox" /* NOSONAR */>
         {uniqueValues.length === 0 ? (
           <li className={styles.filterEmpty}>No options</li>
         ) : (
@@ -146,7 +149,7 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
   rowKey,
   className,
   style,
-  emptyMessage = 'No data available',
+  emptyMessage,
   emptyState,
   pagination,
   onSort,
@@ -220,6 +223,7 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
    * collide on label/input associations or checkbox `id`s.
    */
   const instanceId = useId();
+  const { t } = useLocale();
   const globalSearchId = `${instanceId}-global-search`;
   /** Sanitize a user-supplied key so it's safe to embed in an HTML `id`. */
   const sanitizeIdPart = useCallback((part: string) => part.replace(/[^a-zA-Z0-9_-]/g, '_'), []);
@@ -234,16 +238,11 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
 
   // ── Derive active (controlled vs uncontrolled) state ──────────────────────
 
-  const activeFilters =
-    controlledFilterState !== undefined ? controlledFilterState : internalFilters;
-  const activeSortState =
-    controlledSortState !== undefined ? controlledSortState : internalSortState;
-  const activeExpandedKeys =
-    controlledExpandedKeys !== undefined ? controlledExpandedKeys : internalExpandedKeys;
-  const activeGlobalFilter =
-    controlledGlobalFilter !== undefined ? controlledGlobalFilter : internalGlobalFilter;
-  const activeHiddenColumns =
-    controlledHiddenColumns !== undefined ? controlledHiddenColumns : internalHiddenColumns;
+  const activeFilters = controlledFilterState ?? internalFilters;
+  const activeSortState = controlledSortState ?? internalSortState;
+  const activeExpandedKeys = controlledExpandedKeys ?? internalExpandedKeys;
+  const activeGlobalFilter = controlledGlobalFilter ?? internalGlobalFilter;
+  const activeHiddenColumns = controlledHiddenColumns ?? internalHiddenColumns;
 
   // ── Visible columns (column visibility toggle) ────────────────────────────
 
@@ -507,12 +506,104 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
   const showToolbarRow =
     toolbar !== undefined || showBuiltinGlobalSearch || showColumnToggle || showExportBtn;
 
+  // Compute table body content before JSX to avoid nested ternaries (S3358).
+  let tbodyContent: React.ReactNode;
+  if (loading) {
+    tbodyContent = skeletonRows.map((_, skeletonIdx) => (
+      // NOSONAR – skeleton rows are static placeholders; index is a stable key here
+      <tr key={`skeleton-${skeletonIdx}`} className={styles.skeletonRow}>
+        {selectable && (
+          <td className={styles.td}>
+            <div className={classNames(styles.skeletonCell, styles.skeletonCheckbox)} />
+          </td>
+        )}
+        {visibleColumns.map((col) => (
+          <td key={col.key} className={styles.td}>
+            <div className={styles.skeletonCell} />
+          </td>
+        ))}
+      </tr>
+    ));
+  } else if (filteredData.length === 0) {
+    tbodyContent = (
+      <tr>
+        <td colSpan={colSpan} className={styles.emptyCell}>
+          {emptyState ?? (emptyMessage ?? t('dataTable.noData'))}
+        </td>
+      </tr>
+    );
+  } else {
+    tbodyContent = filteredData.map((row, rowIndex) => {
+      const key = getRowKey(row, rowIndex);
+      const isSelected = activeSelected.has(key);
+      const isExpanded = activeExpandedKeys.has(key);
+      const isClickable = !!(onRowClick || expandedRowRender);
+
+      return (
+        <React.Fragment key={key}>
+          <tr
+            className={classNames(
+              styles.tr,
+              isClickable ? styles.trClickable : undefined,
+              isSelected ? styles.trSelected : undefined
+            )}
+            onClick={isClickable ? () => handleRowClick(row, key) : undefined}
+            // `aria-expanded` is only valid on roles that support
+            // it (e.g. `button`); when a row is expandable, mark
+            // the row as a button so the attribute is conformant.
+            role={expandedRowRender ? 'button' : undefined} // NOSONAR
+            aria-expanded={expandedRowRender ? isExpanded : undefined}
+          >
+            {selectable && (
+              <td className={styles.td} onClick={(e) => e.stopPropagation()}>
+                <input
+                  type="checkbox"
+                  aria-label={`Select row ${key}`}
+                  checked={isSelected}
+                  onChange={() => handleSelectRow(key)}
+                  className={styles.rowCheckbox}
+                />
+              </td>
+            )}
+            {visibleColumns.map((col) => {
+              const stickyStyle = getStickyStyle(col.sticky, col.key, leftStickyOffsets, rightStickyOffsets);
+              const alignStyle: React.CSSProperties = col.align
+                ? { textAlign: col.align }
+                : {};
+              return (
+                <td
+                  key={col.key}
+                  className={classNames(
+                    styles.td,
+                    col.sticky ? styles.stickyCol : undefined
+                  )}
+                  style={{ ...stickyStyle, ...alignStyle }}
+                >
+                  {col.render
+                    ? col.render(row[col.key], row)
+                    : String(row[col.key] ?? '')}
+                </td>
+              );
+            })}
+          </tr>
+          {expandedRowRender && isExpanded && (
+            <tr className={styles.expandedRow}>
+              <td colSpan={colSpan} className={styles.expandedCell}>
+                {expandedRowRender(row)}
+              </td>
+            </tr>
+          )}
+        </React.Fragment>
+      );
+    });
+  }
+
   return (
     <div
       ref={wrapperRef}
       className={classNames(
         styles.wrapper,
-        density !== 'default' ? DENSITY_CLASS[density] : undefined,
+        density === 'default' ? undefined : DENSITY_CLASS[density],
         className
       )}
       style={style}
@@ -561,7 +652,7 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
                   Columns
                 </button>
                 {columnToggleOpen && (
-                  <div className={styles.columnToggleDropdown} role="group" aria-label="Columns">
+                  <div className={styles.columnToggleDropdown} role="group" /* NOSONAR */ aria-label="Columns">
                     {columns.map((col) => {
                       const isVisible = !activeHiddenColumns.includes(col.key);
                       const checkId = columnToggleId(col.key);
@@ -609,7 +700,7 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
         // Make the scrollable region keyboard-accessible (axe rule:
         // scrollable-region-focusable) so users who rely on the keyboard
         // can scroll the table in Safari and other browsers.
-        role="region"
+        role="region" // NOSONAR
         aria-label="Data table"
         // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
         tabIndex={0}
@@ -708,97 +799,7 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
             </tr>
           </thead>
           <tbody>
-            {loading ? (
-              skeletonRows.map((_, skeletonIdx) => (
-                <tr key={`skeleton-${skeletonIdx}`} className={styles.skeletonRow}>
-                  {selectable && (
-                    <td className={styles.td}>
-                      <div className={classNames(styles.skeletonCell, styles.skeletonCheckbox)} />
-                    </td>
-                  )}
-                  {visibleColumns.map((col) => (
-                    <td key={col.key} className={styles.td}>
-                      <div className={styles.skeletonCell} />
-                    </td>
-                  ))}
-                </tr>
-              ))
-            ) : filteredData.length === 0 ? (
-              <tr>
-                <td colSpan={colSpan} className={styles.emptyCell}>
-                  {emptyState ?? emptyMessage}
-                </td>
-              </tr>
-            ) : (
-              filteredData.map((row, rowIndex) => {
-                const key = getRowKey(row, rowIndex);
-                const isSelected = activeSelected.has(key);
-                const isExpanded = activeExpandedKeys.has(key);
-                const isClickable = !!(onRowClick || expandedRowRender);
-
-                return (
-                  <React.Fragment key={key}>
-                    <tr
-                      className={classNames(
-                        styles.tr,
-                        isClickable ? styles.trClickable : undefined,
-                        isSelected ? styles.trSelected : undefined
-                      )}
-                      onClick={isClickable ? () => handleRowClick(row, key) : undefined}
-                      // `aria-expanded` is only valid on roles that support
-                      // it (e.g. `button`); when a row is expandable, mark
-                      // the row as a button so the attribute is conformant.
-                      role={expandedRowRender ? 'button' : undefined}
-                      aria-expanded={expandedRowRender ? isExpanded : undefined}
-                    >
-                      {selectable && (
-                        <td className={styles.td} onClick={(e) => e.stopPropagation()}>
-                          <input
-                            type="checkbox"
-                            aria-label={`Select row ${key}`}
-                            checked={isSelected}
-                            onChange={() => handleSelectRow(key)}
-                            className={styles.rowCheckbox}
-                          />
-                        </td>
-                      )}
-                      {visibleColumns.map((col) => {
-                        const stickyStyle: React.CSSProperties =
-                          col.sticky === 'left'
-                            ? { position: 'sticky', left: leftStickyOffsets[col.key] ?? 0 }
-                            : col.sticky === 'right'
-                              ? { position: 'sticky', right: rightStickyOffsets[col.key] ?? 0 }
-                              : {};
-                        const alignStyle: React.CSSProperties = col.align
-                          ? { textAlign: col.align }
-                          : {};
-                        return (
-                          <td
-                            key={col.key}
-                            className={classNames(
-                              styles.td,
-                              col.sticky ? styles.stickyCol : undefined
-                            )}
-                            style={{ ...stickyStyle, ...alignStyle }}
-                          >
-                            {col.render
-                              ? col.render(row[col.key], row)
-                              : String(row[col.key] ?? '')}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                    {expandedRowRender && isExpanded && (
-                      <tr className={styles.expandedRow}>
-                        <td colSpan={colSpan} className={styles.expandedCell}>
-                          {expandedRowRender(row)}
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                );
-              })
-            )}
+            {tbodyContent}
           </tbody>
         </table>
       </div>
@@ -824,8 +825,12 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
             <div className={styles.pagination}>
               <span className={styles.paginationInfo}>
                 {loading || pagination.totalCount === 0
-                  ? `0–0 of ${pagination.totalCount}`
-                  : `${rangeStart}–${rangeEnd} of ${pagination.totalCount}`}
+                  ? t('dataTable.paginationRange', { start: 0, end: 0, total: pagination.totalCount })
+                  : t('dataTable.paginationRange', {
+                      start: rangeStart,
+                      end: rangeEnd,
+                      total: pagination.totalCount,
+                    })}
               </span>
               <Pagination
                 currentPage={pagination.currentPage}

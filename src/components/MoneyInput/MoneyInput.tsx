@@ -1,3 +1,4 @@
+'use client';
 import React, { useCallback, useId } from 'react';
 import { MoneyInputProps } from './MoneyInput.types';
 import { classNames, getValidationMessage, getValidationMessageClass } from '../../utils';
@@ -70,8 +71,8 @@ export function MoneyInput({
         setCurrentAmount(undefined);
         return;
       }
-      const parsed = parseFloat(raw);
-      if (!isNaN(parsed)) {
+      const parsed = Number.parseFloat(raw);
+      if (!Number.isNaN(parsed)) {
         setCurrentAmount(parsed);
       }
     },
@@ -158,7 +159,7 @@ export function MoneyInput({
           max={max}
           step={step}
           placeholder={placeholder ?? (selectedCurrency ? `0.00` : undefined)}
-          value={currentAmount !== undefined ? currentAmount : ''}
+          value={currentAmount ?? ''}
           onChange={handleAmountChange}
           aria-label={label ? undefined : 'Amount'}
           aria-labelledby={label ? labelId : undefined}

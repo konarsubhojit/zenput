@@ -15,5 +15,5 @@ export function getMenuItems(container: HTMLElement): HTMLElement[] {
  * Returns `true` when `target` is outside every element in `elements`.
  */
 export function isOutsideAll(target: Node, elements: Array<HTMLElement | null>): boolean {
-  return elements.every((el) => el == null || !el.contains(target));
+  return elements.every((el) => !el?.contains(target));
 }

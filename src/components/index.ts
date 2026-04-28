@@ -39,6 +39,9 @@ export * from './Card';
 // Feedback / loading primitives
 export * from './feedback';
 
+// Accessibility primitives
+export * from './a11y';
+
 // Overlay primitives
 export * from './Portal';
 export * from './overlay';
