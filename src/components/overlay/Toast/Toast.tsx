@@ -410,7 +410,7 @@ function ToastItemComponent({
       onAnimationEnd={handleAnimationEnd}
     >
       <span className={styles.icon}>
-        {toast.icon != null ? toast.icon : <DefaultIcon status={toast.status} />}
+        {toast.icon ?? <DefaultIcon status={toast.status} />}
       </span>
       <div className={styles.body}>
         <span className={styles.title}>{toast.title}</span>

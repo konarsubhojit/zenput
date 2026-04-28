@@ -159,7 +159,7 @@ export function MoneyInput({
           max={max}
           step={step}
           placeholder={placeholder ?? (selectedCurrency ? `0.00` : undefined)}
-          value={currentAmount !== undefined ? currentAmount : ''}
+          value={currentAmount ?? ''}
           onChange={handleAmountChange}
           aria-label={label ? undefined : 'Amount'}
           aria-labelledby={label ? labelId : undefined}

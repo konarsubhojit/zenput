@@ -15,7 +15,7 @@ const _rtfCache = new Map<string, Intl.RelativeTimeFormat>();
 function _stableKey(options: object | null | undefined): string {
   if (options == null) return 'null';
   return JSON.stringify(
-    Object.fromEntries(Object.entries(options as Record<string, unknown>).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0))
+    Object.fromEntries(Object.entries(options as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b)))
   );
 }
 
