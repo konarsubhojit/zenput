@@ -36,6 +36,71 @@ export interface UseRovingTabIndexResult {
   onKeyDown: (e: React.KeyboardEvent) => void;
 }
 
+// ---------------------------------------------------------------------------
+// Internal helpers (defined outside the hook to keep the hook body small)
+// ---------------------------------------------------------------------------
+
+/** Returns whether `key` is a forward-navigation key for `orient`. */
+function isForwardKey(key: string, orient: RovingOrientation): boolean {
+  return (
+    (orient === 'horizontal' && key === 'ArrowRight') ||
+    (orient === 'vertical' && key === 'ArrowDown') ||
+    (orient === 'both' && (key === 'ArrowRight' || key === 'ArrowDown'))
+  );
+}
+
+/** Returns whether `key` is a backward-navigation key for `orient`. */
+function isBackwardKey(key: string, orient: RovingOrientation): boolean {
+  return (
+    (orient === 'horizontal' && key === 'ArrowLeft') ||
+    (orient === 'vertical' && key === 'ArrowUp') ||
+    (orient === 'both' && (key === 'ArrowLeft' || key === 'ArrowUp'))
+  );
+}
+
+/**
+ * Computes the next index given direction flags.
+ * Returns `null` when no movement should occur.
+ */
+function getNextIndex(
+  forward: boolean,
+  backward: boolean,
+  home: boolean,
+  end: boolean,
+  current: number,
+  length: number,
+  loop: boolean
+): number | null {
+  if (forward) {
+    if (current < length - 1) return current + 1;
+    if (loop) return 0;
+  } else if (backward) {
+    if (current > 0) return current - 1;
+    if (loop) return length - 1;
+  } else if (home) {
+    return 0;
+  } else if (end) {
+    return length - 1;
+  }
+  return null;
+}
+
+/** Focuses the DOM element inside `container` matching `[data-rti-value="value"]`. */
+function focusDomItem(
+  container: HTMLElement | null | undefined,
+  value: string
+): void {
+  if (!container) return;
+  const el = container.querySelector<HTMLElement>(
+    `[data-rti-value="${CSS.escape(value)}"]`
+  );
+  el?.focus();
+}
+
+// ---------------------------------------------------------------------------
+// Hook
+// ---------------------------------------------------------------------------
+
 /**
  * Generic roving-tabindex hook for keyboard-navigable lists and grids.
  *
@@ -93,55 +158,24 @@ export function useRovingTabIndex({
     // values without re-attaching event listeners on each render.
     const { items: currentItems, activeItem: current, onNavigate: navigate, loop: shouldLoop, disabledItems: disabled, containerRef: ref, orientation: orient } = stateRef.current;
 
-    const isForward =
-      (orient === 'horizontal' && e.key === 'ArrowRight') ||
-      (orient === 'vertical' && e.key === 'ArrowDown') ||
-      (orient === 'both' && (e.key === 'ArrowRight' || e.key === 'ArrowDown'));
-    const isBackward =
-      (orient === 'horizontal' && e.key === 'ArrowLeft') ||
-      (orient === 'vertical' && e.key === 'ArrowUp') ||
-      (orient === 'both' && (e.key === 'ArrowLeft' || e.key === 'ArrowUp'));
-    const isHome = e.key === 'Home';
-    const isEnd = e.key === 'End';
+    const forward = isForwardKey(e.key, orient);
+    const backward = isBackwardKey(e.key, orient);
+    const home = e.key === 'Home';
+    const end = e.key === 'End';
 
-    if (!isForward && !isBackward && !isHome && !isEnd) return;
+    if (!forward && !backward && !home && !end) return;
 
     const enabled = currentItems.filter((v) => !disabled.includes(v));
     if (enabled.length === 0) return;
 
     const currentIdx = enabled.indexOf(current);
-    let nextIdx: number | null = null;
-
-    if (isForward) {
-      if (currentIdx < enabled.length - 1) {
-        nextIdx = currentIdx + 1;
-      } else if (shouldLoop) {
-        nextIdx = 0;
-      }
-    } else if (isBackward) {
-      if (currentIdx > 0) {
-        nextIdx = currentIdx - 1;
-      } else if (shouldLoop) {
-        nextIdx = enabled.length - 1;
-      }
-    } else if (isHome) {
-      nextIdx = 0;
-    } else if (isEnd) {
-      nextIdx = enabled.length - 1;
-    }
+    const nextIdx = getNextIndex(forward, backward, home, end, currentIdx, enabled.length, shouldLoop);
 
     if (nextIdx !== null) {
       e.preventDefault();
       const nextValue = enabled[nextIdx];
       navigate(nextValue);
-
-      // Focus the corresponding DOM element if a containerRef was provided.
-      if (ref?.current) {
-        const el = ref.current.querySelector<HTMLElement>(
-          `[data-rti-value="${CSS.escape(nextValue)}"]`
-        );
-        el?.focus();
-      }
+      focusDomItem(ref?.current, nextValue);
     }
   }, []);
 

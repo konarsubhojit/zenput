@@ -65,7 +65,7 @@ export interface LiveRegionProps {
  * announce('Form saved', { politeness: 'assertive' });
  * ```
  */
-export function LiveRegion({ children }: LiveRegionProps): React.ReactElement {
+export function LiveRegion({ children }: Readonly<LiveRegionProps>): React.ReactElement {
   const [regions, setRegions] = useState<RegionState>({ polite: '', assertive: '' });
 
   // Track the last message per politeness to support debounced re-announcement

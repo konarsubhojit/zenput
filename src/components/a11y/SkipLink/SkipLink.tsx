@@ -26,7 +26,7 @@ export function SkipLink({
   children = 'Skip to main content',
   className,
   ...rest
-}: SkipLinkProps): React.ReactElement {
+}: Readonly<SkipLinkProps>): React.ReactElement {
   return (
     <a href={href} className={classNames(styles.skipLink, className)} {...rest}>
       {children}
