@@ -93,19 +93,23 @@ export function PopoverSection() {
 
       <Scenario title="Controlled">
         <div>
-          <div className="row" style={{ marginBottom: '8px' }}>
-            <button type="button" onClick={() => setOpen(true)}>
-              Open
-            </button>
-            <button type="button" onClick={() => setOpen(false)}>
-              Close
-            </button>
-          </div>
           <Popover open={open} onOpenChange={setOpen}>
+            {/* PopoverTrigger provides the anchor element for positioning */}
+            <PopoverTrigger onClick={() => setOpen((v) => !v)}>
+              Toggle popover
+            </PopoverTrigger>
             <PopoverContent style={{ padding: '12px 16px' }}>
               <p>Controlled popover — open: <strong>{String(open)}</strong></p>
+              <div className="row" style={{ marginTop: '8px' }}>
+                <button type="button" onClick={() => setOpen(false)}>
+                  Close
+                </button>
+              </div>
             </PopoverContent>
           </Popover>
+          <p style={{ marginTop: '8px', fontSize: '0.85em', color: 'var(--zp-color-text-muted)' }}>
+            State is also managed externally — open: <strong>{String(open)}</strong>
+          </p>
         </div>
       </Scenario>
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ThemeProvider, extendTheme, type Theme } from 'zenput';
+import { ThemeProvider, extendTheme, type Theme, type ColorMode } from 'zenput';
 import {
   TypographySection,
   LayoutSection,
@@ -49,52 +49,119 @@ type DensityScale = 'compact' | 'normal' | 'spacious';
 
 const BASE_THEMES: Record<string, Theme> = {
   Default: {},
-  Indigo: {
-    primaryColor: '#6366f1',
-    focusRingColor: '#6366f1',
-    borderRadius: '8px',
-  },
-  Emerald: {
-    primaryColor: '#10b981',
-    focusRingColor: '#10b981',
-    borderRadius: '4px',
-    successColor: '#059669',
-  },
-  Rose: {
-    primaryColor: '#f43f5e',
-    focusRingColor: '#f43f5e',
-    borderRadius: '12px',
-    errorColor: '#e11d48',
-  },
-  Brand: extendTheme(
+  /**
+   * "Indigo" — uses the modern semantic token API (`semantic.brand*`) to
+   * override the brand colour ramp. Legacy `primaryColor` / `focusRingColor`
+   * are included so the 1.x form-input components also pick up the change.
+   */
+  Indigo: extendTheme(
     {
-      primaryColor: '#7c3aed',
-      focusRingColor: '#7c3aed',
+      semantic: {
+        brand: '#6366f1',
+        brandHover: '#4f46e5',
+        brandActive: '#4338ca',
+        brandSubtle: '#eef2ff',
+        focusRing: '#6366f1',
+        borderFocus: '#6366f1',
+      },
+    },
+    // Legacy keys for form-input back-compat
+    {
+      primaryColor: '#6366f1',
+      focusRingColor: '#6366f1',
+      borderRadius: '8px',
+    }
+  ),
+  Emerald: extendTheme(
+    {
+      semantic: {
+        brand: '#10b981',
+        brandHover: '#059669',
+        brandActive: '#047857',
+        brandSubtle: '#ecfdf5',
+        focusRing: '#10b981',
+        borderFocus: '#10b981',
+      },
     },
     {
+      primaryColor: '#10b981',
+      focusRingColor: '#10b981',
+      borderRadius: '4px',
+      successColor: '#059669',
+    }
+  ),
+  Rose: extendTheme(
+    {
+      semantic: {
+        brand: '#f43f5e',
+        brandHover: '#e11d48',
+        brandActive: '#be123c',
+        brandSubtle: '#fff1f2',
+        focusRing: '#f43f5e',
+        borderFocus: '#f43f5e',
+      },
+    },
+    {
+      primaryColor: '#f43f5e',
+      focusRingColor: '#f43f5e',
+      borderRadius: '12px',
+      errorColor: '#e11d48',
+    }
+  ),
+  /**
+   * "Brand" — demonstrates `extendTheme()` + per-component token overrides
+   * via `theme.components` (the modern design-system API).
+   */
+  Brand: extendTheme(
+    {
+      semantic: {
+        brand: '#7c3aed',
+        brandHover: '#6d28d9',
+        brandActive: '#5b21b6',
+        brandSubtle: '#f5f3ff',
+        focusRing: '#7c3aed',
+        borderFocus: '#7c3aed',
+      },
       components: {
         button: {
           borderRadius: 'var(--zp-radius-full)',
         },
       },
+    },
+    { primaryColor: '#7c3aed', focusRingColor: '#7c3aed' }
+  ),
+  Dark: extendTheme(
+    {
+      mode: 'dark' as ColorMode,
+      semantic: {
+        brand: '#818cf8',
+        brandHover: '#6366f1',
+        brandActive: '#4f46e5',
+        brandSubtle: '#1e1b4b',
+        focusRing: '#818cf8',
+        borderFocus: '#818cf8',
+      },
+    },
+    {
+      primaryColor: '#818cf8',
+      bgColor: '#1e1e2e',
+      textColor: '#cdd6f4',
+      borderColor: '#45475a',
+      placeholderColor: '#6c7086',
+      disabledBg: '#313244',
+      disabledText: '#585b70',
     }
   ),
-  Dark: {
-    mode: 'dark',
-    primaryColor: '#818cf8',
-    bgColor: '#1e1e2e',
-    textColor: '#cdd6f4',
-    borderColor: '#45475a',
-    placeholderColor: '#6c7086',
-    disabledBg: '#313244',
-    disabledText: '#585b70',
-  },
-  'Dark (alt)': {
-    mode: 'dark',
-    primaryColor: '#818cf8',
+  /**
+   * "System" — follows the OS `prefers-color-scheme` preference via
+   * `mode: 'system'`. The resolved mode (light / dark) is logged by
+   * ThemeProvider in data-zp-theme on the wrapper element.
+   */
+  System: {
+    mode: 'system' as ColorMode,
   },
   'High Contrast': {
-    mode: 'highContrast',
+    mode: 'highContrast' as ColorMode,
   },
 };
 
@@ -197,8 +264,8 @@ export function App() {
         className="app-shell"
         style={{
           // Ensure the demo shell itself reacts to the active theme's surface/text
-          background: (baseTheme as Theme & { bgColor?: string }).bgColor ?? 'var(--zp-color-surface-canvas)',
-          color: (baseTheme as Theme & { textColor?: string }).textColor ?? 'var(--zp-color-text-default)',
+          background: baseTheme.bgColor ?? 'var(--zp-color-surface-canvas)',
+          color: baseTheme.textColor ?? 'var(--zp-color-text-default)',
         }}
       >
         <header className="app-header">

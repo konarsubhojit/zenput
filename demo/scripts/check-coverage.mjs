@@ -166,11 +166,16 @@ const navIds = new Set([...appSrc.matchAll(/id:\s*['"]([^'"]+)['"]/g)].map(([, i
  *   'TextInput'   → ['textinput', 'text-input']
  *   'navigation'  → ['navigation']
  *   'TokenBrowser'→ ['tokenbrowser', 'token-browser']
+ *   'OTPInput'    → ['otpinput', 'otp-input']
  */
 function toMatchKeys(name) {
   const lower = name.toLowerCase();
-  // Insert hyphens before uppercase letters preceded by a lowercase letter
-  const kebab = name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+  // Two-pass regex: handles acronym boundaries (e.g. OTPInput → OTP-Input)
+  // and standard camel-case transitions (e.g. TextInput → Text-Input).
+  const kebab = name
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .toLowerCase();
   return [lower, kebab];
 }
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type InputHTMLAttributes, type ChangeEvent } from 'react';
 import {
   Field,
   FieldLabel,
@@ -14,11 +14,11 @@ import { Section, Scenario } from './_shell';
 // Custom control demo using useFieldControlProps
 // ---------------------------------------------------------------------------
 
-function StyledInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
+function StyledInput(props: InputHTMLAttributes<HTMLInputElement>) {
   const fieldProps = useFieldControlProps() as Record<string, unknown>;
   return (
     <input
-      {...(fieldProps as React.InputHTMLAttributes<HTMLInputElement>)}
+      {...(fieldProps as InputHTMLAttributes<HTMLInputElement>)}
       {...props}
       style={{
         padding: '6px 10px',
@@ -89,7 +89,7 @@ export function FieldSection() {
             rows={3}
             maxLength={MAX}
             value={value}
-            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setValue(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setValue(e.target.value)}
             style={{ width: '100%', resize: 'vertical' }}
           />
           <FieldCounter current={value.length} max={MAX} />

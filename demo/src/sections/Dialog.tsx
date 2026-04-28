@@ -144,26 +144,25 @@ export function DialogSection() {
 function ControlledDialog() {
   const [open, setOpen] = useState(false);
   return (
-    <div>
-      <button type="button" onClick={() => setOpen(true)}>
+    <Dialog open={open} onOpenChange={setOpen} closeOnOverlayClick={false}>
+      {/* DialogTrigger is used here so focus is properly restored on close */}
+      <DialogTrigger onClick={() => setOpen(true)}>
         Open controlled dialog
-      </button>
-      <Dialog open={open} onOpenChange={setOpen} closeOnOverlayClick={false}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Controlled dialog</DialogTitle>
-            <DialogDescription>Backdrop clicks are disabled — use the button to close.</DialogDescription>
-          </DialogHeader>
-          <DialogBody>
-            <p>This dialog is controlled externally. Clicking outside will not close it.</p>
-          </DialogBody>
-          <DialogFooter>
-            <button type="button" onClick={() => setOpen(false)}>
-              Close
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Controlled dialog</DialogTitle>
+          <DialogDescription>Backdrop clicks are disabled — use the button to close.</DialogDescription>
+        </DialogHeader>
+        <DialogBody>
+          <p>This dialog is controlled externally. Clicking outside will not close it.</p>
+        </DialogBody>
+        <DialogFooter>
+          <button type="button" onClick={() => setOpen(false)}>
+            Close
+          </button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
