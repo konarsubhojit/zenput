@@ -1,7 +1,9 @@
 'use client';
 import React, { forwardRef } from 'react';
 import { classNames } from '../../utils';
+import { Slot } from '../../utils/slot';
 import type { PolymorphicProps, PolymorphicRef } from '../../types/polymorphic';
+import { createPolymorphicComponent } from '../../types/polymorphic';
 import styles from './Typography.module.css';
 import type { TextTone } from './Text';
 
@@ -36,11 +38,14 @@ type HeadingComponent = <C extends React.ElementType = 'h2'>(
 
 /**
  * Semantic heading primitive. Renders `<h{level}>` unless overridden via
- * `as`; size defaults scale with the level but can be overridden.
+ * `as`; size defaults scale with the level but can be overridden. Use
+ * `asChild` to merge styles onto a single child element.
  */
-export const Heading = forwardRef(function Heading(
+export const Heading = createPolymorphicComponent<HeadingComponent>(
+  forwardRef(function Heading(
   {
     as,
+    asChild,
     level = 2,
     size,
     weight = 'semibold',
@@ -51,7 +56,7 @@ export const Heading = forwardRef(function Heading(
   }: PolymorphicProps<React.ElementType, HeadingOwnProps>,
   ref: React.ForwardedRef<Element>
 ) {
-  const Component: React.ElementType = as ?? `h${level}`;
+  const Component: React.ElementType = asChild ? Slot : (as ?? `h${level}`);
   const resolvedSize = size ?? defaultSizeByLevel[level];
   return (
     <Component
@@ -68,6 +73,6 @@ export const Heading = forwardRef(function Heading(
       {children}
     </Component>
   );
-}) as unknown as HeadingComponent & { displayName?: string };
-
-(Heading as { displayName?: string }).displayName = 'Heading';
+}),
+'Heading'
+);

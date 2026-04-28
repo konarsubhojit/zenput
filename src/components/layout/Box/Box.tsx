@@ -1,8 +1,10 @@
 'use client';
 import React, { forwardRef } from 'react';
 import { classNames } from '../../../utils';
+import { Slot } from '../../../utils/slot';
 import { normalizeSpacingKey } from '../../../tokens';
 import type { PolymorphicProps, PolymorphicRef } from '../../../types/polymorphic';
+import { createPolymorphicComponent } from '../../../types/polymorphic';
 import styles from './Box.module.css';
 
 export type SpacingValue =
@@ -92,11 +94,13 @@ function colorToken(v: string | undefined): string | undefined {
 
 /**
  * Low-level styled container. Accepts spacing/color/radius/shadow
- * props that map to design tokens. Polymorphic via `as`.
+ * props that map to design tokens. Polymorphic via `as`/`asChild`.
  */
-export const Box = forwardRef(function Box(
+export const Box = createPolymorphicComponent<BoxComponent>(
+  forwardRef(function Box(
   {
     as,
+    asChild,
     p,
     px,
     py,
@@ -123,7 +127,7 @@ export const Box = forwardRef(function Box(
   }: PolymorphicProps<React.ElementType, BoxOwnProps>,
   ref: React.ForwardedRef<Element>
 ) {
-  const Component: React.ElementType = as ?? 'div';
+  const Component: React.ElementType = asChild ? Slot : (as ?? 'div');
   const resolvedStyle: React.CSSProperties = {
     padding: spacingToken(p),
     paddingLeft: spacingToken(pl) ?? spacingToken(px),
@@ -151,6 +155,6 @@ export const Box = forwardRef(function Box(
       {children}
     </Component>
   );
-}) as unknown as BoxComponent & { displayName?: string };
-
-(Box as { displayName?: string }).displayName = 'Box';
+}),
+'Box'
+);

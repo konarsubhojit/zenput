@@ -208,7 +208,7 @@ jobs:
           path: dist/
       - name: Install fixture dependencies
         working-directory: examples/nextjs-app
-        run: npm install --legacy-peer-deps
+        run: npm ci
       - name: Build Next.js fixture
         working-directory: examples/nextjs-app
         run: npm run build

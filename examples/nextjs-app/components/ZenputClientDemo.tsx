@@ -22,7 +22,7 @@ export default function ZenputClientDemo() {
   const [checked, setChecked] = useState(false);
 
   return (
-    <ThemeProvider>
+    <ThemeProvider storageKey="zp-theme">
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: 400 }}>
         <h2>Client Component Demo</h2>
 

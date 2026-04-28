@@ -9,9 +9,13 @@ export const metadata: Metadata = {
 /**
  * Root layout — a **Server Component**.
  *
- * Imports from `zenput/server` (which has no 'use client' and therefore is
- * safe to import in a Server Component), and inlines the color-mode script
- * so ThemeProvider picks up the right mode on first paint.
+ * Imports `getColorModeScript` from `zenput/server` (which has no React
+ * imports and is safe to use in a Server Component). The inline script sets
+ * `data-zp-theme` on `<html>` before first paint so CSS variables are already
+ * scoped correctly, avoiding a flash of wrong colour scheme.
+ *
+ * The `storageKey` passed here must match the one passed to `<ThemeProvider>`
+ * in the client tree, so both sides read and write the same storage entry.
  */
 export default function RootLayout({
   children,
@@ -21,9 +25,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Inline script injected by zenput/server — prevents theme flash */}
+        {/*
+         * Inline script sets data-zp-theme on <html> before paint.
+         * Works together with <ThemeProvider storageKey="zp-theme"> to keep
+         * the pre-hydration attribute and the React-rendered tokens in sync.
+         */}
         <script
-          dangerouslySetInnerHTML={{ __html: getColorModeScript() }}
+          dangerouslySetInnerHTML={{
+            __html: getColorModeScript({ storageKey: 'zp-theme' }),
+          }}
         />
       </head>
       <body>{children}</body>

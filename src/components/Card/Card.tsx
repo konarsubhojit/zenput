@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import { classNames } from '../../utils';
+import { Slot } from '../../utils/slot';
 import type {
   CardBodyProps,
   CardFooterProps,
@@ -34,10 +35,11 @@ const PADDING_CLASS: Record<NonNullable<CardProps['padding']>, string> = {
 /**
  * Surface container. Supports outlined, elevated, and filled visual variants
  * and an optional interactive mode that renders the card as a `<button>` or
- * `<a>` with hover/focus styles.
+ * `<a>` with hover/focus styles. Polymorphic via `as`/`asChild`.
  */
 export function Card({
   as,
+  asChild,
   variant = 'outlined',
   interactive = false,
   padding = 'none',
@@ -49,7 +51,9 @@ export function Card({
   tabIndex,
   type,
 }: CardProps): React.ReactElement {
-  const Component: React.ElementType = as ?? (interactive ? (href ? 'a' : 'button') : 'div');
+  const Component: React.ElementType = asChild
+    ? Slot
+    : (as ?? (interactive ? (href ? 'a' : 'button') : 'div'));
 
   // Only forward `href` when rendering an `<a>` (or a custom component which
   // may consume it); only forward `type` when rendering a native `<button>` so

@@ -6,25 +6,37 @@ import dts from 'rollup-plugin-dts';
 import peerDepsExternal from 'rollup-plugin-peer-deps-external';
 
 /**
- * Rollup plugin that preserves `'use client'` (and `'use server'`) directives
- * from source files in the bundle output. Rollup treats these as dead code
- * (unused string expressions) and removes them by default. This plugin hoists
- * any such directive found in the entry chunk to the very first line of the
- * emitted file, which is required for Next.js App Router / React Server
- * Components to honour the boundary.
+ * Rollup plugin that preserves `'use client'` and `'use server'` directives
+ * in the bundle output. Rollup treats these as dead code (unused string
+ * expressions) and removes them by default. This plugin detects the directive
+ * present in the entry chunk's leading block, strips all per-module occurrences,
+ * and re-hoists the detected directive to the very first line of the emitted
+ * file, which is required for Next.js App Router / React Server Components to
+ * honour the boundary.
+ *
+ * Only applied to entry chunks; non-entry chunks (code-split async chunks) are
+ * left unchanged.
  */
 function preserveDirectives() {
   return {
     name: 'preserve-directives',
-    renderChunk(code) {
-      // Match any 'use client' / 'use server' directive at the start of a line.
-      // The global flag strips every occurrence so we can re-prepend exactly once.
+    renderChunk(code, chunk) {
+      // Only hoist directives for entry chunks; async split chunks don't need them.
+      if (!chunk.isEntry) return null;
+
+      // Strip all occurrences, then check whether anything was removed.
+      // Using replace with the global flag is safer than .test() + .replace()
+      // because .test() on a global regex mutates lastIndex.
       const directiveRe = /^(?:'use client'|"use client"|'use server'|"use server");?\s*/gm;
-      const hasDirective = directiveRe.test(code);
-      if (!hasDirective) return null;
-      // Strip all occurrences then prepend once at the very top.
       const stripped = code.replace(directiveRe, '');
-      return { code: `'use client';\n${stripped}`, map: null };
+      if (stripped === code) return null;
+
+      // Detect which directive type was present so we hoist the correct one.
+      // Default to 'use client' since all our entry bundles are client-only.
+      const directiveMatch = code.match(/'use server'|"use server"/);
+      const directive = directiveMatch ? `'use server'` : `'use client'`;
+
+      return { code: `${directive};\n${stripped}`, map: null };
     },
   };
 }
