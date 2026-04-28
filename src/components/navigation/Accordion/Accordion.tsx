@@ -1,3 +1,4 @@
+'use client';
 import React, { createContext, useCallback, useContext, useId, useMemo, useState } from 'react';
 import { classNames } from '../../../utils';
 import styles from './Accordion.module.css';
@@ -79,10 +80,11 @@ export function Accordion({
 
   const [internalOpen, setInternalOpen] = useState<string[]>(getInitialOpen);
 
-  const openItems = useMemo<string[]>(
-    () => (isControlled ? (Array.isArray(value) ? value : value ? [value] : []) : internalOpen),
-    [isControlled, value, internalOpen]
-  );
+  const openItems = useMemo<string[]>(() => {
+    if (!isControlled) return internalOpen;
+    if (Array.isArray(value)) return value;
+    return value ? [value] : [];
+  }, [isControlled, value, internalOpen]);
 
   const toggle = useCallback(
     (itemValue: string) => {
@@ -102,8 +104,13 @@ export function Accordion({
     [multiple, openItems, isControlled, onChange]
   );
 
+  const accordionCtxValue = useMemo(
+    () => ({ openItems, toggle, multiple }),
+    [openItems, toggle, multiple]
+  );
+
   return (
-    <AccordionContext.Provider value={{ openItems, toggle, multiple }}>
+    <AccordionContext.Provider value={accordionCtxValue}>
       <div className={classNames(styles.accordion, className)} style={style}>
         {children}
       </div>
@@ -130,8 +137,13 @@ export function AccordionItem({
   const contentId = `${baseId}-content`;
   const isOpen = openItems.includes(value);
 
+  const itemCtxValue = useMemo(
+    () => ({ value, isOpen, disabled, triggerId, contentId }),
+    [value, isOpen, disabled, triggerId, contentId]
+  );
+
   return (
-    <AccordionItemContext.Provider value={{ value, isOpen, disabled, triggerId, contentId }}>
+    <AccordionItemContext.Provider value={itemCtxValue}>
       <div
         className={classNames(
           styles.accordionItem,
@@ -215,7 +227,7 @@ export function AccordionContent({
   return (
     <div
       id={contentId}
-      role="region"
+      role="region" // NOSONAR
       aria-labelledby={triggerId}
       hidden={!isOpen}
       className={classNames(

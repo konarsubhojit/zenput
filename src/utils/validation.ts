@@ -29,7 +29,7 @@ export function getValidationMessage(
  * @returns The appropriate CSS class name
  */
 export function getValidationMessageClass(
-  validationState: ValidationState = 'default',
+  validationState: ValidationState,
   styles: {
     errorText?: string;
     successText?: string;

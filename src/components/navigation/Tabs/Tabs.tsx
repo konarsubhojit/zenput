@@ -1,3 +1,4 @@
+'use client';
 import React, {
   createContext,
   useCallback,
@@ -11,6 +12,7 @@ import React, {
 } from 'react';
 import { classNames } from '../../../utils';
 import styles from './Tabs.module.css';
+import { useDirection } from '../../../context';
 import type {
   TabListProps,
   TabPanelProps,
@@ -38,6 +40,37 @@ function useTabsContext(): TabsContextValue {
     throw new Error('Tab sub-components must be rendered inside <Tabs>.');
   }
   return ctx;
+}
+
+// ---------------------------------------------------------------------------
+// Keyboard navigation helper
+// ---------------------------------------------------------------------------
+
+/**
+ * Determines the next focused tab index given the pressed key, current index,
+ * total count of enabled tabs, orientation, and text direction.
+ * Returns null when the key does not trigger navigation.
+ */
+function getNextTabIndex(
+  key: string,
+  currentIdx: number,
+  count: number,
+  orientation: 'horizontal' | 'vertical',
+  isRtl: boolean
+): number | null {
+  const isHorizontal = orientation === 'horizontal';
+  const forwardKey = isRtl ? 'ArrowLeft' : 'ArrowRight';
+  const backwardKey = isRtl ? 'ArrowRight' : 'ArrowLeft';
+
+  if ((isHorizontal && key === forwardKey) || (!isHorizontal && key === 'ArrowDown')) {
+    return currentIdx < count - 1 ? currentIdx + 1 : 0;
+  }
+  if ((isHorizontal && key === backwardKey) || (!isHorizontal && key === 'ArrowUp')) {
+    return currentIdx > 0 ? currentIdx - 1 : count - 1;
+  }
+  if (key === 'Home') return 0;
+  if (key === 'End') return count - 1;
+  return null;
 }
 
 // ---------------------------------------------------------------------------
@@ -72,8 +105,13 @@ export function Tabs({
     [isControlled, onChange]
   );
 
+  const ctxValue = useMemo(
+    () => ({ selected, onSelect, orientation, baseId }),
+    [selected, onSelect, orientation, baseId]
+  );
+
   return (
-    <TabsContext.Provider value={{ selected, onSelect, orientation, baseId }}>
+    <TabsContext.Provider value={ctxValue}>
       <div
         className={classNames(styles.tabs, styles[orientation], className)}
         style={style}
@@ -97,6 +135,7 @@ Tabs.displayName = 'Tabs';
 export function TabList({ children, className, ...rest }: TabListProps): React.ReactElement {
   const { orientation, selected, onSelect } = useTabsContext();
   const listRef = useRef<HTMLDivElement>(null);
+  const dir = useDirection();
 
   // Collect enabled tab values in render order for keyboard navigation.
   const tabValues = useMemo(() => {
@@ -114,7 +153,14 @@ export function TabList({ children, className, ...rest }: TabListProps): React.R
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
-      const isHorizontal = orientation === 'horizontal';
+      // In RTL mode, ArrowRight moves to the previous (visually left) tab
+      // and ArrowLeft moves to the next (visually right) tab.
+      // When dir === 'auto', check the computed direction of the list element
+      // so keyboard nav matches whatever direction the browser resolved.
+      let isRtl = dir === 'rtl';
+      if (dir === 'auto' && listRef.current) {
+        isRtl = getComputedStyle(listRef.current).direction === 'rtl';
+      }
 
       // Gather enabled values at event-time so disabled tabs are skipped.
       const enabledValues = tabValues.filter((v) => {
@@ -130,20 +176,7 @@ export function TabList({ children, className, ...rest }: TabListProps): React.R
       }
 
       const currentIdx = enabledValues.indexOf(selected);
-      let nextIdx: number | null = null;
-
-      if ((isHorizontal && e.key === 'ArrowRight') || (!isHorizontal && e.key === 'ArrowDown')) {
-        nextIdx = currentIdx < enabledValues.length - 1 ? currentIdx + 1 : 0;
-      } else if (
-        (isHorizontal && e.key === 'ArrowLeft') ||
-        (!isHorizontal && e.key === 'ArrowUp')
-      ) {
-        nextIdx = currentIdx > 0 ? currentIdx - 1 : enabledValues.length - 1;
-      } else if (e.key === 'Home') {
-        nextIdx = 0;
-      } else if (e.key === 'End') {
-        nextIdx = enabledValues.length - 1;
-      }
+      const nextIdx = getNextTabIndex(e.key, currentIdx, enabledValues.length, orientation, isRtl);
 
       if (nextIdx !== null) {
         e.preventDefault();
@@ -155,7 +188,7 @@ export function TabList({ children, className, ...rest }: TabListProps): React.R
         btn?.focus();
       }
     },
-    [orientation, tabValues, selected, onSelect]
+    [orientation, tabValues, selected, onSelect, dir]
   );
 
   return (
@@ -189,7 +222,7 @@ export function Tab({
   children,
   className,
   ...rest
-}: TabProps): React.ReactElement {
+}: Readonly<TabProps>): React.ReactElement {
   const { selected, onSelect, baseId } = useTabsContext();
   const isSelected = selected === value;
 
@@ -251,7 +284,7 @@ export function TabPanel({
   children,
   className,
   ...rest
-}: TabPanelProps): React.ReactElement | null {
+}: Readonly<TabPanelProps>): React.ReactElement | null {
   const { selected, baseId } = useTabsContext();
 
   if (selected !== value) {
