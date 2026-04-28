@@ -80,7 +80,7 @@ export function useRovingTabIndex({
   const stateRef = useRef({ items, activeItem, onNavigate, loop, disabledItems, containerRef, orientation });
   useLayoutEffect(() => {
     stateRef.current = { items, activeItem, onNavigate, loop, disabledItems, containerRef, orientation };
-  });
+  }, [items, activeItem, onNavigate, loop, disabledItems, containerRef, orientation]);
 
   const getTabIndex = useCallback(
     (item: string): 0 | -1 => (item === activeItem ? 0 : -1),
