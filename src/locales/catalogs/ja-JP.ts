@@ -4,6 +4,7 @@ import type { MessageCatalog } from '../types';
 export const jaJP: MessageCatalog = {
   'autoComplete.noOptions': '\u30aa\u30d7\u30b7\u30e7\u30f3\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093',
   'autoComplete.loading': '\u8aad\u307f\u8fbc\u307f\u4e2d\u2026',
+  'autoComplete.suggestionsLabel': '\u5019\u88dc',
 
   'combobox.noOptions': '\u30aa\u30d7\u30b7\u30e7\u30f3\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093',
   'combobox.loading': '\u8aad\u307f\u8fbc\u307f\u4e2d\u2026',
@@ -16,7 +17,7 @@ export const jaJP: MessageCatalog = {
     '\u307e\u305f\u306f\u3053\u3053\u306b\u30d5\u30a1\u30a4\u30eb\u3092\u30c9\u30e9\u30c3\u30b0\uff06\u30c9\u30ed\u30c3\u30d7',
 
   'pagination.navAriaLabel': '\u30da\u30fc\u30b8\u30cd\u30fc\u30b7\u30e7\u30f3',
-  'pagination.rowsPerPage': '\u30da\u30fc\u30b8\u3042\u305f\u308a\u306e\u884c\u6570',
+  'pagination.rowsPerPage': '\u30da\u30fc\u30b8\u3042\u305f\u308a\u306e\u884c\u6570\uff1a',
   'pagination.firstPage': '\u6700\u521d\u306e\u30da\u30fc\u30b8',
   'pagination.previousPage': '\u524d\u306e\u30da\u30fc\u30b8',
   'pagination.nextPage': '\u6b21\u306e\u30da\u30fc\u30b8',

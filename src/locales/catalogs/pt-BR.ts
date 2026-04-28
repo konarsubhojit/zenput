@@ -4,6 +4,7 @@ import type { MessageCatalog } from '../types';
 export const ptBR: MessageCatalog = {
   'autoComplete.noOptions': 'Nenhuma op\u00e7\u00e3o encontrada',
   'autoComplete.loading': 'Carregando\u2026',
+  'autoComplete.suggestionsLabel': 'Sugest\u00f5es',
 
   'combobox.noOptions': 'Nenhuma op\u00e7\u00e3o encontrada',
   'combobox.loading': 'Carregando\u2026',
@@ -15,7 +16,7 @@ export const ptBR: MessageCatalog = {
   'fileInput.dragAndDropHint': 'ou arraste e solte arquivos aqui',
 
   'pagination.navAriaLabel': 'Pagina\u00e7\u00e3o',
-  'pagination.rowsPerPage': 'Linhas por p\u00e1gina',
+  'pagination.rowsPerPage': 'Linhas por p\u00e1gina:',
   'pagination.firstPage': 'Primeira p\u00e1gina',
   'pagination.previousPage': 'P\u00e1gina anterior',
   'pagination.nextPage': 'Pr\u00f3xima p\u00e1gina',

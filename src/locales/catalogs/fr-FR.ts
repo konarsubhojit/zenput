@@ -4,6 +4,7 @@ import type { MessageCatalog } from '../types';
 export const frFR: MessageCatalog = {
   'autoComplete.noOptions': 'Aucune option trouv\u00e9e',
   'autoComplete.loading': 'Chargement\u2026',
+  'autoComplete.suggestionsLabel': 'Suggestions',
 
   'combobox.noOptions': 'Aucune option trouv\u00e9e',
   'combobox.loading': 'Chargement\u2026',
@@ -15,7 +16,7 @@ export const frFR: MessageCatalog = {
   'fileInput.dragAndDropHint': 'ou glisser-d\u00e9poser des fichiers ici',
 
   'pagination.navAriaLabel': 'Pagination',
-  'pagination.rowsPerPage': 'Lignes par page',
+  'pagination.rowsPerPage': 'Lignes par page\u00a0:',
   'pagination.firstPage': 'Premi\u00e8re page',
   'pagination.previousPage': 'Page pr\u00e9c\u00e9dente',
   'pagination.nextPage': 'Page suivante',

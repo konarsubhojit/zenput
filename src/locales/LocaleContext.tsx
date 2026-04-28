@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useMemo } from 'react';
-import type { MessageCatalog, MessageKey, PartialMessageCatalog } from './types';
+import type { MessageKey, PartialMessageCatalog } from './types';
 import { enUS } from './catalogs/en-US';
 import { warnOnce } from '../utils/warnOnce';
 
@@ -69,7 +69,7 @@ export function interpolate(
 export interface LocaleContextValue {
   /** BCP-47 locale tag (e.g. "en-US", "fr-FR"). */
   locale: string;
-  /** Merged messages (provided overrides merged on top of en-US defaults). */
+  /** Consumer-provided message overrides; fallback to en-US defaults is handled by `t()`. */
   messages: PartialMessageCatalog;
   /** First day of the week: 0 = Sunday … 6 = Saturday. */
   weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
@@ -125,7 +125,7 @@ function buildContextValue(
     currency: string,
     options?: Intl.NumberFormatOptions
   ): string {
-    return _cachedNF(locale, { style: 'currency', currency, ...options }).format(value);
+    return _cachedNF(locale, { ...options, style: 'currency', currency }).format(value);
   }
 
   function formatRelativeTime(

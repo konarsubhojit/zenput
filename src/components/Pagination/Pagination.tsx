@@ -111,7 +111,7 @@ export function Pagination({
       {/* Page size selector */}
       {showPageSize && onPageSizeChange && (
         <div className={styles.pageSizeWrapper}>
-          <span className={styles.pageSizeLabel}>{t('pagination.rowsPerPage')}:</span>
+          <span className={styles.pageSizeLabel}>{t('pagination.rowsPerPage')}</span>
           <select
             className={styles.pageSizeSelect}
             value={safePageSize}

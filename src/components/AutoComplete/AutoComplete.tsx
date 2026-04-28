@@ -257,7 +257,7 @@ export const AutoComplete = forwardRef<HTMLInputElement, AutoCompleteProps>(
             id={listboxId}
             role="listbox"
             className={styles.dropdown}
-            aria-label={label ?? 'Suggestions'}
+            aria-label={label ?? t('autoComplete.suggestionsLabel')}
           >
             {loading ? (
               <li className={styles.loading}>{t('autoComplete.loading')}</li>

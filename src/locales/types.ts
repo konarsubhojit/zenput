@@ -1,12 +1,15 @@
 /**
  * All user-facing string keys used across Zenput components.
- * Every key must be present in the `en-US` base catalog; other catalogs use
- * `PartialMessageCatalog` and fall back to `en-US` for missing keys.
+ * Every key must be present in the `en-US` base catalog. Built-in catalogs
+ * are complete `MessageCatalog` objects. Consumer overrides may use
+ * `PartialMessageCatalog` and fall back to `en-US` for any missing keys.
  */
 export type MessageCatalog = {
   // AutoComplete
   'autoComplete.noOptions': string;
   'autoComplete.loading': string;
+  /** Fallback aria-label for the suggestions listbox when no `label` prop is set */
+  'autoComplete.suggestionsLabel': string;
 
   // Combobox
   'combobox.noOptions': string;
