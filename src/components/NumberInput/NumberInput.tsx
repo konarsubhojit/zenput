@@ -104,8 +104,8 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
           setCurrentValue(undefined);
           return;
         }
-        const parsed = parseFloat(raw);
-        if (!isNaN(parsed)) {
+        const parsed = Number.parseFloat(raw);
+        if (!Number.isNaN(parsed)) {
           setCurrentValue(parsed);
         }
       },

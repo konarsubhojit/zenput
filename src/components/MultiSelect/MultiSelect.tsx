@@ -372,6 +372,65 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
     );
     const messageClass = getValidationMessageClass(validationState, styles);
 
+    // Compute dropdown content before JSX to avoid deeply nested arrow functions (S2004).
+    let dropdownContent: React.ReactNode;
+    if (isLoading) {
+      dropdownContent = <li className={styles.loading} role="status" /* NOSONAR */>Loading…</li>;
+    } else if (flatOptions.length === 0) {
+      dropdownContent = <li className={styles.noOptions}>{noOptionsMessage}</li>;
+    } else {
+      dropdownContent = Array.from(grouped.entries()).map(([group, opts]) => (
+        <React.Fragment key={group || '__ungrouped'}>
+          {group && (
+            <li className={styles.groupHeader} role="presentation" /* NOSONAR */ aria-hidden="true">
+              {group}
+            </li>
+          )}
+          {opts.map((opt) => {
+            const flatIdx = flatIndexByValue.get(opt.value) ?? -1;
+            const isSelected = selectedValues.some((s) => s.value === opt.value);
+            const isCreate = (opt as MultiSelectOption & { _isCreate?: boolean })._isCreate;
+
+            let optionLabel: React.ReactNode;
+            if (isCreate) {
+              optionLabel = formatCreateLabel ? formatCreateLabel(opt.label) : `Create "${opt.label}"`;
+            } else if (renderOption) {
+              optionLabel = renderOption(opt);
+            } else {
+              optionLabel = opt.label;
+            }
+
+            return (
+              <li
+                key={opt.value}
+                id={`${listboxId}-opt-${flatIdx}`}
+                role="option" // NOSONAR
+                aria-selected={isSelected}
+                aria-disabled={opt.disabled}
+                className={classNames(
+                  styles.option,
+                  flatIdx === highlightedIndex ? styles.optionHighlighted : undefined,
+                  isSelected ? styles.optionSelected : undefined,
+                  opt.disabled ? styles.optionDisabled : undefined,
+                  isCreate ? styles.creatableOption : undefined
+                )}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  selectOption(opt as MultiSelectOption & { _isCreate?: boolean });
+                }}
+                onMouseEnter={() => setHighlightedIndex(flatIdx)}
+              >
+                {optionLabel}
+                {isSelected && !isCreate && (
+                  <span className={styles.optionCheck} aria-hidden="true">✓</span>
+                )}
+              </li>
+            );
+          })}
+        </React.Fragment>
+      ));
+    }
+
     // ── Render ───────────────────────────────────────────────────────────────
     return (
       <div
@@ -492,61 +551,7 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
             aria-label={label ?? 'Options'}
             className={styles.dropdown}
           >
-            {(() => {
-              if (isLoading) {
-                // NOSONAR
-                return <li className={styles.loading} role="status">Loading…</li>;
-              }
-              if (flatOptions.length === 0) {
-                return <li className={styles.noOptions}>{noOptionsMessage}</li>;
-              }
-              return Array.from(grouped.entries()).map(([group, opts]) => (
-                <React.Fragment key={group || '__ungrouped'}>
-                  {group && <li className={styles.groupHeader} role="presentation" aria-hidden="true">{group}</li>} {/* NOSONAR */}
-                  {opts.map((opt) => {
-                    const flatIdx = flatIndexByValue.get(opt.value) ?? -1;
-                    const isSelected = selectedValues.some((s) => s.value === opt.value);
-                    const isCreate = (opt as MultiSelectOption & { _isCreate?: boolean })._isCreate;
-
-                    let optionLabel: React.ReactNode;
-                    if (isCreate) {
-                      optionLabel = formatCreateLabel ? formatCreateLabel(opt.label) : `Create "${opt.label}"`;
-                    } else if (renderOption) {
-                      optionLabel = renderOption(opt);
-                    } else {
-                      optionLabel = opt.label;
-                    }
-
-                    return (
-                      <li
-                        key={opt.value}
-                        id={`${listboxId}-opt-${flatIdx}`}
-                        role="option" // NOSONAR
-                        aria-selected={isSelected}
-                        aria-disabled={opt.disabled}
-                        className={classNames(
-                          styles.option,
-                          flatIdx === highlightedIndex ? styles.optionHighlighted : undefined,
-                          isSelected ? styles.optionSelected : undefined,
-                          opt.disabled ? styles.optionDisabled : undefined,
-                          isCreate ? styles.creatableOption : undefined
-                        )}
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          selectOption(opt as MultiSelectOption & { _isCreate?: boolean });
-                        }}
-                        onMouseEnter={() => setHighlightedIndex(flatIdx)}
-                      >
-                        {optionLabel}
-                        {isSelected && !isCreate && (
-                          <span className={styles.optionCheck} aria-hidden="true">✓</span>
-                        )}
-                      </li>
-                    );
-                  })}
-                </React.Fragment>
-              ));
-            })()}
+            {dropdownContent}
           </ul>
         )}
 

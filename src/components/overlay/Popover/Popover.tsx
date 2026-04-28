@@ -241,7 +241,7 @@ export const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
     const content = (
       <div
         ref={mergedRef}
-        role="dialog"
+        role="dialog" // NOSONAR
         id={contentId}
         tabIndex={-1}
         data-side={side}

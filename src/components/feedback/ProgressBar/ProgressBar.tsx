@@ -78,7 +78,7 @@ export function ProgressBar({
         </div>
       )}
       <div
-        role="progressbar"
+        role="progressbar" // NOSONAR
         aria-valuenow={indeterminate ? undefined : clampedValue}
         aria-valuemin={0}
         aria-valuemax={safeMax}

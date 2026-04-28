@@ -51,7 +51,7 @@ const TABBABLE_SELECTOR = [
 function getTabbable(container: HTMLElement): HTMLElement[] {
   return Array.from(container.querySelectorAll<HTMLElement>(TABBABLE_SELECTOR)).filter((el) => {
     if (!el.isConnected) return false;
-    const style = window.getComputedStyle(el);
+    const style = getComputedStyle(el);
     return style.display !== 'none' && style.visibility !== 'hidden';
   });
 }
@@ -149,11 +149,9 @@ export function useFocusTrap({
           e.preventDefault();
           last.focus();
         }
-      } else {
-        if (focused === last) {
-          e.preventDefault();
-          first.focus();
-        }
+      } else if (focused === last) {
+        e.preventDefault();
+        first.focus();
       }
     }
 

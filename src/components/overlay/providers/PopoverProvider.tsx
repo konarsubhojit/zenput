@@ -1,5 +1,5 @@
 'use client';
-import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Portal } from '../../Portal';
 import { useEscapeKey } from '../internal/useEscapeKey';
 import { useClickOutside } from '../internal/useClickOutside';
@@ -238,8 +238,10 @@ export function PopoverProvider({ children }: PopoverProviderProps): React.React
     []
   );
 
+  const contextValue = useMemo(() => ({ _open }), [_open]);
+
   return (
-    <PopoverProviderContext.Provider value={{ _open }}>
+    <PopoverProviderContext.Provider value={contextValue}>
       {children}
       {stack.map((entry, index) => (
         <ImperativePopoverContent

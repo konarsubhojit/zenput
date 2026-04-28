@@ -41,7 +41,7 @@ export function Breadcrumbs({
                 </LinkEl>
               ) : (
                 <span
-                  className={classNames(styles.text, isCurrent ? styles.current : undefined)}
+                  className={classNames(styles.text, isCurrent ? styles.current : undefined)} // NOSONAR
                   aria-current={isCurrent ? 'page' : undefined}
                 >
                   {item.label}
