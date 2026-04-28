@@ -270,7 +270,7 @@ describe('Tabs a11y (axe)', () => {
 });
 
 describe('Tabs RTL keyboard navigation', () => {
-  it('ArrowRight (LTR default) still moves to next tab outside a ThemeProvider', () => {
+  it('navigates to next tab with ArrowRight in LTR mode (default)', () => {
     render(
       <Tabs defaultValue="tab1">
         <TabList aria-label="LTR tabs">
