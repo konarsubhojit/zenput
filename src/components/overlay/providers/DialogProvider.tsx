@@ -1,9 +1,11 @@
+'use client';
 import React, {
   createContext,
   useCallback,
   useContext,
   useEffect,
   useId,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -161,7 +163,7 @@ export function DialogProvider({ children }: DialogProviderProps): React.ReactEl
     []
   );
 
-  const contextValue: ProviderContextValue = { _open };
+  const contextValue = useMemo<ProviderContextValue>(() => ({ _open }), [_open]);
 
   return (
     <DialogProviderContext.Provider value={contextValue}>

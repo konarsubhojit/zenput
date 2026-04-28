@@ -1,3 +1,4 @@
+'use client';
 import React, {
   createContext,
   forwardRef,
@@ -216,7 +217,7 @@ export const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(func
       <div className={classNames(styles.overlay, overlayClassName)} data-zp-dialog-overlay="">
         <div
           ref={mergedRef}
-          role="dialog"
+          role="dialog" // NOSONAR
           aria-modal="true"
           id={ctx.contentId}
           aria-labelledby={ctx.hasTitle ? ctx.titleId : undefined}

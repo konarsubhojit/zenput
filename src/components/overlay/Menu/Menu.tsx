@@ -1,3 +1,4 @@
+'use client';
 import React, {
   createContext,
   forwardRef,
@@ -337,7 +338,7 @@ export const MenuLabel = forwardRef<HTMLDivElement, MenuLabelProps>(function Men
   ref
 ) {
   return (
-    <div ref={ref} role="presentation" className={classNames(styles.label, className)} {...rest} />
+    <div ref={ref} role="presentation" /* NOSONAR */ className={classNames(styles.label, className)} {...rest} />
   );
 });
 
@@ -412,7 +413,7 @@ export function MenuRadioGroup({
   value,
   onValueChange,
   children,
-}: MenuRadioGroupProps): React.ReactElement {
+}: Readonly<MenuRadioGroupProps>): React.ReactElement {
   const ctxValue = useMemo(() => ({ value, onValueChange }), [value, onValueChange]);
   return (
     <MenuRadioGroupContext.Provider value={ctxValue}>{children}</MenuRadioGroupContext.Provider>

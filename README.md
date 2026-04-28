@@ -693,6 +693,205 @@ All classes reference `--zp-*` CSS custom properties, so they automatically adap
 | `wrapperClassName` | `string` | — | Class for the wrapper element |
 | `inputClassName` | `string` | — | Class for the input element |
 
+## Accessibility primitives
+
+Zenput ships a set of first-class accessibility primitives in `src/components/a11y/`. All are
+exported from the top-level `zenput` package entry point.
+
+### `<VisuallyHidden>`
+
+Visually hides content while keeping it accessible to screen readers (clip-path technique).
+The hiding styles always win over consumer-supplied `style` props.
+
+```tsx
+import { VisuallyHidden } from 'zenput';
+
+<button>
+  <span aria-hidden="true">🔍</span>
+  <VisuallyHidden>Search</VisuallyHidden>
+</button>
+```
+
+Props:
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `as` | `React.ElementType` | `'span'` | Rendered element type |
+| `children` | `React.ReactNode` | — | Content to hide visually |
+
+---
+
+### `<SkipLink>`
+
+Keyboard-only visible anchor that becomes visible when it receives focus. Always place it as the
+very first focusable element in the document so keyboard users can skip repetitive navigation.
+
+```tsx
+import { SkipLink } from 'zenput';
+
+// Place before <nav> in your layout
+<SkipLink href="#main" />
+<nav>…</nav>
+<main id="main">…</main>
+```
+
+Props:
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `href` | `string` | `'#main'` | Target fragment id |
+| `children` | `React.ReactNode` | `'Skip to main content'` | Link label |
+
+---
+
+### `<LiveRegion>` + `useAnnounce()`
+
+Mount **one** `<LiveRegion>` near your app root. Use `useAnnounce()` anywhere in the tree to
+push polite or assertive messages into an `aria-live` region.
+
+Features: one mounted region per app, debounced re-announcement of identical
+messages (clears then re-sets so screen readers re-read).
+
+```tsx
+import { LiveRegion, useAnnounce } from 'zenput';
+
+// In your root layout:
+<LiveRegion>
+  <App />
+</LiveRegion>
+
+// Anywhere in the tree:
+function SearchResults({ count }: { count: number }) {
+  const announce = useAnnounce();
+
+  useEffect(() => {
+    announce(`${count} results found`);
+  }, [count, announce]);
+
+  return <ul>…</ul>;
+}
+```
+
+`LiveRegion` props:
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `children` | `React.ReactNode` | — | Wrapped content |
+
+`useAnnounce()` signature:
+
+```ts
+type AnnounceOptions = { politeness?: 'polite' | 'assertive' };
+announce(message: string, options?: AnnounceOptions): void
+```
+
+---
+
+### `<FocusScope>`
+
+Declarative wrapper around `useFocusTrap`. Renders a container element and manages focus
+trapping, auto-focus on activation, and focus restoration on deactivation.
+Used internally by `<Dialog>`, `<Drawer>`, and `<Menu>`.
+
+```tsx
+import { FocusScope } from 'zenput';
+
+<FocusScope trapped restoreFocus autoFocus>
+  <div role="dialog" aria-label="Settings">
+    <button>Save</button>
+    <button>Cancel</button>
+  </div>
+</FocusScope>
+```
+
+Props:
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `trapped` | `boolean` | `false` | Activate the focus trap |
+| `restoreFocus` | `boolean` | `true` | Restore focus on deactivation |
+| `autoFocus` | `boolean` | `true` | Auto-focus first tabbable element on activation |
+| `clickOutsideDeactivates` | `boolean` | `true` | Allow clicks outside to move focus |
+| `initialFocusRef` | `RefObject<HTMLElement>` | — | Override initial focus target |
+| `returnFocusRef` | `RefObject<HTMLElement>` | — | Override focus-restoration target |
+| `as` | `React.ElementType` | `'div'` | Rendered container element |
+
+---
+
+### `useRovingTabIndex()`
+
+Generic hook for keyboard-navigable lists and grids. Implements the WAI-ARIA roving-tabindex
+pattern: only the active item has `tabIndex={0}`; all others have `tabIndex={-1}`. Arrow keys,
+Home, and End move focus within the group.
+
+```tsx
+import { useRovingTabIndex } from 'zenput';
+
+const items = ['apple', 'banana', 'cherry'];
+
+function FruitList() {
+  const [selected, setSelected] = useState('apple');
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const { getTabIndex, onKeyDown } = useRovingTabIndex({
+    items,
+    activeItem: selected,
+    onNavigate: setSelected,
+    containerRef,           // enables automatic DOM focus on navigation
+  });
+
+  return (
+    <div role="listbox" ref={containerRef} onKeyDown={onKeyDown}>
+      {items.map((id) => (
+        <div
+          key={id}
+          role="option"
+          tabIndex={getTabIndex(id)}
+          data-rti-value={id}       // required for DOM focus to work
+          aria-selected={id === selected}
+          onClick={() => setSelected(id)}
+        >
+          {id}
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+Options:
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `items` | `string[]` | — | Ordered item identifiers in DOM order |
+| `activeItem` | `string` | — | Currently active item |
+| `orientation` | `'horizontal' \| 'vertical' \| 'both'` | `'horizontal'` | Navigation axis |
+| `onNavigate` | `(item: string) => void` | — | Called when focus should move |
+| `loop` | `boolean` | `true` | Wrap from last to first and vice versa |
+| `disabledItems` | `string[]` | `[]` | Items skipped during navigation |
+| `containerRef` | `RefObject<HTMLElement>` | — | Container ref for automatic DOM focus |
+
+---
+
+### `useId()` re-export
+
+React 18+ ships `useId()` built-in. Zenput re-exports it so consumers don't need to reach for
+a third-party package:
+
+```tsx
+import { useId } from 'zenput';
+
+function Field({ label }: { label: string }) {
+  const id = useId();
+  return (
+    <>
+      <label htmlFor={id}>{label}</label>
+      <input id={id} />
+    </>
+  );
+}
+```
+
 ## Imperative overlays
 
 Zenput ships **provider-based imperative APIs** for Dialog, Drawer, and Popover. These are designed for "fire-and-forget" use cases where managing `open` state and JSX placement would be inconvenient — confirming navigation, prompting for input from a row-action callback, or surfacing errors from `fetch().catch()`.
@@ -1112,6 +1311,139 @@ function EmailField() {
 }
 ```
 
+
+## Next.js App Router
+
+Zenput ships with `'use client'` directives in its bundle so every component
+and hook is clearly marked as a Client Component boundary. This means you can
+import zenput components directly from **Server Components** — Next.js will
+automatically render them on the client.
+
+### Server-safe sub-path exports
+
+| Import path | Contents | Safe in Server Component? |
+|---|---|---|
+| `zenput` | All components + hooks | ✅ (via `'use client'` boundary) |
+| `zenput/tokens` | Design token objects, `cssVar()`, `buildCssVariables()` | ✅ Yes (no React) |
+| `zenput/server` | `getColorModeScript()` | ✅ Yes (no React) |
+| `zenput/forms` | `Form`, `useZenputForm` | ✅ (via `'use client'` boundary) |
+
+### Minimal App Router setup
+
+```tsx
+// app/layout.tsx  (Server Component)
+import Script from 'next/script';
+import { getColorModeScript } from 'zenput/server';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = { title: 'My App' };
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <head>
+        {/*
+         * Sets data-zp-theme on <html> before first paint so CSS variables
+         * are scoped correctly before React hydrates, preventing theme flash.
+         * The storageKey must match the one passed to <ThemeProvider>.
+         */}
+        <Script
+          id="zp-color-mode"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: getColorModeScript({ storageKey: 'zp-theme', defaultMode: 'system' }),
+          }}
+        />
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+```tsx
+// app/page.tsx  (Server Component — token utilities run on the server)
+import { cssVar, CSS_VAR_PREFIX } from 'zenput/tokens';
+import MyForm from './MyForm';           // client component
+
+export default function Page() {
+  const brand = cssVar('color-brand');   // runs on server, no hooks needed
+  return <MyForm />;
+}
+```
+
+```tsx
+// app/MyForm.tsx  (Client Component)
+'use client';
+import { ThemeProvider, TextInput, Button } from 'zenput';
+
+export default function MyForm() {
+  return (
+    // storageKey must match the one passed to getColorModeScript above
+    <ThemeProvider theme={{ mode: 'system' }} storageKey="zp-theme">
+      <TextInput label="Email" placeholder="you@example.com" />
+      <Button>Submit</Button>
+    </ThemeProvider>
+  );
+}
+```
+
+### `getColorModeScript` options
+
+The `zenput/server` entry re-exports `getColorModeScript` from the same module
+that the main `zenput` bundle exports — so you can import it from either path.
+
+```ts
+import { getColorModeScript } from 'zenput/server';
+// or:
+import { getColorModeScript } from 'zenput';
+
+getColorModeScript({
+  storageKey: 'zp-theme',        // required — must match ThemeProvider storageKey
+  defaultMode: 'system',         // mode when no stored value ('system' respects OS)
+  storage: 'localStorage',       // 'localStorage' (default) or 'sessionStorage'
+  detectHighContrast: false,     // set true to honour prefers-contrast: more
+});
+```
+
+### `transpilePackages` (optional)
+
+If you see module resolution errors, add zenput to `transpilePackages` in
+`next.config.ts`:
+
+```ts
+// next.config.ts
+const nextConfig = {
+  transpilePackages: ['zenput'],
+};
+export default nextConfig;
+```
+
+---
+
+## SSR Safety
+
+All Zenput components are designed to render safely in server-side environments:
+
+- **`Portal`** — Defers `document` access until after mount using
+  `useSyncExternalStore` with a server snapshot of `false`; renders `null` on
+  the server. No browser globals accessed at module evaluation time.
+
+- **`useFocusTrap`** — All `document` access is inside `useEffect`, which only
+  runs on the client. Safe to call during SSR.
+
+- **`ThemeProvider`** — SSR-safe by default. When `mode='system'` is set,
+  `matchMedia` calls are deferred to `useEffect` and guarded by
+  `typeof window !== 'undefined'`. Deterministic SSR output is achieved by
+  rendering with the `defaultMode` until the client determines the OS preference.
+
+- **`useDisclosure`** — Uses `useState` and `useRef` from React 18+; no
+  `useId` fallback or random values that could cause hydration mismatches.
+
+- **Internal hooks** (`useClickOutside`, `useEscapeKey`, `useMenuKeyboardNav`)
+  — All event-listener registration is deferred to `useEffect`.
+
+---
 
 ## License
 

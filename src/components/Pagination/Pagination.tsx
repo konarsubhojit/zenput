@@ -1,6 +1,8 @@
+'use client';
 import React from 'react';
 import { classNames } from '../../utils';
 import type { PaginationProps } from './Pagination.types';
+import { useLocale } from '../../locales/LocaleContext';
 import styles from './Pagination.module.css';
 
 /**
@@ -93,6 +95,7 @@ export function Pagination({
   const totalPages = Math.max(1, Math.ceil(Math.max(0, totalCount) / safePageSize));
   const safeCurrentPage = Math.min(Math.max(1, Math.floor(currentPage) || 1), totalPages);
   const items = buildPaginationItems(safeCurrentPage, totalPages, siblingCount, boundaryCount);
+  const { t } = useLocale();
 
   const goTo = (page: number) => {
     if (!disabled && page >= 1 && page <= totalPages && page !== safeCurrentPage) {
@@ -102,19 +105,19 @@ export function Pagination({
 
   return (
     <nav
-      aria-label="Pagination"
+      aria-label={t('pagination.navAriaLabel')}
       className={classNames(styles.pagination, SIZE_CLASS[size], className)}
       style={style}
     >
       {/* Page size selector */}
       {showPageSize && onPageSizeChange && (
         <div className={styles.pageSizeWrapper}>
-          <span className={styles.pageSizeLabel}>Rows per page:</span>
+          <span className={styles.pageSizeLabel}>{t('pagination.rowsPerPage')}</span>
           <select
             className={styles.pageSizeSelect}
             value={safePageSize}
             disabled={disabled}
-            aria-label="Rows per page"
+            aria-label={t('pagination.rowsPerPage')}
             onChange={(e) => onPageSizeChange(Number(e.target.value))}
           >
             {pageSizeOptions.map((opt) => (
@@ -135,7 +138,7 @@ export function Pagination({
             className={styles.btn}
             disabled={disabled || safeCurrentPage <= 1}
             onClick={() => goTo(1)}
-            aria-label="First page"
+            aria-label={t('pagination.firstPage')}
           >
             «
           </button>
@@ -147,7 +150,7 @@ export function Pagination({
           className={styles.btn}
           disabled={disabled || safeCurrentPage <= 1}
           onClick={() => goTo(safeCurrentPage - 1)}
-          aria-label="Previous page"
+          aria-label={t('pagination.previousPage')}
         >
           ‹
         </button>
@@ -155,7 +158,7 @@ export function Pagination({
         {/* Page numbers / ellipses */}
         {items.map((item, idx) =>
           item === 'ellipsis' ? (
-            <span key={`ellipsis-${idx}`} className={styles.ellipsis} aria-hidden="true">
+          <span key={`ellipsis-after-${items[idx - 1] ?? idx}`} className={styles.ellipsis} aria-hidden="true">
               …
             </span>
           ) : (
@@ -168,7 +171,7 @@ export function Pagination({
               )}
               disabled={disabled}
               onClick={() => goTo(item)}
-              aria-label={`Page ${item}`}
+              aria-label={t('pagination.page', { n: item })}
               aria-current={item === safeCurrentPage ? 'page' : undefined}
             >
               {item}
@@ -182,7 +185,7 @@ export function Pagination({
           className={styles.btn}
           disabled={disabled || safeCurrentPage >= totalPages}
           onClick={() => goTo(safeCurrentPage + 1)}
-          aria-label="Next page"
+          aria-label={t('pagination.nextPage')}
         >
           ›
         </button>
@@ -194,7 +197,7 @@ export function Pagination({
             className={styles.btn}
             disabled={disabled || safeCurrentPage >= totalPages}
             onClick={() => goTo(totalPages)}
-            aria-label="Last page"
+            aria-label={t('pagination.lastPage')}
           >
             »
           </button>
