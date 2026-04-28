@@ -1,3 +1,4 @@
+'use client';
 import React, {
   createContext,
   useCallback,
@@ -204,7 +205,7 @@ export function Tab({
   children,
   className,
   ...rest
-}: TabProps): React.ReactElement {
+}: Readonly<TabProps>): React.ReactElement {
   const { selected, onSelect, baseId } = useTabsContext();
   const isSelected = selected === value;
 
@@ -266,7 +267,7 @@ export function TabPanel({
   children,
   className,
   ...rest
-}: TabPanelProps): React.ReactElement | null {
+}: Readonly<TabPanelProps>): React.ReactElement | null {
   const { selected, baseId } = useTabsContext();
 
   if (selected !== value) {
