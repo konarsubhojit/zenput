@@ -19,6 +19,12 @@ export interface UseFocusTrapOptions {
    * moves outside the container it is pulled back to the first tabbable element.
    */
   clickOutsideDeactivates?: boolean;
+  /**
+   * When `true` (default), the first tabbable element (or `initialFocusRef`)
+   * is focused automatically when the trap activates.
+   * Set to `false` to suppress automatic focus movement on activation.
+   */
+  autoFocus?: boolean;
 }
 
 /** CSS selector that matches all potentially tabbable elements. */
@@ -64,6 +70,7 @@ export function useFocusTrap({
   initialFocusRef,
   returnFocusRef,
   clickOutsideDeactivates = true,
+  autoFocus = true,
 }: UseFocusTrapOptions): void {
   // Store the element that was focused before the trap activated.
   const savedFocusRef = useRef<Element | null>(null);
@@ -85,21 +92,32 @@ export function useFocusTrap({
     // 1. Save the currently focused element for restoration.
     savedFocusRef.current = document.activeElement;
 
-    // 2. Move focus to the desired initial target.
+    // 2. Move focus to the desired initial target (only when autoFocus is enabled).
     const tabbable = getTabbable(container);
     const initialTarget = initialFocusRef?.current ?? tabbable[0] ?? null;
 
-    // Track whether we added tabindex so we can clean it up on deactivation.
-    const addedTabindex = !container.hasAttribute('tabindex');
+    // Track whether the container already had a tabindex attribute so we
+    // can restore the original state on cleanup without removing a
+    // consumer-set attribute.
+    const hadTabindex = container.hasAttribute('tabindex');
 
-    if (initialTarget) {
-      initialTarget.focus();
-    } else {
-      // No tabbable children — focus the container itself.
-      if (addedTabindex) {
-        container.setAttribute('tabindex', '-1');
+    // The container must be programmatically focusable whenever there are no
+    // tabbable children — this is needed both for the autoFocus path (which
+    // focuses the container directly) and for the Tab-key handler (which calls
+    // container.focus() when getTabbable returns an empty list). We always set
+    // the attribute here so the Tab handler always has a valid focus target,
+    // regardless of the autoFocus setting.
+    if (!initialTarget) {
+      container.setAttribute('tabindex', '-1');
+    }
+
+    if (autoFocus) {
+      if (initialTarget) {
+        initialTarget.focus();
+      } else {
+        // No tabbable children — focus the container itself.
+        container.focus();
       }
-      container.focus();
     }
 
     // 3. Tab-key cycling handler.
@@ -165,8 +183,9 @@ export function useFocusTrap({
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('focusin', handleFocusIn);
 
-      // Restore any tabindex mutation made when the container had no tabbable children.
-      if (addedTabindex) {
+      // Restore tabindex to its original state: only remove the attribute if
+      // it was not present before the trap activated (i.e., we added it).
+      if (!hadTabindex) {
         container.removeAttribute('tabindex');
       }
 
