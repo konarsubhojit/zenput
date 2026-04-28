@@ -149,11 +149,9 @@ export function useFocusTrap({
           e.preventDefault();
           last.focus();
         }
-      } else {
-        if (focused === last) {
-          e.preventDefault();
-          first.focus();
-        }
+      } else if (focused === last) {
+        e.preventDefault();
+        first.focus();
       }
     }
 

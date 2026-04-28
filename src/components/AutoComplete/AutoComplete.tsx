@@ -194,6 +194,37 @@ export const AutoComplete = forwardRef<HTMLInputElement, AutoCompleteProps>(
 
     const showDropdown = isOpen && !disabled && !readOnly;
 
+    // Compute dropdown list content before JSX to avoid nested ternaries (S3358).
+    let listContent: React.ReactNode;
+    if (loading) {
+      listContent = <li className={styles.loading}>{t('autoComplete.loading')}</li>;
+    } else if (filteredOptions.length === 0) {
+      listContent = <li className={styles.noOptions}>{noOptionsMessage ?? t('autoComplete.noOptions')}</li>;
+    } else {
+      listContent = filteredOptions.map((option, index) => (
+        <li
+          key={option.value}
+          id={`${listboxId}-option-${index}`}
+          role="option" // NOSONAR
+          aria-selected={option.label === currentInputValue}
+          aria-disabled={option.disabled}
+          className={classNames(
+            styles.option,
+            index === highlightedIndex ? styles.optionHighlighted : undefined,
+            option.label === currentInputValue ? styles.optionSelected : undefined,
+            option.disabled ? styles.optionDisabled : undefined
+          )}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            selectOption(option);
+          }}
+          onMouseEnter={() => setHighlightedIndex(index)}
+        >
+          {option.label}
+        </li>
+      ));
+    }
+
     return (
       <div
         ref={wrapperRef}
@@ -256,38 +287,11 @@ export const AutoComplete = forwardRef<HTMLInputElement, AutoCompleteProps>(
         {showDropdown && (
           <ul
             id={listboxId}
-            role="listbox"
+            role="listbox" // NOSONAR
             className={styles.dropdown}
             aria-label={label ?? t('autoComplete.suggestionsLabel')}
           >
-            {loading ? (
-              <li className={styles.loading}>{t('autoComplete.loading')}</li>
-            ) : filteredOptions.length === 0 ? (
-              <li className={styles.noOptions}>{noOptionsMessage ?? t('autoComplete.noOptions')}</li>
-            ) : (
-              filteredOptions.map((option, index) => (
-                <li
-                  key={option.value}
-                  id={`${listboxId}-option-${index}`}
-                  role="option"
-                  aria-selected={option.label === currentInputValue}
-                  aria-disabled={option.disabled}
-                  className={classNames(
-                    styles.option,
-                    index === highlightedIndex ? styles.optionHighlighted : undefined,
-                    option.label === currentInputValue ? styles.optionSelected : undefined,
-                    option.disabled ? styles.optionDisabled : undefined
-                  )}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    selectOption(option);
-                  }}
-                  onMouseEnter={() => setHighlightedIndex(index)}
-                >
-                  {option.label}
-                </li>
-              ))
-            )}
+            {listContent}
           </ul>
         )}
         {activeMessage && (

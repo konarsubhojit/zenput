@@ -91,6 +91,7 @@ export const ContextMenuTrigger = forwardRef<HTMLDivElement, ContextMenuTriggerP
     );
 
     return (
+      /* NOSONAR – ContextMenu trigger intentionally uses a div with event handler */
       <div ref={mergedRef} onContextMenu={handleContextMenu} {...rest}>
         {children}
       </div>

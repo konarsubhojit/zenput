@@ -66,13 +66,16 @@ export function interpolate(
 // Context shape
 // ---------------------------------------------------------------------------
 
+/** Day of the week: 0 = Sunday, 1 = Monday, … 6 = Saturday. */
+export type WeekDay = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
 export interface LocaleContextValue {
   /** BCP-47 locale tag (e.g. "en-US", "fr-FR"). */
   locale: string;
   /** Consumer-provided message overrides; fallback to en-US defaults is handled by `t()`. */
   messages: PartialMessageCatalog;
   /** First day of the week: 0 = Sunday … 6 = Saturday. */
-  weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+  weekStartsOn?: WeekDay;
   /** IANA time-zone name (e.g. "Europe/Paris"). */
   timeZone?: string;
 
@@ -106,7 +109,7 @@ export interface LocaleContextValue {
 function buildContextValue(
   locale: string,
   messages: PartialMessageCatalog,
-  weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6,
+  weekStartsOn?: WeekDay,
   timeZone?: string
 ): LocaleContextValue {
   function formatDate(date: Date | number, options?: Intl.DateTimeFormatOptions): string {
@@ -197,7 +200,7 @@ export interface LocaleProviderProps {
    * First day of the week: 0 = Sunday, 1 = Monday, … 6 = Saturday.
    * Passed through via `useLocale()` for calendar components.
    */
-  weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+  weekStartsOn?: WeekDay;
   /**
    * IANA time-zone identifier (e.g. "Europe/Paris") applied as the default
    * `timeZone` option for `formatDate`.

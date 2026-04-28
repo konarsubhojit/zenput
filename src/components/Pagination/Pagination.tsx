@@ -158,7 +158,7 @@ export function Pagination({
         {/* Page numbers / ellipses */}
         {items.map((item, idx) =>
           item === 'ellipsis' ? (
-          <span key={`ellipsis-${idx}`} className={styles.ellipsis} aria-hidden="true">
+          <span key={`ellipsis-after-${items[idx - 1] ?? idx}`} className={styles.ellipsis} aria-hidden="true">
               …
             </span>
           ) : (

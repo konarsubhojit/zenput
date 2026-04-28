@@ -1,5 +1,5 @@
 'use client';
-import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Drawer,
   DrawerContent,
@@ -132,8 +132,10 @@ export function DrawerProvider({ children }: DrawerProviderProps): React.ReactEl
     []
   );
 
+  const contextValue = useMemo(() => ({ _open }), [_open]);
+
   return (
-    <DrawerProviderContext.Provider value={{ _open }}>
+    <DrawerProviderContext.Provider value={contextValue}>
       {children}
       {stack.map((entry, index) => {
         const isTopmost = index === stack.length - 1;

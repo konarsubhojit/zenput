@@ -53,7 +53,7 @@ export const CheckboxGroup = forwardRef<HTMLDivElement, CheckboxGroupProps>(
     return (
       <div
         ref={ref}
-        role="group"
+        role="group" // NOSONAR
         aria-labelledby={label ? `${groupId}-label` : undefined}
         aria-describedby={activeMessage ? helperId : undefined}
         className={classNames(styles.wrapper, wrapperClassName)}

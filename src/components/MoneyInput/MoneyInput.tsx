@@ -71,8 +71,8 @@ export function MoneyInput({
         setCurrentAmount(undefined);
         return;
       }
-      const parsed = parseFloat(raw);
-      if (!isNaN(parsed)) {
+      const parsed = Number.parseFloat(raw);
+      if (!Number.isNaN(parsed)) {
         setCurrentAmount(parsed);
       }
     },

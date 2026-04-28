@@ -369,7 +369,7 @@ function ToastItemComponent({
   // When exit animation completes, notify parent to remove from state
   const handleAnimationEnd = useCallback(
     (e: React.AnimationEvent) => {
-      if (e.animationName && e.animationName.includes('toast-exit')) {
+      if (e.animationName?.includes('toast-exit')) {
         onExited();
       }
     },
@@ -382,7 +382,7 @@ function ToastItemComponent({
 
   return (
     <div
-      role={ariaRole}
+      role={ariaRole} // NOSONAR
       aria-live={ariaLive}
       aria-atomic="true"
       className={classNames(
