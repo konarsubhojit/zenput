@@ -1,3 +1,4 @@
+'use client';
 import React, { forwardRef, useCallback, useState } from 'react';
 import { NumberInputProps } from './NumberInput.types';
 import { classNames, getValidationMessage, getValidationMessageClass } from '../../utils';
@@ -103,8 +104,8 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
           setCurrentValue(undefined);
           return;
         }
-        const parsed = parseFloat(raw);
-        if (!isNaN(parsed)) {
+        const parsed = Number.parseFloat(raw);
+        if (!Number.isNaN(parsed)) {
           setCurrentValue(parsed);
         }
       },

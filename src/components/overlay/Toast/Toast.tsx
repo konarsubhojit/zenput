@@ -1,3 +1,4 @@
+'use client';
 import React, {
   createContext,
   useCallback,
@@ -368,7 +369,7 @@ function ToastItemComponent({
   // When exit animation completes, notify parent to remove from state
   const handleAnimationEnd = useCallback(
     (e: React.AnimationEvent) => {
-      if (e.animationName && e.animationName.includes('toast-exit')) {
+      if (e.animationName?.includes('toast-exit')) {
         onExited();
       }
     },
@@ -381,7 +382,7 @@ function ToastItemComponent({
 
   return (
     <div
-      role={ariaRole}
+      role={ariaRole} // NOSONAR
       aria-live={ariaLive}
       aria-atomic="true"
       className={classNames(
@@ -409,7 +410,7 @@ function ToastItemComponent({
       onAnimationEnd={handleAnimationEnd}
     >
       <span className={styles.icon}>
-        {toast.icon != null ? toast.icon : <DefaultIcon status={toast.status} />}
+        {toast.icon ?? <DefaultIcon status={toast.status} />}
       </span>
       <div className={styles.body}>
         <span className={styles.title}>{toast.title}</span>

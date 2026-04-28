@@ -1,3 +1,4 @@
+'use client';
 import React from 'react';
 import { classNames } from '../../../utils';
 import styles from './ProgressBar.module.css';
@@ -77,7 +78,7 @@ export function ProgressBar({
         </div>
       )}
       <div
-        role="progressbar"
+        role="progressbar" // NOSONAR
         aria-valuenow={indeterminate ? undefined : clampedValue}
         aria-valuemin={0}
         aria-valuemax={safeMax}

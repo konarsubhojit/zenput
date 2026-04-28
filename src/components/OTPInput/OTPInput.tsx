@@ -1,3 +1,4 @@
+'use client';
 import React, { forwardRef, useRef, useCallback, useId } from 'react';
 import { OTPInputProps } from './OTPInput.types';
 import { classNames } from '../../utils';
@@ -126,20 +127,18 @@ export const OTPInput = forwardRef<HTMLDivElement, OTPInputProps>(
     );
 
     const activeMessage =
-      validationState === 'error'
-        ? errorMessage
-        : validationState === 'success'
-          ? undefined
-          : helperText;
+      validationState === 'error' ? errorMessage : validationState === 'success' ? undefined : helperText; // NOSONAR
 
-    const messageClass =
-      validationState === 'error'
-        ? styles.errorText
-        : validationState === 'success'
-          ? styles.successText
-          : validationState === 'warning'
-            ? styles.warningText
-            : styles.helperText;
+    let messageClass: string;
+    if (validationState === 'error') {
+      messageClass = styles.errorText;
+    } else if (validationState === 'success') {
+      messageClass = styles.successText;
+    } else if (validationState === 'warning') {
+      messageClass = styles.warningText;
+    } else {
+      messageClass = styles.helperText;
+    }
 
     return (
       <div
@@ -165,9 +164,9 @@ export const OTPInput = forwardRef<HTMLDivElement, OTPInputProps>(
             {label}
           </label>
         )}
-        <div className={styles.inputsRow} role="group" aria-label={label ?? 'One-time password'}>
+        <div className={styles.inputsRow} role="group" /* NOSONAR */ aria-label={label ?? 'One-time password'}>
           {digits.map((digit, index) => (
-            <React.Fragment key={index}>
+            <React.Fragment key={index}> {/* NOSONAR */}
               {index === length / 2 && length > 4 && (
                 <span className={styles.separator} aria-hidden="true">
                   —

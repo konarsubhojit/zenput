@@ -1,3 +1,4 @@
+'use client';
 import { useEffect, type RefObject } from 'react';
 
 /**
@@ -19,7 +20,7 @@ export function useClickOutside(
       if (target == null) return;
       for (const ref of refs) {
         const el = ref.current;
-        if (el && el.contains(target)) return;
+        if (el?.contains(target)) return;
       }
       onOutside(event);
     };
