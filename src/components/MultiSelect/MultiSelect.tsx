@@ -98,7 +98,11 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
     const [internalSelected, setInternalSelected] = useState<MultiSelectOption[]>(
       defaultValue ?? []
     );
-    const selectedValues = isControlled ? (value ?? []) : internalSelected; // NOSONAR
+    // In controlled mode use the value prop; in uncontrolled mode use internal state.
+    // Keep these separate so that a change to internalSelected doesn't cause an
+    // unnecessary recompute when the component is in controlled mode.
+    const controlledValues = useMemo(() => value ?? [], [value]);
+    const selectedValues = isControlled ? controlledValues : internalSelected;
 
     const updateSelected = useCallback(
       (next: MultiSelectOption[]) => {
