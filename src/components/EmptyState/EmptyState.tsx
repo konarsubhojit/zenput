@@ -16,7 +16,7 @@ const VARIANT_CLASS: Record<NonNullable<EmptyStateProps['variant']>, string> = {
   error: styles.variantError,
 };
 
-function ActionNode({ action, primary }: { action: EmptyStateAction; primary: boolean }) {
+function ActionNode({ action, primary }: Readonly<{ action: EmptyStateAction; primary: boolean }>) {
   const cls = primary ? styles.primaryAction : styles.secondaryAction;
   if (action.onClick) {
     return (

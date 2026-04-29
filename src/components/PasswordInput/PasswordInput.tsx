@@ -145,7 +145,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             {...inputAriaProps}
             ref={ref}
             id={inputId}
-            type={visible ? 'text' : 'password'}
+            type={visible ? 'text' : 'password'} // NOSONAR: type attribute, not a credential
             disabled={disabled}
             readOnly={readOnly}
             required={required}

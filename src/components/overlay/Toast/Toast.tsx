@@ -127,7 +127,7 @@ const TOAST_EXIT_FALLBACK_MS = 200;
 // Default status icons
 // ---------------------------------------------------------------------------
 
-function DefaultIcon({ status }: { status: ToastStatus }): React.ReactElement {
+function DefaultIcon({ status }: Readonly<{ status: ToastStatus }>): React.ReactElement {
   switch (status) {
     case 'success':
       return (

@@ -94,7 +94,7 @@ export interface MenuTriggerProps extends Omit<
   children: React.ReactNode;
 }
 
-export const MenuTrigger = forwardRef<HTMLButtonElement, MenuTriggerProps>(function MenuTrigger(
+export const MenuTrigger = forwardRef<HTMLButtonElement, Readonly<MenuTriggerProps>>(function MenuTrigger(
   { onClick, type = 'button', ...rest },
   forwardedRef
 ) {
@@ -426,7 +426,7 @@ export interface MenuRadioItemProps extends Omit<React.HTMLAttributes<HTMLDivEle
   children?: React.ReactNode;
 }
 
-export const MenuRadioItem = forwardRef<HTMLDivElement, MenuRadioItemProps>(function MenuRadioItem(
+export const MenuRadioItem = forwardRef<HTMLDivElement, Readonly<MenuRadioItemProps>>(function MenuRadioItem(
   { value, disabled, onClick, className, children, ...rest },
   ref
 ) {
@@ -507,7 +507,7 @@ export interface MenuSubTriggerProps extends Omit<React.HTMLAttributes<HTMLDivEl
   children?: React.ReactNode;
 }
 
-export const MenuSubTrigger = forwardRef<HTMLDivElement, MenuSubTriggerProps>(
+export const MenuSubTrigger = forwardRef<HTMLDivElement, Readonly<MenuSubTriggerProps>>(
   function MenuSubTrigger(
     { disabled, onClick, onKeyDown, onMouseEnter, className, children, ...rest },
     ref

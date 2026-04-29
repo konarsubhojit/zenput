@@ -345,14 +345,14 @@ function PromptDialogBody({
   confirmLabel,
   cancelLabel,
   close,
-}: {
+}: Readonly<{
   label?: string;
   defaultValue: string;
   validate?: (v: string) => boolean | string;
   confirmLabel: string;
   cancelLabel: string;
   close: (value: unknown) => void;
-}): React.ReactElement {
+}>): React.ReactElement {
   const [value, setValue] = useState(defaultValue);
   const [error, setError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);

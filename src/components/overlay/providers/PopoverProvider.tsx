@@ -86,11 +86,11 @@ function ImperativePopoverContent({
   entry,
   onClose,
   isTopmost,
-}: {
+}: Readonly<{
   entry: PopoverStackEntry;
   onClose: (value?: unknown) => void;
   isTopmost: boolean;
-}): React.ReactElement | null {
+}>): React.ReactElement | null {
   const contentRef = useRef<HTMLDivElement | null>(null);
   const [coords, setCoords] = useState<PopoverCoords | null>(null);
 
