@@ -89,11 +89,11 @@ export function Tabs({
   children,
   className,
   style,
-}: TabsProps): React.ReactElement {
+}: Readonly<TabsProps>): React.ReactElement {
   const baseId = useId();
   const isControlled = value !== undefined;
   const [internalSelected, setInternalSelected] = useState<string>(defaultValue ?? '');
-  const selected = isControlled ? (value as string) : internalSelected;
+  const selected = isControlled ? value! : internalSelected;
 
   const onSelect = useCallback(
     (val: string) => {
@@ -132,7 +132,7 @@ Tabs.displayName = 'Tabs';
  * Container for `<Tab>` items. Implements roving-focus keyboard navigation
  * per the WAI-ARIA Tabs pattern.
  */
-export function TabList({ children, className, ...rest }: TabListProps): React.ReactElement {
+export function TabList({ children, className, ...rest }: Readonly<TabListProps>): React.ReactElement {
   const { orientation, selected, onSelect } = useTabsContext();
   const listRef = useRef<HTMLDivElement>(null);
   const dir = useDirection();
@@ -262,7 +262,7 @@ Tab.displayName = 'Tab';
 // ---------------------------------------------------------------------------
 
 /** Wrapper for `<TabPanel>` elements. */
-export function TabPanels({ children, className, style }: TabPanelsProps): React.ReactElement {
+export function TabPanels({ children, className, style }: Readonly<TabPanelsProps>): React.ReactElement {
   return (
     <div className={classNames(styles.tabPanels, className)} style={style}>
       {children}

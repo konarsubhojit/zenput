@@ -62,7 +62,7 @@ export function Popover({
   defaultOpen,
   onOpenChange,
   children,
-}: PopoverProps): React.ReactElement {
+}: Readonly<PopoverProps>): React.ReactElement {
   const { open, setOpen } = useDisclosure({
     open: controlledOpen,
     defaultOpen,
@@ -107,7 +107,7 @@ export interface PopoverTriggerProps extends Omit<
   children: React.ReactNode;
 }
 
-export const PopoverTrigger = forwardRef<HTMLButtonElement, PopoverTriggerProps>(
+export const PopoverTrigger = forwardRef<HTMLButtonElement, Readonly<PopoverTriggerProps>>(
   function PopoverTrigger({ onClick, type = 'button', ...rest }, forwardedRef) {
     const ctx = usePopoverContext('PopoverTrigger');
     const { setTriggerNode, setOpen, open, contentId } = ctx;
@@ -159,7 +159,7 @@ export interface PopoverContentProps extends React.HTMLAttributes<HTMLDivElement
   children: React.ReactNode;
 }
 
-export const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
+export const PopoverContent = forwardRef<HTMLDivElement, Readonly<PopoverContentProps>>(
   function PopoverContent(
     {
       side = 'bottom',
@@ -190,23 +190,24 @@ export const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
     // Position the popover relative to the trigger while open. Recomputes
     // on scroll/resize and on open. Only runs while `open` is true; when
     // closed the component returns null so stale `coords` are irrelevant.
+    const updatePosition = useCallback((): void => {
+      const trigger = triggerRef.current;
+      const content = contentElRef.current;
+      if (!trigger || !content) return;
+      setCoords(
+        computePosition(
+          trigger.getBoundingClientRect(),
+          content.getBoundingClientRect(),
+          side,
+          align,
+          sideOffset,
+          alignOffset
+        )
+      );
+    }, [triggerRef, side, align, sideOffset, alignOffset]);
+
     useIsomorphicLayoutEffect(() => {
       if (!open) return;
-      const updatePosition = (): void => {
-        const trigger = triggerRef.current;
-        const content = contentElRef.current;
-        if (!trigger || !content) return;
-        setCoords(
-          computePosition(
-            trigger.getBoundingClientRect(),
-            content.getBoundingClientRect(),
-            side,
-            align,
-            sideOffset,
-            alignOffset
-          )
-        );
-      };
       updatePosition();
       window.addEventListener('scroll', updatePosition, true);
       window.addEventListener('resize', updatePosition);
@@ -214,7 +215,7 @@ export const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
         window.removeEventListener('scroll', updatePosition, true);
         window.removeEventListener('resize', updatePosition);
       };
-    }, [open, triggerRef, side, align, sideOffset, alignOffset]);
+    }, [open, updatePosition]);
 
     const handleEscape = useCallback(() => {
       setOpen(false);

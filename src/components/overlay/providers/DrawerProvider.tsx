@@ -3,10 +3,6 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import {
   Drawer,
   DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerBody,
-  DrawerFooter,
 } from '../Drawer';
 import type { DrawerSide, DrawerSize } from '../Drawer';
 
@@ -67,7 +63,7 @@ export interface DrawerProviderProps {
  * `<DrawerProvider>` once, then call `useDrawer()` anywhere inside the tree
  * to open drawers without managing `open` state or JSX placement.
  */
-export function DrawerProvider({ children }: DrawerProviderProps): React.ReactElement {
+export function DrawerProvider({ children }: Readonly<DrawerProviderProps>): React.ReactElement {
   const [stack, setStack] = useState<DrawerStackEntry[]>([]);
 
   const pendingRef = useRef(new Map<string, (value?: unknown) => void>());
@@ -103,13 +99,15 @@ export function DrawerProvider({ children }: DrawerProviderProps): React.ReactEl
         resolveFn = res;
       });
 
+      const restoreFocus = (): void => {
+        if (returnFocusEl instanceof HTMLElement) returnFocusEl.focus();
+      };
+
       const close = (value?: unknown): void => {
         setStack((prev) => removeDrawerEntryById(prev, id));
         pendingRef.current.delete(id);
         resolveFn(value !== undefined ? value : null);
-        requestAnimationFrame(() => {
-          if (returnFocusEl instanceof HTMLElement) returnFocusEl.focus();
-        });
+        requestAnimationFrame(restoreFocus);
       };
 
       pendingRef.current.set(id, close);
@@ -221,4 +219,4 @@ export function useDrawer(): DrawerApi {
 // ---------------------------------------------------------------------------
 // Convenience re-exports so consumers can build drawer content easily.
 // ---------------------------------------------------------------------------
-export { DrawerHeader, DrawerTitle, DrawerBody, DrawerFooter };
+export { DrawerHeader, DrawerTitle, DrawerBody, DrawerFooter } from '../Drawer';

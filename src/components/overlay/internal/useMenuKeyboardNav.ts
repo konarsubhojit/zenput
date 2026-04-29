@@ -82,14 +82,13 @@ export function useMenuKeyboardNav({
     match?.focus();
   }, []);
 
-  return useCallback(
-    (e: React.KeyboardEvent<HTMLDivElement>) => {
-      const el = containerRef.current;
-      if (!el) return;
-      const items = getMenuItems(el);
-      const focused = document.activeElement as HTMLElement | null;
-      const currentIndex = focused ? items.indexOf(focused) : -1;
-
+  const handleNavigationKey = useCallback(
+    (
+      e: React.KeyboardEvent<HTMLDivElement>,
+      items: HTMLElement[],
+      focused: HTMLElement | null,
+      currentIndex: number
+    ): void => {
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault();
@@ -143,6 +142,18 @@ export function useMenuKeyboardNav({
           }
       }
     },
-    [containerRef, handleTypeAhead]
+    [handleTypeAhead]
+  );
+
+  return useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      const el = containerRef.current;
+      if (!el) return;
+      const items = getMenuItems(el);
+      const focused = document.activeElement as HTMLElement | null;
+      const currentIndex = focused ? items.indexOf(focused) : -1;
+      handleNavigationKey(e, items, focused, currentIndex);
+    },
+    [containerRef, handleNavigationKey]
   );
 }

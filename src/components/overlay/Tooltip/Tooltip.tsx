@@ -49,7 +49,7 @@ export function TooltipProvider({
   openDelay = 700,
   closeDelay = 150,
   children,
-}: TooltipProviderProps): React.ReactElement {
+}: Readonly<TooltipProviderProps>): React.ReactElement {
   const value = useMemo(() => ({ openDelay, closeDelay }), [openDelay, closeDelay]);
   return (
     <TooltipProviderContext.Provider value={value}>{children}</TooltipProviderContext.Provider>
@@ -102,7 +102,7 @@ export function Tooltip({
   openDelay,
   closeDelay,
   children,
-}: TooltipProps): React.ReactElement {
+}: Readonly<TooltipProps>): React.ReactElement {
   const providerValue = useContext(TooltipProviderContext);
   const effectiveOpenDelay = openDelay ?? providerValue.openDelay;
   const effectiveCloseDelay = closeDelay ?? providerValue.closeDelay;
@@ -199,7 +199,7 @@ interface TriggerableProps {
  * `aria-describedby`. The child must accept a ref (either a native
  * element or a `forwardRef` component).
  */
-export function TooltipTrigger({ children }: TooltipTriggerProps): React.ReactElement {
+export function TooltipTrigger({ children }: Readonly<TooltipTriggerProps>): React.ReactElement {
   const ctx = useTooltipContext('TooltipTrigger');
   const { setTriggerNode, open, contentId, openSoon, closeSoon, openNow, closeNow } = ctx;
   const child = Children.only(children);
@@ -217,7 +217,7 @@ export function TooltipTrigger({ children }: TooltipTriggerProps): React.ReactEl
     setTriggerNode(node);
     if (typeof childRef === 'function') childRef(node);
     else if (childRef && 'current' in childRef) {
-      (childRef as React.MutableRefObject<HTMLElement | null>).current = node;
+      (childRef as React.RefObject<HTMLElement | null>).current = node;
     }
   };
 
@@ -276,7 +276,7 @@ export interface TooltipContentProps extends React.HTMLAttributes<HTMLDivElement
   children: React.ReactNode;
 }
 
-export const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
+export const TooltipContent = forwardRef<HTMLDivElement, Readonly<TooltipContentProps>>(
   function TooltipContent(
     {
       side = 'top',
@@ -306,23 +306,24 @@ export const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
       [forwardedRef]
     );
 
+    const updatePosition = useCallback((): void => {
+      const trigger = triggerRef.current;
+      const content = contentElRef.current;
+      if (!trigger || !content) return;
+      setCoords(
+        computePosition(
+          trigger.getBoundingClientRect(),
+          content.getBoundingClientRect(),
+          side,
+          align,
+          sideOffset,
+          alignOffset
+        )
+      );
+    }, [triggerRef, side, align, sideOffset, alignOffset]);
+
     useIsomorphicLayoutEffect(() => {
       if (!open) return;
-      const updatePosition = (): void => {
-        const trigger = triggerRef.current;
-        const content = contentElRef.current;
-        if (!trigger || !content) return;
-        setCoords(
-          computePosition(
-            trigger.getBoundingClientRect(),
-            content.getBoundingClientRect(),
-            side,
-            align,
-            sideOffset,
-            alignOffset
-          )
-        );
-      };
       updatePosition();
       window.addEventListener('scroll', updatePosition, true);
       window.addEventListener('resize', updatePosition);
@@ -330,7 +331,7 @@ export const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
         window.removeEventListener('scroll', updatePosition, true);
         window.removeEventListener('resize', updatePosition);
       };
-    }, [open, triggerRef, side, align, sideOffset, alignOffset]);
+    }, [open, updatePosition]);
 
     if (!open) return null;
 

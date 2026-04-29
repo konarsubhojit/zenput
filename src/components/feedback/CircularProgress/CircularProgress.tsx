@@ -63,7 +63,7 @@ export function CircularProgress({
   'aria-label': ariaLabel,
   'aria-labelledby': ariaLabelledBy,
   ...rest
-}: CircularProgressProps): React.ReactElement {
+}: Readonly<CircularProgressProps>): React.ReactElement {
   const diameter = diameterProp ?? sizeMap[size];
   const thickness = thicknessProp ?? thicknessMap[size];
   // Normalize `max` to a non-negative number so consumers can't produce

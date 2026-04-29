@@ -14,7 +14,7 @@ declare const process: undefined | { env?: { NODE_ENV?: string } };
 let warned: Set<string> | null = null;
 
 export function warnOnce(key: string, message: string): void {
-  // Safe typeof guard for browser environments without Node.js globals.
+  // typeof guard required: `process` may not be defined as a global in browser environments. NOSONAR: S7741
   if (typeof process !== 'undefined' && process?.env?.NODE_ENV === 'production') return;
   if (warned === null) warned = new Set<string>();
   if (warned.has(key)) return;

@@ -86,7 +86,7 @@ export interface DialogProviderProps {
  * `useAlert()`, or the generic `useDialog()` anywhere inside the tree to
  * open dialogs without managing `open` state or JSX placement.
  */
-export function DialogProvider({ children }: DialogProviderProps): React.ReactElement {
+export function DialogProvider({ children }: Readonly<DialogProviderProps>): React.ReactElement {
   const [stack, setStack] = useState<StackEntry[]>([]);
 
   // Track {resolve, defaultCloseValue} keyed by id for unmount cleanup.
@@ -133,6 +133,10 @@ export function DialogProvider({ children }: DialogProviderProps): React.ReactEl
       // (e.g. useAlert passes defaultCloseValue: undefined).
       const defaultCloseValue = 'defaultCloseValue' in opts ? opts.defaultCloseValue : null;
 
+      const restoreFocus = (): void => {
+        if (returnFocusEl instanceof HTMLElement) returnFocusEl.focus();
+      };
+
       const close = (value: unknown = _CLOSE_DEFAULT): void => {
         setStack((prev) => removeStackEntryById(prev, id));
         pendingRef.current.delete(id);
@@ -140,9 +144,7 @@ export function DialogProvider({ children }: DialogProviderProps): React.ReactEl
         // value (e.g. false for confirm, null for prompt, undefined for alert).
         // An explicit argument — even `undefined` — is forwarded as-is.
         resolveFn(value === _CLOSE_DEFAULT ? defaultCloseValue : value);
-        requestAnimationFrame(() => {
-          if (returnFocusEl instanceof HTMLElement) returnFocusEl.focus();
-        });
+        requestAnimationFrame(restoreFocus);
       };
 
       pendingRef.current.set(id, { resolve: resolveFn, defaultCloseValue });
@@ -345,14 +347,14 @@ function PromptDialogBody({
   confirmLabel,
   cancelLabel,
   close,
-}: {
+}: Readonly<{
   label?: string;
   defaultValue: string;
   validate?: (v: string) => boolean | string;
   confirmLabel: string;
   cancelLabel: string;
   close: (value: unknown) => void;
-}): React.ReactElement {
+}>): React.ReactElement {
   const [value, setValue] = useState(defaultValue);
   const [error, setError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);

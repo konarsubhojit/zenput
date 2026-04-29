@@ -10,7 +10,7 @@ import type { ValidationState } from '../types/common';
  * @returns The active message to display
  */
 export function getValidationMessage(
-  validationState: ValidationState = 'default',
+  validationState: ValidationState | undefined,
   errorMessage?: string,
   successMessage?: string,
   warningMessage?: string,

@@ -17,7 +17,7 @@ export function Breadcrumbs({
   separator = '/',
   className,
   style,
-}: BreadcrumbsProps): React.ReactElement {
+}: Readonly<BreadcrumbsProps>): React.ReactElement {
   return (
     <nav aria-label={ariaLabel} className={classNames(styles.breadcrumbs, className)} style={style}>
       <ol className={styles.list}>

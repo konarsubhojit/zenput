@@ -2,8 +2,7 @@
 import React, { forwardRef, useCallback, useState } from 'react';
 import { NumberInputProps } from './NumberInput.types';
 import { classNames, getValidationMessage, getValidationMessageClass } from '../../utils';
-import { useFormField } from '../../hooks';
-import { useControllable } from '../../hooks';
+import { useFormField, useControllable } from '../../hooks';
 import styles from './NumberInput.module.css';
 
 function computeDisplayValue(
@@ -14,6 +13,13 @@ function computeDisplayValue(
   if (currentValue === undefined) return '';
   if (!isFocused && formatValue !== undefined) return formatValue(currentValue);
   return currentValue;
+}
+
+function clampValue(value: number, min: number | undefined, max: number | undefined): number {
+  let clamped = value;
+  if (min !== undefined) clamped = Math.max(min, clamped);
+  if (max !== undefined) clamped = Math.min(max, clamped);
+  return clamped;
 }
 
 export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
@@ -78,12 +84,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
     const [isFocused, setIsFocused] = useState(false);
 
     const clamp = useCallback(
-      (n: number) => {
-        let clamped = n;
-        if (min !== undefined) clamped = Math.max(min, clamped);
-        if (max !== undefined) clamped = Math.min(max, clamped);
-        return clamped;
-      },
+      (n: number) => clampValue(n, min, max),
       [min, max]
     );
 

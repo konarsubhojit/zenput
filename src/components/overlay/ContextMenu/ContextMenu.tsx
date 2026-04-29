@@ -38,7 +38,7 @@ export function ContextMenu({
   defaultOpen,
   onOpenChange,
   children,
-}: ContextMenuProps): React.ReactElement {
+}: Readonly<ContextMenuProps>): React.ReactElement {
   const { open, setOpen } = useDisclosure({ open: controlledOpen, defaultOpen, onOpenChange });
   const triggerRef = useRef<HTMLElement | null>(null);
   const contentId = useId();
@@ -67,7 +67,7 @@ export interface ContextMenuTriggerProps extends React.HTMLAttributes<HTMLDivEle
   children: React.ReactNode;
 }
 
-export const ContextMenuTrigger = forwardRef<HTMLDivElement, ContextMenuTriggerProps>(
+export const ContextMenuTrigger = forwardRef<HTMLDivElement, Readonly<ContextMenuTriggerProps>>(
   function ContextMenuTrigger({ onContextMenu, children, ...rest }, forwardedRef) {
     const menuCtx = useContext(MenuContext);
     const ctxCtx = useContext(ContextMenuContext);
@@ -104,7 +104,7 @@ export interface ContextMenuContentProps extends React.HTMLAttributes<HTMLDivEle
   children: React.ReactNode;
 }
 
-export const ContextMenuContent = forwardRef<HTMLDivElement, ContextMenuContentProps>(
+export const ContextMenuContent = forwardRef<HTMLDivElement, Readonly<ContextMenuContentProps>>(
   function ContextMenuContent({ className, children, ...rest }, forwardedRef) {
     const menuCtx = useContext(MenuContext);
     const ctxCtx = useContext(ContextMenuContext);
@@ -193,7 +193,7 @@ export const ContextMenuContent = forwardRef<HTMLDivElement, ContextMenuContentP
       <Portal>
         <div
           ref={mergedRef}
-          role="menu"
+          role="menu" // NOSONAR: WAI-ARIA menu pattern requires role="menu" on container div
           id={contentId}
           tabIndex={-1}
           style={{

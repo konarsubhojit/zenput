@@ -70,7 +70,7 @@ export function Accordion({
   children,
   className,
   style,
-}: AccordionProps): React.ReactElement {
+}: Readonly<AccordionProps>): React.ReactElement {
   const isControlled = value !== undefined;
 
   const getInitialOpen = (): string[] => {
@@ -130,7 +130,7 @@ export function AccordionItem({
   children,
   className,
   style,
-}: AccordionItemProps): React.ReactElement {
+}: Readonly<AccordionItemProps>): React.ReactElement {
   const { openItems } = useAccordionContext();
   const baseId = useId();
   const triggerId = `${baseId}-trigger`;
@@ -173,7 +173,7 @@ export function AccordionTrigger({
   children,
   className,
   ...rest
-}: AccordionTriggerProps): React.ReactElement {
+}: Readonly<AccordionTriggerProps>): React.ReactElement {
   const { toggle } = useAccordionContext();
   const { value, isOpen, disabled, triggerId, contentId } = useAccordionItemContext();
 
@@ -221,13 +221,12 @@ export function AccordionContent({
   children,
   className,
   ...rest
-}: AccordionContentProps): React.ReactElement {
+}: Readonly<AccordionContentProps>): React.ReactElement {
   const { isOpen, triggerId, contentId } = useAccordionItemContext();
 
   return (
-    <div
+    <section
       id={contentId}
-      role="region" // NOSONAR
       aria-labelledby={triggerId}
       hidden={!isOpen}
       className={classNames(
@@ -238,7 +237,7 @@ export function AccordionContent({
       {...rest}
     >
       <div className={styles.contentInner}>{children}</div>
-    </div>
+    </section>
   );
 }
 AccordionContent.displayName = 'AccordionContent';

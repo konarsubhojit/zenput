@@ -59,7 +59,7 @@ export function Drawer({
   closeOnOverlayClick = true,
   closeOnEscape = true,
   children,
-}: DrawerProps): React.ReactElement {
+}: Readonly<DrawerProps>): React.ReactElement {
   const value = useOverlayPanelState({
     open: controlledOpen,
     defaultOpen,
@@ -89,7 +89,7 @@ export interface DrawerTriggerProps extends Omit<
   children: React.ReactNode;
 }
 
-export const DrawerTrigger = forwardRef<HTMLButtonElement, DrawerTriggerProps>(
+export const DrawerTrigger = forwardRef<HTMLButtonElement, Readonly<DrawerTriggerProps>>(
   function DrawerTrigger({ onClick, type = 'button', ...rest }, forwardedRef) {
     const ctx = useDrawerContext('DrawerTrigger');
     const { setTriggerNode, setOpen, open, contentId } = ctx;
@@ -135,7 +135,7 @@ export interface DrawerContentProps extends React.HTMLAttributes<HTMLDivElement>
   children: React.ReactNode;
 }
 
-export const DrawerContent = forwardRef<HTMLDivElement, DrawerContentProps>(function DrawerContent(
+export const DrawerContent = forwardRef<HTMLDivElement, Readonly<DrawerContentProps>>(function DrawerContent(
   { side = 'right', size = 'md', className, overlayClassName, children, ...rest },
   forwardedRef
 ) {
@@ -225,21 +225,21 @@ export const DrawerContent = forwardRef<HTMLDivElement, DrawerContentProps>(func
 
 export type DrawerSectionProps = React.HTMLAttributes<HTMLDivElement>;
 
-export const DrawerHeader = forwardRef<HTMLDivElement, DrawerSectionProps>(function DrawerHeader(
+export const DrawerHeader = forwardRef<HTMLDivElement, Readonly<DrawerSectionProps>>(function DrawerHeader(
   { className, ...rest },
   ref
 ) {
   return <div ref={ref} className={classNames(styles.header, className)} {...rest} />;
 });
 
-export const DrawerBody = forwardRef<HTMLDivElement, DrawerSectionProps>(function DrawerBody(
+export const DrawerBody = forwardRef<HTMLDivElement, Readonly<DrawerSectionProps>>(function DrawerBody(
   { className, ...rest },
   ref
 ) {
   return <div ref={ref} className={classNames(styles.body, className)} {...rest} />;
 });
 
-export const DrawerFooter = forwardRef<HTMLDivElement, DrawerSectionProps>(function DrawerFooter(
+export const DrawerFooter = forwardRef<HTMLDivElement, Readonly<DrawerSectionProps>>(function DrawerFooter(
   { className, ...rest },
   ref
 ) {
@@ -250,7 +250,7 @@ export interface DrawerTitleProps extends React.HTMLAttributes<HTMLHeadingElemen
   as?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
 }
 
-export const DrawerTitle = forwardRef<HTMLHeadingElement, DrawerTitleProps>(function DrawerTitle(
+export const DrawerTitle = forwardRef<HTMLHeadingElement, Readonly<DrawerTitleProps>>(function DrawerTitle(
   { as: Tag = 'h2', className, ...rest },
   ref
 ) {
@@ -265,7 +265,7 @@ export const DrawerTitle = forwardRef<HTMLHeadingElement, DrawerTitleProps>(func
 
 export type DrawerDescriptionProps = React.HTMLAttributes<HTMLParagraphElement>;
 
-export const DrawerDescription = forwardRef<HTMLParagraphElement, DrawerDescriptionProps>(
+export const DrawerDescription = forwardRef<HTMLParagraphElement, Readonly<DrawerDescriptionProps>>(
   function DrawerDescription({ className, ...rest }, ref) {
     const ctx = useDrawerContext('DrawerDescription');
     const { registerDescription, descriptionId } = ctx;
@@ -288,7 +288,7 @@ export interface DrawerCloseProps extends React.ButtonHTMLAttributes<HTMLButtonE
   children?: React.ReactNode;
 }
 
-export const DrawerClose = forwardRef<HTMLButtonElement, DrawerCloseProps>(function DrawerClose(
+export const DrawerClose = forwardRef<HTMLButtonElement, Readonly<DrawerCloseProps>>(function DrawerClose(
   { onClick, type = 'button', children, ...rest },
   ref
 ) {

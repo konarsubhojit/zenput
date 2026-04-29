@@ -74,7 +74,7 @@ export function Field({
   className,
   style,
   children,
-}: FieldProps): React.ReactElement {
+}: Readonly<FieldProps>): React.ReactElement {
   const generatedId = useId();
   const controlId = id ?? `field-${generatedId}`;
   const descriptionId = `${controlId}-description`;
@@ -207,7 +207,7 @@ export function FieldControl<C extends React.ElementType = 'div'>({
   style,
   children,
   ...rest
-}: FieldControlProps<C>): React.ReactElement {
+}: Readonly<FieldControlProps<C>>): React.ReactElement {
   const Component = (as ?? 'div') as React.ElementType;
   const { controlId, describedByIds, required, disabled, validationState } = useFieldContext();
 
@@ -253,7 +253,7 @@ export function FieldDescription({
   children,
   className,
   ...rest
-}: FieldDescriptionProps): React.ReactElement {
+}: Readonly<FieldDescriptionProps>): React.ReactElement {
   const { descriptionId, onDescriptionMount, onDescriptionUnmount } = useFieldContext();
 
   useEffect(() => {
@@ -297,7 +297,7 @@ export function FieldMessage({
   children,
   className,
   ...rest
-}: FieldMessageProps): React.ReactElement {
+}: Readonly<FieldMessageProps>): React.ReactElement {
   const { messageId, validationState, onMessageMount, onMessageUnmount } = useFieldContext();
   const resolvedType = resolveMessageType(type, validationState);
 
@@ -338,7 +338,7 @@ export function FieldCounter({
   max,
   className,
   ...rest
-}: FieldCounterProps): React.ReactElement {
+}: Readonly<FieldCounterProps>): React.ReactElement {
   const { counterId } = useFieldContext();
   const exceeded = current > max;
 

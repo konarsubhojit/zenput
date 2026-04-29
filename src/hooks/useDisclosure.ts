@@ -35,7 +35,7 @@ export function useDisclosure(options: UseDisclosureOptions = {}): UseDisclosure
   const [uncontrolledOpen, setUncontrolledOpen] = useState<boolean>(defaultOpen);
 
   const isControlled = controlledOpen !== undefined;
-  const open = controlledOpen !== undefined ? controlledOpen : uncontrolledOpen;
+  const open = controlledOpen === undefined ? uncontrolledOpen : controlledOpen;
 
   // In controlled mode the parent only updates `open` after it processes
   // `onOpenChange`, so within a synchronous burst of `setOpen` calls the

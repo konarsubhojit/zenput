@@ -127,7 +127,7 @@ const TOAST_EXIT_FALLBACK_MS = 200;
 // Default status icons
 // ---------------------------------------------------------------------------
 
-function DefaultIcon({ status }: { status: ToastStatus }): React.ReactElement {
+function DefaultIcon({ status }: Readonly<{ status: ToastStatus }>): React.ReactElement {
   switch (status) {
     case 'success':
       return (
@@ -237,7 +237,7 @@ function ToastItemComponent({
   toast,
   onDismiss,
   onExited,
-}: ToastItemComponentProps): React.ReactElement {
+}: Readonly<ToastItemComponentProps>): React.ReactElement {
   const timerIdRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const timerStartRef = useRef<number | null>(null);
   const remainingRef = useRef<number | null>(toast.duration);
@@ -475,7 +475,7 @@ export function ToastProvider({
   duration: defaultDuration = 5000,
   gap,
   containerStyle,
-}: ToastProviderProps): React.ReactElement {
+}: Readonly<ToastProviderProps>): React.ReactElement {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const idCounterRef = useRef(0);
 
