@@ -95,6 +95,11 @@ export function TokenBrowser({ defaultCategory = 'colors' }: Readonly<TokenBrows
     return merged;
   }, [themeComponents]);
 
+  const clearCopied = useCallback((): void => {
+    copyTimerRef.current = null;
+    setCopied(null);
+  }, []);
+
   const handleCopy = useCallback((id: string, textToCopy: string) => {
     if (typeof navigator === 'undefined' || !navigator.clipboard) return;
     navigator.clipboard.writeText(textToCopy).then(() => {
@@ -104,12 +109,9 @@ export function TokenBrowser({ defaultCategory = 'colors' }: Readonly<TokenBrows
       }
       // clearTimeout above ensures only one timer is active at a time, so
       // setCopied(null) always clears the most recently copied entry.
-      copyTimerRef.current = setTimeout(() => {
-        copyTimerRef.current = null;
-        setCopied(null);
-      }, 1500);
+      copyTimerRef.current = setTimeout(clearCopied, 1500);
     });
-  }, []);
+  }, [clearCopied]);
 
   // Clear pending copy timer on unmount to prevent state updates on
   // unmounted components.

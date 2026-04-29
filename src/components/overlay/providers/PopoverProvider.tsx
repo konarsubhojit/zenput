@@ -94,21 +94,22 @@ function ImperativePopoverContent({
   const contentRef = useRef<HTMLDivElement | null>(null);
   const [coords, setCoords] = useState<PopoverCoords | null>(null);
 
+  const updatePosition = useCallback((): void => {
+    const anchorRect = getAnchorRect(entry.anchor);
+    const content = contentRef.current;
+    if (!anchorRect || !content) return;
+    setCoords(
+      computePosition(
+        anchorRect,
+        content.getBoundingClientRect(),
+        entry.side,
+        entry.align,
+        entry.sideOffset
+      )
+    );
+  }, [entry]);
+
   useEffect(() => {
-    const updatePosition = (): void => {
-      const anchorRect = getAnchorRect(entry.anchor);
-      const content = contentRef.current;
-      if (!anchorRect || !content) return;
-      setCoords(
-        computePosition(
-          anchorRect,
-          content.getBoundingClientRect(),
-          entry.side,
-          entry.align,
-          entry.sideOffset
-        )
-      );
-    };
     updatePosition();
     window.addEventListener('scroll', updatePosition, true);
     window.addEventListener('resize', updatePosition);
@@ -116,7 +117,7 @@ function ImperativePopoverContent({
       window.removeEventListener('scroll', updatePosition, true);
       window.removeEventListener('resize', updatePosition);
     };
-  }, [entry]);
+  }, [updatePosition]);
 
   const handleEscape = useCallback(() => {
     if (entry.dismissible) onClose(null);
@@ -208,13 +209,15 @@ export function PopoverProvider({ children }: Readonly<PopoverProviderProps>): R
         resolveFn = res;
       });
 
+      const restoreFocus = (): void => {
+        if (returnFocusEl instanceof HTMLElement) returnFocusEl.focus();
+      };
+
       const close = (value?: unknown): void => {
         setStack((prev) => removePopoverEntryById(prev, id));
         pendingRef.current.delete(id);
         resolveFn(value !== undefined ? value : null);
-        requestAnimationFrame(() => {
-          if (returnFocusEl instanceof HTMLElement) returnFocusEl.focus();
-        });
+        requestAnimationFrame(restoreFocus);
       };
 
       pendingRef.current.set(id, close);

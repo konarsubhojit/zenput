@@ -1,7 +1,7 @@
 'use client';
 import React, { forwardRef, useRef, useCallback, useId } from 'react';
 import { OTPInputProps } from './OTPInput.types';
-import { classNames } from '../../utils';
+import { classNames, getValidationMessageClass } from '../../utils';
 import { useControllable } from '../../hooks';
 import styles from './OTPInput.module.css';
 
@@ -129,16 +129,7 @@ export const OTPInput = forwardRef<HTMLDivElement, OTPInputProps>(
     const activeMessage =
       validationState === 'error' ? errorMessage : validationState === 'success' ? undefined : helperText; // NOSONAR
 
-    let messageClass: string;
-    if (validationState === 'error') {
-      messageClass = styles.errorText;
-    } else if (validationState === 'success') {
-      messageClass = styles.successText;
-    } else if (validationState === 'warning') {
-      messageClass = styles.warningText;
-    } else {
-      messageClass = styles.helperText;
-    }
+    const messageClass = getValidationMessageClass(validationState, styles);
 
     return (
       <div

@@ -506,6 +506,24 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
   const showToolbarRow =
     toolbar !== undefined || showBuiltinGlobalSearch || showColumnToggle || showExportBtn;
 
+  // ── Pagination display values ──────────────────────────────────────────────
+
+  const paginationDisplay = useMemo(() => {
+    if (!pagination) return null;
+    // Clamp the displayed range to valid bounds so the "x–y of total" label
+    // stays consistent even if the consumer's currentPage drifts out of
+    // range (for example after totalCount shrinks).
+    const safePageSize = Math.max(1, Math.floor(pagination.pageSize) || 1);
+    const totalPages = Math.max(1, Math.ceil(Math.max(0, pagination.totalCount) / safePageSize));
+    const safeCurrentPage = Math.min(
+      Math.max(1, Math.floor(pagination.currentPage) || 1),
+      totalPages
+    );
+    const rangeStart = (safeCurrentPage - 1) * safePageSize + 1;
+    const rangeEnd = Math.min(safeCurrentPage * safePageSize, pagination.totalCount);
+    return { rangeStart, rangeEnd };
+  }, [pagination]);
+
   // Compute table body content before JSX to avoid nested ternaries (S3358).
   let tbodyContent: React.ReactNode;
   if (loading) {
@@ -805,44 +823,27 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
       </div>
 
       {/* Pagination controls */}
-      {pagination &&
-        (() => {
-          // Clamp the displayed range to valid bounds so the "x–y of total" label
-          // stays consistent even if the consumer's currentPage drifts out of
-          // range (for example after totalCount shrinks).
-          const safePageSize = Math.max(1, Math.floor(pagination.pageSize) || 1);
-          const totalPages = Math.max(
-            1,
-            Math.ceil(Math.max(0, pagination.totalCount) / safePageSize)
-          );
-          const safeCurrentPage = Math.min(
-            Math.max(1, Math.floor(pagination.currentPage) || 1),
-            totalPages
-          );
-          const rangeStart = (safeCurrentPage - 1) * safePageSize + 1;
-          const rangeEnd = Math.min(safeCurrentPage * safePageSize, pagination.totalCount);
-          return (
-            <div className={styles.pagination}>
-              <span className={styles.paginationInfo}>
-                {loading || pagination.totalCount === 0
-                  ? t('dataTable.paginationRange', { start: 0, end: 0, total: pagination.totalCount })
-                  : t('dataTable.paginationRange', {
-                      start: rangeStart,
-                      end: rangeEnd,
-                      total: pagination.totalCount,
-                    })}
-              </span>
-              <Pagination
-                currentPage={pagination.currentPage}
-                totalCount={pagination.totalCount}
-                pageSize={pagination.pageSize}
-                onPageChange={pagination.onPageChange}
-                disabled={loading}
-                size="sm"
-              />
-            </div>
-          );
-        })()}
+      {pagination && paginationDisplay && (
+        <div className={styles.pagination}>
+          <span className={styles.paginationInfo}>
+            {loading || pagination.totalCount === 0
+              ? t('dataTable.paginationRange', { start: 0, end: 0, total: pagination.totalCount })
+              : t('dataTable.paginationRange', {
+                  start: paginationDisplay.rangeStart,
+                  end: paginationDisplay.rangeEnd,
+                  total: pagination.totalCount,
+                })}
+          </span>
+          <Pagination
+            currentPage={pagination.currentPage}
+            totalCount={pagination.totalCount}
+            pageSize={pagination.pageSize}
+            onPageChange={pagination.onPageChange}
+            disabled={loading}
+            size="sm"
+          />
+        </div>
+      )}
     </div>
   );
 }

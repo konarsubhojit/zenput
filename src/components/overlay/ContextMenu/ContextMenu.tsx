@@ -193,7 +193,7 @@ export const ContextMenuContent = forwardRef<HTMLDivElement, ContextMenuContentP
       <Portal>
         <div
           ref={mergedRef}
-          role="menu"
+          role="menu" // NOSONAR: WAI-ARIA menu pattern requires role="menu" on container div
           id={contentId}
           tabIndex={-1}
           style={{

@@ -15,6 +15,13 @@ function computeDisplayValue(
   return currentValue;
 }
 
+function clampValue(value: number, min: number | undefined, max: number | undefined): number {
+  let clamped = value;
+  if (min !== undefined) clamped = Math.max(min, clamped);
+  if (max !== undefined) clamped = Math.min(max, clamped);
+  return clamped;
+}
+
 export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
   (
     {
@@ -77,12 +84,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
     const [isFocused, setIsFocused] = useState(false);
 
     const clamp = useCallback(
-      (n: number) => {
-        let clamped = n;
-        if (min !== undefined) clamped = Math.max(min, clamped);
-        if (max !== undefined) clamped = Math.min(max, clamped);
-        return clamped;
-      },
+      (n: number) => clampValue(n, min, max),
       [min, max]
     );
 

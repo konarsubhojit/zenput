@@ -306,23 +306,24 @@ export const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
       [forwardedRef]
     );
 
+    const updatePosition = useCallback((): void => {
+      const trigger = triggerRef.current;
+      const content = contentElRef.current;
+      if (!trigger || !content) return;
+      setCoords(
+        computePosition(
+          trigger.getBoundingClientRect(),
+          content.getBoundingClientRect(),
+          side,
+          align,
+          sideOffset,
+          alignOffset
+        )
+      );
+    }, [triggerRef, side, align, sideOffset, alignOffset]);
+
     useIsomorphicLayoutEffect(() => {
       if (!open) return;
-      const updatePosition = (): void => {
-        const trigger = triggerRef.current;
-        const content = contentElRef.current;
-        if (!trigger || !content) return;
-        setCoords(
-          computePosition(
-            trigger.getBoundingClientRect(),
-            content.getBoundingClientRect(),
-            side,
-            align,
-            sideOffset,
-            alignOffset
-          )
-        );
-      };
       updatePosition();
       window.addEventListener('scroll', updatePosition, true);
       window.addEventListener('resize', updatePosition);
@@ -330,7 +331,7 @@ export const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
         window.removeEventListener('scroll', updatePosition, true);
         window.removeEventListener('resize', updatePosition);
       };
-    }, [open, triggerRef, side, align, sideOffset, alignOffset]);
+    }, [open, updatePosition]);
 
     if (!open) return null;
 

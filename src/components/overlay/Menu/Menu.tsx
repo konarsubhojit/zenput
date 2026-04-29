@@ -166,23 +166,24 @@ export const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(function
     [forwardedRef]
   );
 
+  const updatePosition = useCallback((): void => {
+    const trigger = triggerRef.current;
+    const content = contentElRef.current;
+    if (!trigger || !content) return;
+    setCoords(
+      computePosition(
+        trigger.getBoundingClientRect(),
+        content.getBoundingClientRect(),
+        side,
+        align,
+        sideOffset,
+        alignOffset
+      )
+    );
+  }, [triggerRef, side, align, sideOffset, alignOffset]);
+
   useIsomorphicLayoutEffect(() => {
     if (!open) return;
-    const updatePosition = (): void => {
-      const trigger = triggerRef.current;
-      const content = contentElRef.current;
-      if (!trigger || !content) return;
-      setCoords(
-        computePosition(
-          trigger.getBoundingClientRect(),
-          content.getBoundingClientRect(),
-          side,
-          align,
-          sideOffset,
-          alignOffset
-        )
-      );
-    };
     updatePosition();
     window.addEventListener('scroll', updatePosition, true);
     window.addEventListener('resize', updatePosition);
@@ -190,7 +191,7 @@ export const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(function
       window.removeEventListener('scroll', updatePosition, true);
       window.removeEventListener('resize', updatePosition);
     };
-  }, [open, triggerRef, side, align, sideOffset, alignOffset]);
+  }, [open, updatePosition]);
 
   useEffect(() => {
     if (!open) return;
@@ -242,7 +243,7 @@ export const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(function
   const content = (
     <div
       ref={mergedRef}
-      role="menu"
+      role="menu" // NOSONAR: WAI-ARIA menu pattern requires role="menu" on container div
       id={contentId}
       tabIndex={-1}
       style={positionStyle}
@@ -302,7 +303,7 @@ export const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(function MenuI
   return (
     <div
       ref={ref}
-      role="menuitem"
+      role="menuitem" // NOSONAR: WAI-ARIA menu pattern requires role="menuitem" on div
       tabIndex={-1}
       aria-disabled={disabled || undefined}
       data-disabled={disabled ? '' : undefined}
@@ -386,7 +387,7 @@ export const MenuCheckboxItem = forwardRef<HTMLDivElement, MenuCheckboxItemProps
     return (
       <div
         ref={ref}
-        role="menuitemcheckbox"
+        role="menuitemcheckbox" // NOSONAR: WAI-ARIA menu pattern requires role="menuitemcheckbox" on div
         tabIndex={-1}
         aria-checked={checked}
         aria-disabled={disabled || undefined}
@@ -464,7 +465,7 @@ export const MenuRadioItem = forwardRef<HTMLDivElement, Readonly<MenuRadioItemPr
   return (
     <div
       ref={ref}
-      role="menuitemradio"
+      role="menuitemradio" // NOSONAR: WAI-ARIA menu pattern requires role="menuitemradio" on div
       tabIndex={-1}
       aria-checked={checked}
       aria-disabled={disabled || undefined}
@@ -557,7 +558,7 @@ export const MenuSubTrigger = forwardRef<HTMLDivElement, Readonly<MenuSubTrigger
     return (
       <div
         ref={mergedRef}
-        role="menuitem"
+        role="menuitem" // NOSONAR: WAI-ARIA menu pattern requires role="menuitem" on div
         tabIndex={-1}
         aria-haspopup="menu"
         aria-expanded={subCtx.open}
@@ -587,6 +588,7 @@ export const MenuSubContent = forwardRef<HTMLDivElement, MenuSubContentProps>(
     const subCtx = useContext(MenuSubContext);
     if (!subCtx) throw new Error('<MenuSubContent> must be used inside <MenuSub>.');
     const parentCtx = useContext(MenuContext);
+    const { open: subOpen, triggerRef: subTriggerRef, setOpen: subSetOpen, contentId: subContentId } = subCtx;
 
     const contentElRef = useRef<HTMLDivElement | null>(null);
     const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
@@ -599,34 +601,35 @@ export const MenuSubContent = forwardRef<HTMLDivElement, MenuSubContentProps>(
       [forwardedRef]
     );
 
+    const updateSubPosition = useCallback((): void => {
+      const trigger = subTriggerRef.current;
+      const content = contentElRef.current;
+      if (!trigger || !content) return;
+      setCoords(
+        computePosition(
+          trigger.getBoundingClientRect(),
+          content.getBoundingClientRect(),
+          'right',
+          'start',
+          sideOffset,
+          0
+        )
+      );
+    }, [subTriggerRef, sideOffset]);
+
     useIsomorphicLayoutEffect(() => {
-      if (!subCtx.open) return;
-      const updatePosition = (): void => {
-        const trigger = subCtx.triggerRef.current;
-        const content = contentElRef.current;
-        if (!trigger || !content) return;
-        setCoords(
-          computePosition(
-            trigger.getBoundingClientRect(),
-            content.getBoundingClientRect(),
-            'right',
-            'start',
-            sideOffset,
-            0
-          )
-        );
-      };
-      updatePosition();
-      window.addEventListener('scroll', updatePosition, true);
-      window.addEventListener('resize', updatePosition);
+      if (!subOpen) return;
+      updateSubPosition();
+      window.addEventListener('scroll', updateSubPosition, true);
+      window.addEventListener('resize', updateSubPosition);
       return () => {
-        window.removeEventListener('scroll', updatePosition, true);
-        window.removeEventListener('resize', updatePosition);
+        window.removeEventListener('scroll', updateSubPosition, true);
+        window.removeEventListener('resize', updateSubPosition);
       };
-    }, [subCtx.open, subCtx.triggerRef, sideOffset]);
+    }, [subOpen, updateSubPosition]);
 
     useEffect(() => {
-      if (!subCtx.open) return;
+      if (!subOpen) return;
       const rafId = requestAnimationFrame(() => {
         const el = contentElRef.current;
         if (!el) return;
@@ -634,34 +637,34 @@ export const MenuSubContent = forwardRef<HTMLDivElement, MenuSubContentProps>(
         if (items.length > 0) items[0].focus();
       });
       return () => cancelAnimationFrame(rafId);
-    }, [subCtx.open]);
+    }, [subOpen]);
 
     useEffect(() => {
-      if (!subCtx.open) return;
+      if (!subOpen) return;
       const handleMouseDown = (e: MouseEvent) => {
         const target = e.target as Node;
-        if (isOutsideAll(target, [contentElRef.current, subCtx.triggerRef.current])) {
-          subCtx.setOpen(false);
+        if (isOutsideAll(target, [contentElRef.current, subTriggerRef.current])) {
+          subSetOpen(false);
         }
       };
       document.addEventListener('mousedown', handleMouseDown);
       return () => document.removeEventListener('mousedown', handleMouseDown);
-    }, [subCtx]);
+    }, [subOpen, subTriggerRef, subSetOpen]);
 
     const handleEscapeOrArrowLeft = useCallback(
       (e: React.KeyboardEvent) => {
         e.stopPropagation();
-        subCtx.setOpen(false);
-        subCtx.triggerRef.current?.focus();
+        subSetOpen(false);
+        subTriggerRef.current?.focus();
       },
-      [subCtx]
+      [subSetOpen, subTriggerRef]
     );
 
     const handleTab = useCallback(() => {
-      subCtx.setOpen(false);
+      subSetOpen(false);
       parentCtx?.setOpen(false);
       parentCtx?.triggerRef.current?.focus();
-    }, [subCtx, parentCtx]);
+    }, [subSetOpen, parentCtx]);
 
     const handleKeyDown = useMenuKeyboardNav({
       containerRef: contentElRef,
@@ -670,7 +673,7 @@ export const MenuSubContent = forwardRef<HTMLDivElement, MenuSubContentProps>(
       onArrowLeft: handleEscapeOrArrowLeft,
     });
 
-    if (!subCtx.open) return null;
+    if (!subOpen) return null;
 
     const positionStyle: React.CSSProperties = {
       position: 'fixed',
@@ -683,8 +686,8 @@ export const MenuSubContent = forwardRef<HTMLDivElement, MenuSubContentProps>(
       <Portal>
         <div
           ref={mergedRef}
-          role="menu"
-          id={subCtx.contentId}
+          role="menu" // NOSONAR: WAI-ARIA sub-menu pattern requires role="menu" on container div
+          id={subContentId}
           tabIndex={-1}
           style={positionStyle}
           className={classNames(styles.subContent, className)}

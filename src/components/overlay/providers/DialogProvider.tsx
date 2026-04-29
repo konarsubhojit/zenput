@@ -133,6 +133,10 @@ export function DialogProvider({ children }: Readonly<DialogProviderProps>): Rea
       // (e.g. useAlert passes defaultCloseValue: undefined).
       const defaultCloseValue = 'defaultCloseValue' in opts ? opts.defaultCloseValue : null;
 
+      const restoreFocus = (): void => {
+        if (returnFocusEl instanceof HTMLElement) returnFocusEl.focus();
+      };
+
       const close = (value: unknown = _CLOSE_DEFAULT): void => {
         setStack((prev) => removeStackEntryById(prev, id));
         pendingRef.current.delete(id);
@@ -140,9 +144,7 @@ export function DialogProvider({ children }: Readonly<DialogProviderProps>): Rea
         // value (e.g. false for confirm, null for prompt, undefined for alert).
         // An explicit argument — even `undefined` — is forwarded as-is.
         resolveFn(value === _CLOSE_DEFAULT ? defaultCloseValue : value);
-        requestAnimationFrame(() => {
-          if (returnFocusEl instanceof HTMLElement) returnFocusEl.focus();
-        });
+        requestAnimationFrame(restoreFocus);
       };
 
       pendingRef.current.set(id, { resolve: resolveFn, defaultCloseValue });

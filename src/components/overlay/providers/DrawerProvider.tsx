@@ -99,13 +99,15 @@ export function DrawerProvider({ children }: Readonly<DrawerProviderProps>): Rea
         resolveFn = res;
       });
 
+      const restoreFocus = (): void => {
+        if (returnFocusEl instanceof HTMLElement) returnFocusEl.focus();
+      };
+
       const close = (value?: unknown): void => {
         setStack((prev) => removeDrawerEntryById(prev, id));
         pendingRef.current.delete(id);
         resolveFn(value !== undefined ? value : null);
-        requestAnimationFrame(() => {
-          if (returnFocusEl instanceof HTMLElement) returnFocusEl.focus();
-        });
+        requestAnimationFrame(restoreFocus);
       };
 
       pendingRef.current.set(id, close);
