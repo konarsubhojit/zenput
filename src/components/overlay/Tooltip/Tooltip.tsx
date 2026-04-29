@@ -276,7 +276,7 @@ export interface TooltipContentProps extends React.HTMLAttributes<HTMLDivElement
   children: React.ReactNode;
 }
 
-export const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
+export const TooltipContent = forwardRef<HTMLDivElement, Readonly<TooltipContentProps>>(
   function TooltipContent(
     {
       side = 'top',

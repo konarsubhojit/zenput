@@ -207,7 +207,7 @@ export function FieldControl<C extends React.ElementType = 'div'>({
   style,
   children,
   ...rest
-}: FieldControlProps<C>): React.ReactElement {
+}: Readonly<FieldControlProps<C>>): React.ReactElement {
   const Component = (as ?? 'div') as React.ElementType;
   const { controlId, describedByIds, required, disabled, validationState } = useFieldContext();
 

@@ -97,7 +97,7 @@ export interface DialogTriggerProps extends Omit<
 }
 
 /** Button that toggles the dialog open. Forwards ref to the underlying element. */
-export const DialogTrigger = forwardRef<HTMLButtonElement, DialogTriggerProps>(
+export const DialogTrigger = forwardRef<HTMLButtonElement, Readonly<DialogTriggerProps>>(
   function DialogTrigger({ onClick, type = 'button', ...rest }, forwardedRef) {
     const ctx = useDialogContext('DialogTrigger');
     const { setTriggerNode, open, contentId, setOpen } = ctx;
@@ -153,7 +153,7 @@ export interface DialogContentProps extends React.HTMLAttributes<HTMLDivElement>
  * Dialog panel rendered through a portal. Traps focus, closes on
  * Escape / backdrop click, and restores focus to the trigger on close.
  */
-export const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(function DialogContent(
+export const DialogContent = forwardRef<HTMLDivElement, Readonly<DialogContentProps>>(function DialogContent(
   { size = 'md', className, overlayClassName, children, ...rest },
   forwardedRef
 ) {
@@ -239,21 +239,21 @@ export const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(func
 
 export type DialogSectionProps = React.HTMLAttributes<HTMLDivElement>;
 
-export const DialogHeader = forwardRef<HTMLDivElement, DialogSectionProps>(function DialogHeader(
+export const DialogHeader = forwardRef<HTMLDivElement, Readonly<DialogSectionProps>>(function DialogHeader(
   { className, ...rest },
   ref
 ) {
   return <div ref={ref} className={classNames(styles.header, className)} {...rest} />;
 });
 
-export const DialogBody = forwardRef<HTMLDivElement, DialogSectionProps>(function DialogBody(
+export const DialogBody = forwardRef<HTMLDivElement, Readonly<DialogSectionProps>>(function DialogBody(
   { className, ...rest },
   ref
 ) {
   return <div ref={ref} className={classNames(styles.body, className)} {...rest} />;
 });
 
-export const DialogFooter = forwardRef<HTMLDivElement, DialogSectionProps>(function DialogFooter(
+export const DialogFooter = forwardRef<HTMLDivElement, Readonly<DialogSectionProps>>(function DialogFooter(
   { className, ...rest },
   ref
 ) {
@@ -265,7 +265,7 @@ export interface DialogTitleProps extends React.HTMLAttributes<HTMLHeadingElemen
   as?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
 }
 
-export const DialogTitle = forwardRef<HTMLHeadingElement, DialogTitleProps>(function DialogTitle(
+export const DialogTitle = forwardRef<HTMLHeadingElement, Readonly<DialogTitleProps>>(function DialogTitle(
   { as: Tag = 'h2', className, ...rest },
   ref
 ) {
@@ -280,7 +280,7 @@ export const DialogTitle = forwardRef<HTMLHeadingElement, DialogTitleProps>(func
 
 export type DialogDescriptionProps = React.HTMLAttributes<HTMLParagraphElement>;
 
-export const DialogDescription = forwardRef<HTMLParagraphElement, DialogDescriptionProps>(
+export const DialogDescription = forwardRef<HTMLParagraphElement, Readonly<DialogDescriptionProps>>(
   function DialogDescription({ className, ...rest }, ref) {
     const ctx = useDialogContext('DialogDescription');
     const { registerDescription, descriptionId } = ctx;
@@ -304,7 +304,7 @@ export interface DialogCloseProps extends React.ButtonHTMLAttributes<HTMLButtonE
 }
 
 /** Closes the dialog when clicked. */
-export const DialogClose = forwardRef<HTMLButtonElement, DialogCloseProps>(function DialogClose(
+export const DialogClose = forwardRef<HTMLButtonElement, Readonly<DialogCloseProps>>(function DialogClose(
   { onClick, type = 'button', children, ...rest },
   ref
 ) {

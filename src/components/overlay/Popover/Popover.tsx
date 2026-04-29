@@ -107,7 +107,7 @@ export interface PopoverTriggerProps extends Omit<
   children: React.ReactNode;
 }
 
-export const PopoverTrigger = forwardRef<HTMLButtonElement, PopoverTriggerProps>(
+export const PopoverTrigger = forwardRef<HTMLButtonElement, Readonly<PopoverTriggerProps>>(
   function PopoverTrigger({ onClick, type = 'button', ...rest }, forwardedRef) {
     const ctx = usePopoverContext('PopoverTrigger');
     const { setTriggerNode, setOpen, open, contentId } = ctx;
@@ -159,7 +159,7 @@ export interface PopoverContentProps extends React.HTMLAttributes<HTMLDivElement
   children: React.ReactNode;
 }
 
-export const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
+export const PopoverContent = forwardRef<HTMLDivElement, Readonly<PopoverContentProps>>(
   function PopoverContent(
     {
       side = 'bottom',

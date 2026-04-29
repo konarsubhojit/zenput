@@ -67,7 +67,7 @@ export interface ContextMenuTriggerProps extends React.HTMLAttributes<HTMLDivEle
   children: React.ReactNode;
 }
 
-export const ContextMenuTrigger = forwardRef<HTMLDivElement, ContextMenuTriggerProps>(
+export const ContextMenuTrigger = forwardRef<HTMLDivElement, Readonly<ContextMenuTriggerProps>>(
   function ContextMenuTrigger({ onContextMenu, children, ...rest }, forwardedRef) {
     const menuCtx = useContext(MenuContext);
     const ctxCtx = useContext(ContextMenuContext);
@@ -104,7 +104,7 @@ export interface ContextMenuContentProps extends React.HTMLAttributes<HTMLDivEle
   children: React.ReactNode;
 }
 
-export const ContextMenuContent = forwardRef<HTMLDivElement, ContextMenuContentProps>(
+export const ContextMenuContent = forwardRef<HTMLDivElement, Readonly<ContextMenuContentProps>>(
   function ContextMenuContent({ className, children, ...rest }, forwardedRef) {
     const menuCtx = useContext(MenuContext);
     const ctxCtx = useContext(ContextMenuContext);

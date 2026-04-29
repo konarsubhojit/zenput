@@ -140,7 +140,7 @@ export interface MenuContentProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
 }
 
-export const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(function MenuContent(
+export const MenuContent = forwardRef<HTMLDivElement, Readonly<MenuContentProps>>(function MenuContent(
   {
     side = 'bottom',
     align = 'start',
@@ -267,7 +267,7 @@ export interface MenuItemProps extends Omit<React.HTMLAttributes<HTMLDivElement>
   children?: React.ReactNode;
 }
 
-export const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(function MenuItem(
+export const MenuItem = forwardRef<HTMLDivElement, Readonly<MenuItemProps>>(function MenuItem(
   { disabled, destructive, leftIcon, onSelect, onClick, className, children, ...rest },
   ref
 ) {
@@ -325,7 +325,7 @@ export const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(function MenuI
 
 export type MenuSeparatorProps = React.HTMLAttributes<HTMLHRElement>;
 
-export const MenuSeparator = forwardRef<HTMLHRElement, MenuSeparatorProps>(function MenuSeparator(
+export const MenuSeparator = forwardRef<HTMLHRElement, Readonly<MenuSeparatorProps>>(function MenuSeparator(
   { className, ...rest },
   ref
 ) {
@@ -334,7 +334,7 @@ export const MenuSeparator = forwardRef<HTMLHRElement, MenuSeparatorProps>(funct
 
 export type MenuLabelProps = React.HTMLAttributes<HTMLDivElement>;
 
-export const MenuLabel = forwardRef<HTMLDivElement, MenuLabelProps>(function MenuLabel(
+export const MenuLabel = forwardRef<HTMLDivElement, Readonly<MenuLabelProps>>(function MenuLabel(
   { className, ...rest },
   ref
 ) {
@@ -350,7 +350,7 @@ export interface MenuCheckboxItemProps extends Omit<React.HTMLAttributes<HTMLDiv
   children?: React.ReactNode;
 }
 
-export const MenuCheckboxItem = forwardRef<HTMLDivElement, MenuCheckboxItemProps>(
+export const MenuCheckboxItem = forwardRef<HTMLDivElement, Readonly<MenuCheckboxItemProps>>(
   function MenuCheckboxItem(
     { checked, onCheckedChange, disabled, onClick, className, children, ...rest },
     ref
@@ -583,7 +583,7 @@ export interface MenuSubContentProps extends React.HTMLAttributes<HTMLDivElement
   children: React.ReactNode;
 }
 
-export const MenuSubContent = forwardRef<HTMLDivElement, MenuSubContentProps>(
+export const MenuSubContent = forwardRef<HTMLDivElement, Readonly<MenuSubContentProps>>(
   function MenuSubContent({ sideOffset = 0, className, children, ...rest }, forwardedRef) {
     const subCtx = useContext(MenuSubContext);
     if (!subCtx) throw new Error('<MenuSubContent> must be used inside <MenuSub>.');
