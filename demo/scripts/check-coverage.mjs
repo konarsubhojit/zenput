@@ -30,6 +30,10 @@ const EXCLUDED_COMPONENTS = new Set([
   'VisuallyHidden',
   // Sub-module re-export path (providers live inside overlay sections)
   'providers',
+  // Sub-module re-export path for accessibility primitives (SkipLink,
+  // LiveRegion, FocusScope, VisuallyHidden) — pure a11y utilities with
+  // no standalone visual demo.
+  'a11y',
 ]);
 
 // ---------------------------------------------------------------------------
