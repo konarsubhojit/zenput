@@ -7,7 +7,8 @@ import type { PolymorphicProps, PolymorphicRef } from '../../../types/polymorphi
 import { createPolymorphicComponent } from '../../../types/polymorphic';
 import styles from './Button.module.css';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'subtle' | 'outline' | 'ghost' | 'danger';
+
+export type ButtonVariant = 'primary' | 'secondary' | 'subtle' | 'outline' | 'ghost' | 'danger' | 'destructive';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonBaseProps {
@@ -99,7 +100,7 @@ export const Button = createPolymorphicComponent<ButtonComponent>(
 
   const buttonClassName = classNames(
     styles.button,
-    styles[`variant-${variant}`],
+   styles[variant-${variant === 'destructive' ? 'danger' : variant}],
     styles[`size-${size}`],
     iconOnly ? styles.iconOnly : undefined,
     fullWidth ? styles.fullWidth : undefined,
