@@ -18,6 +18,8 @@ export function ButtonSection() {
           <Button variant="outline">Outline</Button>
           <Button variant="ghost">Ghost</Button>
           <Button variant="danger">Danger</Button>
+          <Button variant="destructive">Destructive</Button>
+          
         </div>
       </Scenario>
       <Scenario title="Sizes">
