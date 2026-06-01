@@ -7,7 +7,14 @@ import type { PolymorphicProps, PolymorphicRef } from '../../../types/polymorphi
 import { createPolymorphicComponent } from '../../../types/polymorphic';
 import styles from './Button.module.css';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'subtle' | 'outline' | 'ghost' | 'danger';
+export type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'subtle'
+  | 'outline'
+  | 'ghost'
+  | 'danger'
+  | 'destructive';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonBaseProps {
@@ -50,8 +57,8 @@ export type ButtonProps =
 
 /**
  * Primary action primitive. Six variants (primary, secondary, subtle,
- * outline, ghost, danger), three sizes, icon slots, `iconOnly` and
- * `loading` states.
+ * outline, ghost, danger) plus `destructive` as an alias of `danger`,
+ * three sizes, icon slots, `iconOnly` and `loading` states.
  *
  * Polymorphic via `as` (e.g. `as="a"`) or `asChild` (Radix-style
  * merging onto a single child: `<Button asChild><NextLink …/></Button>`).
@@ -96,10 +103,11 @@ export const Button = createPolymorphicComponent<ButtonComponent>(
 ) {
   const isDisabled = Boolean(disabled || loading);
   const resolvedAriaLabel = loading && loadingLabel ? loadingLabel : ariaLabel;
+  const resolvedVariant = variant === 'destructive' ? 'danger' : variant;
 
   const buttonClassName = classNames(
     styles.button,
-    styles[`variant-${variant}`],
+    styles[`variant-${resolvedVariant}`],
     styles[`size-${size}`],
     iconOnly ? styles.iconOnly : undefined,
     fullWidth ? styles.fullWidth : undefined,

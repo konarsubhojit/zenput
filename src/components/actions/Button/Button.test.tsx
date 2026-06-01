@@ -22,6 +22,20 @@ describe('Button', () => {
     expect(btn.className).toMatch(/size-lg/);
   });
 
+  it('treats destructive as an alias of danger', () => {
+    render(
+      <>
+        <Button variant="danger" data-testid="danger">
+          Delete
+        </Button>
+        <Button variant="destructive" data-testid="destructive">
+          Delete
+        </Button>
+      </>
+    );
+    expect(screen.getByTestId('destructive').className).toBe(screen.getByTestId('danger').className);
+  });
+
   it('fires onClick', () => {
     const onClick = vi.fn();
     render(<Button onClick={onClick}>go</Button>);

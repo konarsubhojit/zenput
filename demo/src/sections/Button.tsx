@@ -1,6 +1,17 @@
-import { useState } from 'react';
+import { useState, type AnchorHTMLAttributes } from 'react';
 import { Button } from 'zenput';
 import { Section, Scenario } from './_shell';
+
+function LocaleLink({
+  locale,
+  href,
+  ...rest
+}: {
+  locale: string;
+  href: string;
+} & AnchorHTMLAttributes<HTMLAnchorElement>) {
+  return <a href={`/${locale}${href}`} {...rest} />;
+}
 
 export function ButtonSection() {
   const [loading, setLoading] = useState(false);
@@ -8,7 +19,7 @@ export function ButtonSection() {
     <Section
       id="button"
       name="Button"
-      description="Primary action primitive — six variants, three sizes, icon slots and loading state."
+      description="Primary action primitive — six variants (+ `destructive` alias for `danger`), three sizes, icon slots and loading state."
     >
       <Scenario title="Variants">
         <div className="row">
@@ -18,6 +29,7 @@ export function ButtonSection() {
           <Button variant="outline">Outline</Button>
           <Button variant="ghost">Ghost</Button>
           <Button variant="danger">Danger</Button>
+          <Button variant="destructive">Destructive (alias)</Button>
         </div>
       </Scenario>
       <Scenario title="Sizes">
@@ -52,6 +64,15 @@ export function ButtonSection() {
           <Button disabled>Disabled</Button>
           <Button variant="primary" fullWidth>
             Full width
+          </Button>
+        </div>
+      </Scenario>
+      <Scenario title="asChild with custom link">
+        <div className="row">
+          <Button asChild variant="outline">
+            <LocaleLink locale="en" href="/docs/buttons">
+              Open docs
+            </LocaleLink>
           </Button>
         </div>
       </Scenario>
