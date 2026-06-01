@@ -2,6 +2,7 @@ import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { Button } from './Button';
 import { PlusIcon, ChevronDownIcon, CloseIcon } from '../../../icons';
+import { LocaleLink } from '../../../navigation/LocaleLink'; // Додано імпорт
 
 const meta: Meta<typeof Button> = {
   title: 'Components/Actions/Button',
@@ -10,7 +11,7 @@ const meta: Meta<typeof Button> = {
   argTypes: {
     variant: {
       control: 'select',
-      options: ['primary', 'secondary', 'subtle', 'outline', 'ghost', 'danger'],
+      options: ['primary', 'secondary', 'subtle', 'outline', 'ghost', 'danger', 'destructive'],
     },
     size: { control: 'select', options: ['sm', 'md', 'lg'] },
     loading: { control: 'boolean' },
@@ -36,6 +37,7 @@ export const Variants: Story = {
       <Button variant="outline">Outline</Button>
       <Button variant="ghost">Ghost</Button>
       <Button variant="danger">Danger</Button>
+      <Button variant="destructive">Destructive</Button> {/* Додано */}
     </div>
   ),
 };
@@ -95,7 +97,11 @@ export const Disabled: Story = {
     </div>
   ),
 };
+
 export const Destructive: Story = {
+  parameters: {
+    docs: { description: { story: 'Alias for the `danger` variant, used for destructive actions.' } }
+  },
   args: {
     variant: 'destructive',
     children: 'Delete',
@@ -103,9 +109,16 @@ export const Destructive: Story = {
 };
 
 export const AsChild: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: 'Demonstrates polymorphic composition using `asChild`. Example uses a custom `LocaleLink` component.'
+      }
+    }
+  },
   args: {
     asChild: true,
-    children: <a href="#">Custom Link</a>,
+    children: <LocaleLink href="#">Custom Link</LocaleLink>,
   },
 };
 
