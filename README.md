@@ -207,6 +207,24 @@ function App() {
 />
 ```
 
+### DataTable (expanded row controls)
+```tsx
+<DataTable
+  columns={columns}
+  data={rows}
+  rowKey={(row) => row.id}
+  expandedRowRender={(row, { close, isExpanded }) => (
+    <div>
+      <strong>{row.name}</strong>
+      <div>Expanded: {String(isExpanded)}</div>
+      <button type="button" onClick={close}>
+        Save & collapse
+      </button>
+    </div>
+  )}
+/>
+```
+
 ## Theming
 
 Zenput provides a comprehensive theming system with semantic colors, per-component tokens, density scaling, and theme composition utilities.
