@@ -168,7 +168,7 @@ export const WithRowClickAndExpand: Story = {
       data={employees}
       rowKey={(row) => row.id}
       onRowClick={(row) => console.log('Row clicked:', row)}
-      expandedRowRender={(row) => (
+      expandedRowRender={(row, { close, isExpanded }) => (
         <div style={{ padding: '8px 0', fontSize: '0.875rem', color: '#374151' }}>
           <strong>{row.name}</strong> — {row.role} in {row.department}. Salary:{' '}
           {new Intl.NumberFormat('en-US', {
@@ -176,6 +176,13 @@ export const WithRowClickAndExpand: Story = {
             currency: 'USD',
             maximumFractionDigits: 0,
           }).format(row.salary)}
+          <div style={{ marginTop: 8 }}>
+            Expanded: {String(isExpanded)}
+            <br />
+            <button type="button" onClick={close}>
+              Save & collapse
+            </button>
+          </div>
         </div>
       )}
     />

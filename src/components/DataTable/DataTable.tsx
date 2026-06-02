@@ -388,6 +388,14 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
     [rowKey]
   );
 
+  const updateExpandedKeys = useCallback(
+    (next: Set<string | number>) => {
+      if (controlledExpandedKeys === undefined) setInternalExpandedKeys(next);
+      onExpansionChange?.(next);
+    },
+    [controlledExpandedKeys, onExpansionChange]
+  );
+
   /** Toggle expanded state for a row */
   const toggleExpandedRow = useCallback(
     (key: string | number) => {
@@ -397,10 +405,19 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
       } else {
         next.add(key);
       }
-      if (controlledExpandedKeys === undefined) setInternalExpandedKeys(next);
-      onExpansionChange?.(next);
+      updateExpandedKeys(next);
     },
-    [activeExpandedKeys, controlledExpandedKeys, onExpansionChange]
+    [activeExpandedKeys, updateExpandedKeys]
+  );
+
+  /** Collapse a specific expanded row */
+  const closeExpandedRow = useCallback(
+    (key: string | number) => {
+      const next = new Set(activeExpandedKeys);
+      next.delete(key);
+      updateExpandedKeys(next);
+    },
+    [activeExpandedKeys, updateExpandedKeys]
   );
 
   /** Handle row click */
@@ -607,7 +624,10 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
           {expandedRowRender && isExpanded && (
             <tr className={styles.expandedRow}>
               <td colSpan={colSpan} className={styles.expandedCell}>
-                {expandedRowRender(row)}
+                {expandedRowRender(row, {
+                  close: () => closeExpandedRow(key),
+                  isExpanded,
+                })}
               </td>
             </tr>
           )}
