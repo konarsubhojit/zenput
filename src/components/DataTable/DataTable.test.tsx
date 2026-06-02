@@ -312,6 +312,57 @@ describe('DataTable', () => {
     expect(screen.queryByTestId('expanded')).not.toBeInTheDocument();
   });
 
+  it('allows expanded content to close itself in uncontrolled mode', async () => {
+    render(
+      <DataTable
+        columns={columns}
+        data={data}
+        rowKey={(r) => r.id}
+        expandedRowRender={(row, { close }) => (
+          <button type="button" onClick={close}>
+            Save {row.name} & collapse
+          </button>
+        )}
+      />
+    );
+
+    await userEvent.click(screen.getByText('Alice'));
+    expect(screen.getByRole('button', { name: 'Save Alice & collapse' })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Save Alice & collapse' }));
+    expect(screen.queryByRole('button', { name: 'Save Alice & collapse' })).not.toBeInTheDocument();
+  });
+
+  it('passes isExpanded=true to expandedRowRender while a row is expanded', async () => {
+    render(
+      <DataTable
+        columns={columns}
+        data={data}
+        rowKey={(r) => r.id}
+        expandedRowRender={(_, { isExpanded }) => (
+          <div data-testid="expanded-state">{String(isExpanded)}</div>
+        )}
+      />
+    );
+
+    await userEvent.click(screen.getByText('Alice'));
+    expect(screen.getByTestId('expanded-state')).toHaveTextContent('true');
+  });
+
+  it('keeps single-argument expandedRowRender usage working', async () => {
+    render(
+      <DataTable
+        columns={columns}
+        data={data}
+        rowKey={(r) => r.id}
+        expandedRowRender={(row) => <div data-testid="expanded-single-arg">{row.name} details</div>}
+      />
+    );
+
+    await userEvent.click(screen.getByText('Alice'));
+    expect(screen.getByTestId('expanded-single-arg')).toHaveTextContent('Alice details');
+  });
+
   // ── Selection ─────────────────────────────────────────────────────────────
 
   it('renders checkbox column when selectable is true', () => {
@@ -592,6 +643,29 @@ describe('DataTable – controlled expansion', () => {
     );
     await userEvent.click(screen.getByText('Alice'));
     expect(handleExpansionChange).toHaveBeenCalledWith(new Set([1]));
+  });
+
+  it('close() triggers onExpansionChange with the row removed in controlled mode', async () => {
+    const handleExpansionChange = vi.fn();
+    render(
+      <DataTable
+        columns={columns}
+        data={data}
+        rowKey={(r) => r.id}
+        expandedRowKeys={new Set<string | number>([1])}
+        onExpansionChange={handleExpansionChange}
+        expandedRowRender={(row, { close }) => (
+          <button type="button" onClick={close}>
+            Save {row.name} & collapse
+          </button>
+        )}
+      />
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Save Alice & collapse' }));
+
+    expect(handleExpansionChange).toHaveBeenCalledTimes(1);
+    expect(handleExpansionChange).toHaveBeenCalledWith(new Set());
   });
 });
 

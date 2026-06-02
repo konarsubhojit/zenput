@@ -99,8 +99,13 @@ export interface DataTableProps<T extends DataTableRecord = DataTableRecord> {
   /**
    * Renders additional content below the clicked row.
    * When provided together with onRowClick the row expands on click to reveal this content.
+   * `controls.close` collapses this row.
+   * `controls.isExpanded` reflects whether this row is currently expanded.
    */
-  expandedRowRender?: (row: T) => React.ReactNode;
+  expandedRowRender?: (
+    row: T,
+    controls: { close: () => void; isExpanded: boolean }
+  ) => React.ReactNode;
   /**
    * When true, adds a leading checkbox column for row selection.
    */
