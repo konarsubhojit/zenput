@@ -8,7 +8,7 @@ export function ButtonSection() {
     <Section
       id="button"
       name="Button"
-      description="Primary action primitive — six variants, three sizes, icon slots and loading state."
+      description="Primary action primitive — six variants (plus the `destructive` alias for `danger`), three sizes, icon slots and loading state."
     >
       <Scenario title="Variants">
         <div className="row">
@@ -19,7 +19,6 @@ export function ButtonSection() {
           <Button variant="ghost">Ghost</Button>
           <Button variant="danger">Danger</Button>
           <Button variant="destructive">Destructive</Button>
-          
         </div>
       </Scenario>
       <Scenario title="Sizes">
