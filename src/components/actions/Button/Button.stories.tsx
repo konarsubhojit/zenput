@@ -3,14 +3,37 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Button } from './Button';
 import { PlusIcon, ChevronDownIcon, CloseIcon } from '../../../icons';
 
+// Local stub used to demonstrate Radix-style `asChild` composition with a
+// custom routing component (e.g. a localized `<Link>`). Replace with your
+// app's link component in real usage.
+const LocaleLink = React.forwardRef<
+  HTMLAnchorElement,
+  React.AnchorHTMLAttributes<HTMLAnchorElement>
+>(function LocaleLink(props, ref) {
+  return <a ref={ref} {...props} />;
+});
+
 const meta: Meta<typeof Button> = {
   title: 'Components/Actions/Button',
   component: Button,
   tags: ['autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'Action primitive whose visual styling is owned by the component and driven by design tokens ' +
+          '(CSS custom properties such as `--zp-color-*`, `--zp-space-*`, `--zp-radius-*`). ' +
+          'Compose and extend via the `variant`, `size`, `fullWidth`, `iconOnly`, and `asChild` props ' +
+          'rather than redeclaring Tailwind class strings. Use `className` only for layout-level overrides; ' +
+          'do not duplicate token-driven styles. The `destructive` variant is an alias of `danger` and ' +
+          'renders with the same token-backed styles.',
+      },
+    },
+  },
   argTypes: {
     variant: {
       control: 'select',
-      options: ['primary', 'secondary', 'subtle', 'outline', 'ghost', 'danger'],
+      options: ['primary', 'secondary', 'subtle', 'outline', 'ghost', 'danger', 'destructive'],
     },
     size: { control: 'select', options: ['sm', 'md', 'lg'] },
     loading: { control: 'boolean' },
@@ -36,6 +59,7 @@ export const Variants: Story = {
       <Button variant="outline">Outline</Button>
       <Button variant="ghost">Ghost</Button>
       <Button variant="danger">Danger</Button>
+      <Button variant="destructive">Destructive</Button>
     </div>
   ),
 };
@@ -94,6 +118,37 @@ export const Disabled: Story = {
       </Button>
     </div>
   ),
+};
+
+export const Destructive: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`destructive` is an alias for `danger` and renders with the same `variant-danger` token-driven styles. ' +
+          'Use whichever name better fits your product vocabulary; both produce identical output.',
+      },
+    },
+  },
+  args: {
+    variant: 'destructive',
+    children: 'Delete',
+  },
+};
+
+export const AsChild: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Demonstrates polymorphic composition using `asChild`. Example uses a custom `LocaleLink` component.',
+      },
+    },
+  },
+  args: {
+    asChild: true,
+    children: <LocaleLink href="#">Custom Link</LocaleLink>,
+  },
 };
 
 export const FullWidth: Story = {

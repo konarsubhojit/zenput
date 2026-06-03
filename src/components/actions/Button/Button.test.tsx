@@ -22,6 +22,13 @@ describe('Button', () => {
     expect(btn.className).toMatch(/size-lg/);
   });
 
+  it('maps the `destructive` variant alias to the danger class', () => {
+    render(<Button variant="destructive">x</Button>);
+    const btn = screen.getByRole('button');
+    expect(btn.className).toMatch(/variant-danger/);
+    expect(btn.className).not.toMatch(/variant-destructive/);
+  });
+
   it('fires onClick', () => {
     const onClick = vi.fn();
     render(<Button onClick={onClick}>go</Button>);

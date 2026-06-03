@@ -7,7 +7,14 @@ import type { PolymorphicProps, PolymorphicRef } from '../../../types/polymorphi
 import { createPolymorphicComponent } from '../../../types/polymorphic';
 import styles from './Button.module.css';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'subtle' | 'outline' | 'ghost' | 'danger';
+export type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'subtle'
+  | 'outline'
+  | 'ghost'
+  | 'danger'
+  | 'destructive';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonBaseProps {
@@ -64,104 +71,105 @@ export type ButtonProps =
  */
 export const Button = createPolymorphicComponent<ButtonComponent>(
   forwardRef(function Button(
-  {
-    as,
-    asChild,
-    variant = 'primary',
-    size = 'md',
-    leftIcon,
-    rightIcon,
-    iconOnly,
-    loading,
-    loadingLabel,
-    fullWidth,
-    disabled,
-    type,
-    className,
-    children,
-    'aria-busy': ariaBusy,
-    'aria-label': ariaLabel,
-    ...rest
-  }: PolymorphicProps<
-    React.ElementType,
-    ButtonBaseProps & {
-      iconOnly?: boolean;
-      disabled?: boolean;
-      type?: React.ButtonHTMLAttributes<HTMLButtonElement>['type'];
-      'aria-busy'?: React.AriaAttributes['aria-busy'];
-      'aria-label'?: string;
+    {
+      as,
+      asChild,
+      variant = 'primary',
+      size = 'md',
+      leftIcon,
+      rightIcon,
+      iconOnly,
+      loading,
+      loadingLabel,
+      fullWidth,
+      disabled,
+      type,
+      className,
+      children,
+      'aria-busy': ariaBusy,
+      'aria-label': ariaLabel,
+      ...rest
+    }: PolymorphicProps<
+      React.ElementType,
+      ButtonBaseProps & {
+        iconOnly?: boolean;
+        disabled?: boolean;
+        type?: React.ButtonHTMLAttributes<HTMLButtonElement>['type'];
+        'aria-busy'?: React.AriaAttributes['aria-busy'];
+        'aria-label'?: string;
+      }
+    >,
+    ref: React.ForwardedRef<Element>
+  ) {
+    const isDisabled = Boolean(disabled || loading);
+    const resolvedAriaLabel = loading && loadingLabel ? loadingLabel : ariaLabel;
+    const resolvedVariant = variant === 'destructive' ? 'danger' : variant;
+
+    const buttonClassName = classNames(
+      styles.button,
+      styles[`variant-${resolvedVariant}`],
+      styles[`size-${size}`],
+      iconOnly ? styles.iconOnly : undefined,
+      fullWidth ? styles.fullWidth : undefined,
+      className
+    );
+
+    // asChild: merge button styles onto the single child element.
+    if (asChild) {
+      return (
+        <Slot
+          ref={ref}
+          className={buttonClassName}
+          aria-busy={loading ? true : ariaBusy}
+          aria-label={resolvedAriaLabel}
+          {...(isDisabled ? { 'aria-disabled': true, 'data-disabled': '' } : {})}
+          {...rest}
+        >
+          {children}
+        </Slot>
+      );
     }
-  >,
-  ref: React.ForwardedRef<Element>
-) {
-  const isDisabled = Boolean(disabled || loading);
-  const resolvedAriaLabel = loading && loadingLabel ? loadingLabel : ariaLabel;
 
-  const buttonClassName = classNames(
-    styles.button,
-    styles[`variant-${variant}`],
-    styles[`size-${size}`],
-    iconOnly ? styles.iconOnly : undefined,
-    fullWidth ? styles.fullWidth : undefined,
-    className
-  );
+    const Component: React.ElementType = as ?? 'button';
+    const isNativeButton = Component === 'button';
 
-  // asChild: merge button styles onto the single child element.
-  if (asChild) {
+    let extraButtonProps: Record<string, unknown>;
+    if (isNativeButton) {
+      extraButtonProps = { type: type ?? 'button', disabled: isDisabled };
+    } else if (isDisabled) {
+      extraButtonProps = { 'aria-disabled': true, 'data-disabled': '' };
+    } else {
+      extraButtonProps = {};
+    }
+
     return (
-      <Slot
+      <Component
         ref={ref}
-        className={buttonClassName}
+        {...extraButtonProps}
         aria-busy={loading ? true : ariaBusy}
         aria-label={resolvedAriaLabel}
-        {...(isDisabled ? { 'aria-disabled': true, 'data-disabled': '' } : {})}
+        className={buttonClassName}
         {...rest}
       >
-        {children}
-      </Slot>
+        {loading && (
+          <Spinner
+            size="sm"
+            label=""
+            className={styles.spinner}
+            data-testid="button-spinner"
+            aria-hidden="true"
+          />
+        )}
+        <span
+          className={classNames(loading ? styles.contentHidden : undefined)}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 'inherit' }}
+        >
+          {leftIcon && <span aria-hidden="true">{leftIcon}</span>}
+          {children}
+          {rightIcon && <span aria-hidden="true">{rightIcon}</span>}
+        </span>
+      </Component>
     );
-  }
-
-  const Component: React.ElementType = as ?? 'button';
-  const isNativeButton = Component === 'button';
-
-  let extraButtonProps: Record<string, unknown>;
-  if (isNativeButton) {
-    extraButtonProps = { type: type ?? 'button', disabled: isDisabled };
-  } else if (isDisabled) {
-    extraButtonProps = { 'aria-disabled': true, 'data-disabled': '' };
-  } else {
-    extraButtonProps = {};
-  }
-
-  return (
-    <Component
-      ref={ref}
-      {...extraButtonProps}
-      aria-busy={loading ? true : ariaBusy}
-      aria-label={resolvedAriaLabel}
-      className={buttonClassName}
-      {...rest}
-    >
-      {loading && (
-        <Spinner
-          size="sm"
-          label=""
-          className={styles.spinner}
-          data-testid="button-spinner"
-          aria-hidden="true"
-        />
-      )}
-      <span
-        className={classNames(loading ? styles.contentHidden : undefined)}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 'inherit' }}
-      >
-        {leftIcon && <span aria-hidden="true">{leftIcon}</span>}
-        {children}
-        {rightIcon && <span aria-hidden="true">{rightIcon}</span>}
-      </span>
-    </Component>
-  );
-}),
-'Button'
+  }),
+  'Button'
 );
