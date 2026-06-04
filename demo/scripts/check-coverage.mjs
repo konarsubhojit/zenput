@@ -59,6 +59,7 @@ const COMPONENT_TO_SECTION_MAP = {
   Tag: 'actions-ext',
   SegmentedControl: 'actions-ext',
   // feedback section covers Spinner, Skeleton, ProgressBar, CircularProgress
+  Alert: 'feedback',
   Spinner: 'feedback',
   Skeleton: 'feedback',
   ProgressBar: 'feedback',
@@ -67,8 +68,11 @@ const COMPONENT_TO_SECTION_MAP = {
   Card: 'content',
   EmptyState: 'content',
   Pagination: 'content',
+  Stat: 'content',
   // menu section covers ContextMenu
   ContextMenu: 'menu',
+  // dialog section covers ConfirmDialog
+  ConfirmDialog: 'dialog',
 };
 
 // ---------------------------------------------------------------------------
@@ -234,4 +238,3 @@ if (missing.length === 0) {
   );
   process.exit(1);
 }
-

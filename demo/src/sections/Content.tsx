@@ -7,6 +7,7 @@ import {
   EmptyState,
   Pagination,
   Avatar,
+  Stat,
 } from 'zenput';
 import { Section, Scenario } from './_shell';
 
@@ -47,7 +48,7 @@ export function ContentSection() {
     <Section
       id="content"
       name="Content (Card, EmptyState, Pagination)"
-      description="Surface-level content containers, empty-state placeholders, and pagination controls."
+      description="Surface-level content containers, KPI stats, empty-state placeholders, and pagination controls."
     >
       <Scenario title="Card variants">
         <div className="row" style={{ flexWrap: 'wrap', gap: '12px' }}>
@@ -131,6 +132,14 @@ export function ContentSection() {
             description="Failed to load your data. Please try again."
             primaryAction={{ label: 'Retry', onClick: () => {} }}
           />
+        </div>
+      </Scenario>
+
+      <Scenario title="Stat">
+        <div className="row" style={{ flexWrap: 'wrap', gap: '12px' }}>
+          <Stat label="Revenue" value="$24.8k" hint="This month" delta={{ value: 12.4, caption: 'vs last month' }} />
+          <Stat label="Refunds" value="1.8%" tone="danger" delta={{ value: -0.6, invert: true, caption: 'lower is better' }} />
+          <Stat label="Active trials" value="128" loading />
         </div>
       </Scenario>
 
