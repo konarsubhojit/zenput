@@ -9,6 +9,7 @@ import {
   DialogBody,
   DialogFooter,
   DialogClose,
+  ConfirmDialog,
 } from 'zenput';
 import type { DialogSize } from 'zenput';
 import { Section, Scenario } from './_shell';
@@ -88,6 +89,32 @@ function ScrollableDialog() {
   );
 }
 
+function ConfirmDialogDemo() {
+  const [open, setOpen] = useState(false);
+  const [status, setStatus] = useState('No action yet.');
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'flex-start' }}>
+      <button type="button" onClick={() => setOpen(true)}>
+        Archive project
+      </button>
+      <p style={{ margin: 0 }}>{status}</p>
+      <ConfirmDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Archive this project?"
+        description="Archived projects are removed from active dashboards until restored."
+        confirmLabel="Archive"
+        cancelLabel="Keep active"
+        tone="danger"
+        onConfirm={async () => {
+          setStatus('Project archived.');
+        }}
+      />
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Section
 // ---------------------------------------------------------------------------
@@ -99,7 +126,7 @@ export function DialogSection() {
     <Section
       id="dialog"
       name="Dialog"
-      description="Accessible modal dialog — sizes, scrollable body, nested confirm, and controlled open state."
+      description="Accessible modal dialog primitives — Dialog and ConfirmDialog, with sizes, scrolling, nesting, and controlled open state."
     >
       <Scenario title="Sizes">
         <div className="row">
@@ -132,6 +159,10 @@ export function DialogSection() {
 
       <Scenario title="Nested confirm">
         <NestedConfirmDialog />
+      </Scenario>
+
+      <Scenario title="ConfirmDialog">
+        <ConfirmDialogDemo />
       </Scenario>
 
       <Scenario title="Controlled (no backdrop close)">

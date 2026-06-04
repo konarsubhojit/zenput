@@ -1,4 +1,12 @@
-import { Spinner, Skeleton, SkeletonText, SkeletonAvatar, ProgressBar, CircularProgress } from 'zenput';
+import {
+  Spinner,
+  Skeleton,
+  SkeletonText,
+  SkeletonAvatar,
+  ProgressBar,
+  CircularProgress,
+  Alert,
+} from 'zenput';
 import { Section, Scenario } from './_shell';
 
 export function FeedbackSection() {
@@ -6,8 +14,23 @@ export function FeedbackSection() {
     <Section
       id="feedback"
       name="Feedback"
-      description="Loading and feedback primitives — Spinner, Skeleton, ProgressBar, CircularProgress."
+      description="Loading and feedback primitives — Alert, Spinner, Skeleton, ProgressBar, CircularProgress."
     >
+      <Scenario title="Alert — tones">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '520px' }}>
+          <Alert tone="success" title="Changes saved">
+            Your profile updates were published successfully.
+          </Alert>
+          <Alert
+            tone="error"
+            title="Payment failed"
+            action={<button type="button">Retry</button>}
+          >
+            We could not charge the card on file. Check the billing details and try again.
+          </Alert>
+        </div>
+      </Scenario>
+
       <Scenario title="Spinner — sizes">
         <div className="row" style={{ alignItems: 'center' }}>
           <Spinner size="sm" />

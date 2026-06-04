@@ -9,8 +9,12 @@ import { PlusIcon, ChevronDownIcon, CloseIcon } from '../../../icons';
 const LocaleLink = React.forwardRef<
   HTMLAnchorElement,
   React.AnchorHTMLAttributes<HTMLAnchorElement>
->(function LocaleLink(props, ref) {
-  return <a ref={ref} {...props} />;
+>(function LocaleLink({ children, ...props }, ref) {
+  return (
+    <a ref={ref} {...props}>
+      {children}
+    </a>
+  );
 });
 
 const meta: Meta<typeof Button> = {
