@@ -149,6 +149,8 @@ export function AlertAction({ children }: Readonly<AlertActionProps>): React.Rea
 }
 
 AlertAction.displayName = 'Alert.Action';
+/** @internal Used for reliable compound-component detection regardless of minification. */
+AlertAction._isAlertAction = true as const;
 
 /**
  * Persistent inline banner for page-level feedback (errors, warnings, info,
@@ -193,7 +195,10 @@ export function Alert({
   const descriptionNodes: React.ReactNode[] = [];
 
   React.Children.forEach(children, (child) => {
-    if (React.isValidElement(child) && child.type === AlertAction) {
+    if (
+      React.isValidElement(child) &&
+      (child.type as typeof AlertAction)._isAlertAction === true
+    ) {
       // `action` prop takes precedence over a child Alert.Action
       if (resolvedAction === undefined) {
         resolvedAction = (child as React.ReactElement<AlertActionProps>).props.children;
@@ -204,11 +209,9 @@ export function Alert({
   });
 
   const descriptionContent = descriptionNodes.length > 0 ? descriptionNodes : null;
-  // Show the dismiss button when:
-  //   - `dismissible` is explicitly `true`, OR
-  //   - `dismissible` is omitted (`undefined`) and `onDismiss` is supplied (backward-compat).
-  // `dismissible={false}` explicitly suppresses the button even if `onDismiss` is provided.
-  const showDismiss = dismissible !== false && (dismissible === true || !!onDismiss);
+  // Show the dismiss button when dismissible is explicitly true, or when it is
+  // not explicitly false and onDismiss is supplied (backward-compatible default).
+  const showDismiss = dismissible === true || (dismissible !== false && !!onDismiss);
 
   // ── Optional LiveRegion announcement ───────────────────────────────────
   // When inside a <LiveRegion> provider, push the title text through it so
