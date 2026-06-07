@@ -125,6 +125,98 @@ describe('NumberInput', () => {
   });
 });
 
+describe('NumberInput allowEmpty={false}', () => {
+  it('snaps to 0 when input is cleared and no min/fallbackValue', async () => {
+    const handleChange = vi.fn();
+    render(<NumberInput allowEmpty={false} defaultValue={5} onChange={handleChange} />);
+    const input = screen.getByRole('spinbutton');
+    await userEvent.clear(input);
+    expect(handleChange).toHaveBeenLastCalledWith(0);
+    expect(input).toHaveValue(0);
+  });
+
+  it('snaps to min when input is cleared and min is provided', async () => {
+    const handleChange = vi.fn();
+    render(<NumberInput allowEmpty={false} defaultValue={5} min={2} onChange={handleChange} />);
+    const input = screen.getByRole('spinbutton');
+    await userEvent.clear(input);
+    expect(handleChange).toHaveBeenLastCalledWith(2);
+    expect(input).toHaveValue(2);
+  });
+
+  it('snaps to fallbackValue (clamped to min/max) when input is cleared', async () => {
+    const handleChange = vi.fn();
+    render(
+      <NumberInput
+        allowEmpty={false}
+        defaultValue={5}
+        min={1}
+        max={10}
+        fallbackValue={3}
+        onChange={handleChange}
+      />
+    );
+    const input = screen.getByRole('spinbutton');
+    await userEvent.clear(input);
+    expect(handleChange).toHaveBeenLastCalledWith(3);
+    expect(input).toHaveValue(3);
+  });
+
+  it('clamps fallbackValue to min', async () => {
+    const handleChange = vi.fn();
+    render(
+      <NumberInput
+        allowEmpty={false}
+        defaultValue={5}
+        min={4}
+        fallbackValue={1}
+        onChange={handleChange}
+      />
+    );
+    const input = screen.getByRole('spinbutton');
+    await userEvent.clear(input);
+    // fallbackValue=1 is below min=4, so snaps to min=4
+    expect(handleChange).toHaveBeenLastCalledWith(4);
+    expect(input).toHaveValue(4);
+  });
+
+  it('clamps fallbackValue to max', async () => {
+    const handleChange = vi.fn();
+    render(
+      <NumberInput
+        allowEmpty={false}
+        defaultValue={5}
+        max={8}
+        fallbackValue={20}
+        onChange={handleChange}
+      />
+    );
+    const input = screen.getByRole('spinbutton');
+    await userEvent.clear(input);
+    // fallbackValue=20 is above max=8, so snaps to max=8
+    expect(handleChange).toHaveBeenLastCalledWith(8);
+    expect(input).toHaveValue(8);
+  });
+
+  it('never calls onChange with undefined', async () => {
+    const handleChange = vi.fn();
+    render(<NumberInput allowEmpty={false} onChange={handleChange} />);
+    const input = screen.getByRole('spinbutton');
+    await userEvent.type(input, '42');
+    await userEvent.clear(input);
+    const allArgs = handleChange.mock.calls.map(([v]) => v);
+    expect(allArgs.every((v) => typeof v === 'number')).toBe(true);
+  });
+
+  it('still emits typed numeric values normally', async () => {
+    const handleChange = vi.fn();
+    render(<NumberInput allowEmpty={false} onChange={handleChange} />);
+    const input = screen.getByRole('spinbutton');
+    await userEvent.type(input, '7');
+    expect(handleChange).toHaveBeenLastCalledWith(7);
+  });
+});
+
 describe('a11y (axe)', () => {
   it('has no detectable axe violations in default render', async () => {
     const { container } = render(<NumberInput label="Quantity" />);

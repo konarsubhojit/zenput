@@ -61,6 +61,8 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       formatValue,
       onFocus,
       onBlur,
+      allowEmpty,
+      fallbackValue,
       ...rest
     },
     ref
@@ -75,10 +77,14 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       disabled,
     });
 
+    // Cast onChange to satisfy useControllable's generic constraint. When
+    // allowEmpty is false, handleChange ensures setCurrentValue is never called
+    // with undefined, so the consumer's (value: number) => void callback is
+    // never invoked with undefined at runtime.
     const [currentValue, setCurrentValue] = useControllable<number | undefined>({
       value,
       defaultValue,
-      onChange,
+      onChange: onChange as ((value: number | undefined) => void) | undefined,
     });
 
     const [isFocused, setIsFocused] = useState(false);
@@ -86,6 +92,16 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
     const clamp = useCallback(
       (n: number) => clampValue(n, min, max),
       [min, max]
+    );
+
+    /**
+     * Resolve the concrete number to use when the field is empty and
+     * `allowEmpty` is `false`. Precedence: fallbackValue → min → 0,
+     * then clamped to [min, max].
+     */
+    const resolveFallback = useCallback(
+      () => clamp(fallbackValue ?? min ?? 0),
+      [clamp, fallbackValue, min]
     );
 
     const handleIncrement = useCallback(() => {
@@ -102,7 +118,11 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       (e: React.ChangeEvent<HTMLInputElement>) => {
         const raw = e.target.value;
         if (raw === '' || raw === '-') {
-          setCurrentValue(undefined);
+          if (allowEmpty === false) {
+            setCurrentValue(resolveFallback());
+          } else {
+            setCurrentValue(undefined);
+          }
           return;
         }
         const parsed = Number.parseFloat(raw);
@@ -110,7 +130,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
           setCurrentValue(parsed);
         }
       },
-      [setCurrentValue]
+      [setCurrentValue, allowEmpty, resolveFallback]
     );
 
     const activeMessage = getValidationMessage(
