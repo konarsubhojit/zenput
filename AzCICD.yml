@@ -310,7 +310,7 @@ stages:
                   displayName: 'Build'
                 - script: |
                     echo "//registry.npmjs.org/:_authToken=$(NPM_TOKEN)" > .npmrc
-                    npm publish --access public --provenance
+                    npm publish --access public
                   displayName: 'npm publish'
                   env:
                     NPM_TOKEN: $(NPM_TOKEN)
