@@ -14,6 +14,10 @@ export const frFR: MessageCatalog = {
 
   'fileInput.chooseFile': 'Choisir un fichier',
   'fileInput.dragAndDropHint': 'ou glisser-d\u00e9poser des fichiers ici',
+  'fileInput.maxFilesExceeded': 'Maximum {max} fichiers autoris\u00e9s',
+  'fileInput.moveFileUp': 'Monter {name}',
+  'fileInput.moveFileDown': 'Descendre {name}',
+  'fileInput.removeFile': 'Supprimer {name}',
 
   'pagination.navAriaLabel': 'Pagination',
   'pagination.rowsPerPage': 'Lignes par page\u00a0:',

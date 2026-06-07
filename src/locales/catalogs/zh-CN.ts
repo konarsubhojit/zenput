@@ -14,6 +14,10 @@ export const zhCN: MessageCatalog = {
 
   'fileInput.chooseFile': '\u9009\u62e9\u6587\u4ef6',
   'fileInput.dragAndDropHint': '\u6216\u5c06\u6587\u4ef6\u62d6\u653e\u5230\u6b64\u5904',
+  'fileInput.maxFilesExceeded': '\u6700\u591a\u5141\u8bb8 {max} \u4e2a\u6587\u4ef6',
+  'fileInput.moveFileUp': '\u5c06 {name} \u4e0a\u79fb',
+  'fileInput.moveFileDown': '\u5c06 {name} \u4e0b\u79fb',
+  'fileInput.removeFile': '\u79fb\u9664 {name}',
 
   'pagination.navAriaLabel': '\u5206\u9875\u5bfc\u822a',
   'pagination.rowsPerPage': '\u6bcf\u9875\u884c\u6570\uff1a',

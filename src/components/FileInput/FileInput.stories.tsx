@@ -11,6 +11,7 @@ const meta: Meta<typeof FileInput> = {
     variant: { control: 'select', options: ['outlined', 'filled', 'underlined'] },
     validationState: { control: 'select', options: ['default', 'error', 'success', 'warning'] },
     uploadProgress: { control: { type: 'range', min: 0, max: 100, step: 1 } },
+    maxFiles: { control: { type: 'number', min: 0, step: 1 } },
   },
 };
 

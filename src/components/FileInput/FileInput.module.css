@@ -132,16 +132,66 @@
   border-color: var(--input-error-color);
 }
 
-.fileNames {
+.fileList {
   margin-top: 4px;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   font-size: 0.75rem;
   color: #6b7280;
 }
 
-.fileName {
+.fileListItem {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.fileName {
+  display: inline-flex;
+  align-items: center;
   gap: 4px;
+  min-width: 0;
+}
+
+.fileActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.fileActionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--input-border-color);
+  border-radius: 4px;
+  background-color: var(--input-bg-color);
+  color: var(--input-text-color);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.fileActionButton:hover:not(:disabled) {
+  border-color: var(--input-primary-color);
+  background-color: #f0f9ff;
+}
+
+.fileActionButton:focus-visible {
+  outline: none;
+  border-color: var(--input-primary-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4);
+}
+
+.fileActionButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .helperText {

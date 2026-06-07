@@ -14,6 +14,10 @@ export const esES: MessageCatalog = {
 
   'fileInput.chooseFile': 'Elegir archivo',
   'fileInput.dragAndDropHint': 'o arrastre y suelte archivos aqu\u00ed',
+  'fileInput.maxFilesExceeded': 'M\u00e1ximo {max} archivos permitidos',
+  'fileInput.moveFileUp': 'Subir {name}',
+  'fileInput.moveFileDown': 'Bajar {name}',
+  'fileInput.removeFile': 'Eliminar {name}',
 
   'pagination.navAriaLabel': 'Paginaci\u00f3n',
   'pagination.rowsPerPage': 'Filas por p\u00e1gina:',
