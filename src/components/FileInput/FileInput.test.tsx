@@ -108,14 +108,14 @@ describe('FileInput', () => {
       URL.revokeObjectURL = originalRevoke;
     });
 
-    it('calls onChange and lists selected file names', async () => {
+    it('calls native onChange and lists selected file names', async () => {
       const onChange = vi.fn();
       render(<FileInput onChange={onChange} />);
       const file = new File(['hello'], 'hello.txt', { type: 'text/plain' });
       const input = document.querySelector('input[type="file"]') as HTMLInputElement;
       await userEvent.upload(input, file);
       expect(onChange).toHaveBeenCalledTimes(1);
-      expect(onChange).toHaveBeenCalledWith([file]);
+      expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ type: 'change' }));
       expect(screen.getByText(/hello\.txt/)).toBeInTheDocument();
     });
 
@@ -147,8 +147,8 @@ describe('FileInput', () => {
     });
 
     it('allows removing a selected file', async () => {
-      const onChange = vi.fn();
-      render(<FileInput multiple onChange={onChange} />);
+      const onFilesChange = vi.fn();
+      render(<FileInput multiple onFilesChange={onFilesChange} />);
       const file1 = new File(['a'], 'a.txt', { type: 'text/plain' });
       const file2 = new File(['b'], 'b.txt', { type: 'text/plain' });
       const input = document.querySelector('input[type="file"]') as HTMLInputElement;
@@ -159,12 +159,12 @@ describe('FileInput', () => {
       await userEvent.click(screen.getByRole('button', { name: 'Remove a.txt' }));
       expect(screen.getAllByRole('listitem')).toHaveLength(1);
       expect(screen.queryByText('a.txt')).not.toBeInTheDocument();
-      expect(onChange).toHaveBeenLastCalledWith([file2]);
+      expect(onFilesChange).toHaveBeenLastCalledWith([file2]);
     });
 
     it('allows reordering selected files', async () => {
-      const onChange = vi.fn();
-      render(<FileInput multiple onChange={onChange} />);
+      const onFilesChange = vi.fn();
+      render(<FileInput multiple onFilesChange={onFilesChange} />);
       const file1 = new File(['a'], 'a.txt', { type: 'text/plain' });
       const file2 = new File(['b'], 'b.txt', { type: 'text/plain' });
       const input = document.querySelector('input[type="file"]') as HTMLInputElement;
@@ -178,7 +178,7 @@ describe('FileInput', () => {
       const itemsAfter = screen.getAllByRole('listitem');
       expect(itemsAfter[0]).toHaveTextContent('b.txt');
       expect(itemsAfter[1]).toHaveTextContent('a.txt');
-      expect(onChange).toHaveBeenLastCalledWith([file2, file1]);
+      expect(onFilesChange).toHaveBeenLastCalledWith([file2, file1]);
     });
 
     it('enforces maxFiles and shows an accessible error message', async () => {
@@ -189,7 +189,7 @@ describe('FileInput', () => {
 
       await userEvent.upload(input, [file1, file2]);
       expect(screen.getAllByRole('listitem')).toHaveLength(1);
-      expect(screen.getByRole('alert')).toHaveTextContent('Maximum 1 files allowed');
+      expect(screen.getByRole('alert')).toHaveTextContent('Maximum 1 file(s) allowed');
     });
   });
 
@@ -240,8 +240,8 @@ describe('FileInput', () => {
     });
 
     it('handles drag over / drag leave and drop with files', () => {
-      const onChange = vi.fn();
-      render(<FileInput dropzone onChange={onChange} />);
+      const onFilesChange = vi.fn();
+      render(<FileInput dropzone onFilesChange={onFilesChange} />);
       const dropzone = screen.getByRole('button');
       const file = new File(['img'], 'drop.png', { type: 'image/png' });
       const fileList = {
@@ -254,15 +254,15 @@ describe('FileInput', () => {
       fireEvent.dragLeave(dropzone);
       fireEvent.drop(dropzone, { dataTransfer: { files: fileList } });
 
-      expect(onChange).toHaveBeenCalledTimes(1);
-      expect(onChange).toHaveBeenCalledWith([file]);
+      expect(onFilesChange).toHaveBeenCalledTimes(1);
+      expect(onFilesChange).toHaveBeenCalledWith([file]);
       expect(screen.getByText(/drop\.png/)).toBeInTheDocument();
       expect(URL.createObjectURL).toHaveBeenCalledWith(file);
     });
 
     it('ignores drop events when disabled', () => {
-      const onChange = vi.fn();
-      render(<FileInput dropzone disabled onChange={onChange} />);
+      const onFilesChange = vi.fn();
+      render(<FileInput dropzone disabled onFilesChange={onFilesChange} />);
       const file = new File(['x'], 'nope.txt', { type: 'text/plain' });
       const fileList = {
         0: file,
@@ -270,7 +270,7 @@ describe('FileInput', () => {
         item: (i: number) => (i === 0 ? file : null),
       } as unknown as FileList;
       fireEvent.drop(screen.getByRole('button'), { dataTransfer: { files: fileList } });
-      expect(onChange).not.toHaveBeenCalled();
+      expect(onFilesChange).not.toHaveBeenCalled();
     });
   });
 });

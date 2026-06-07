@@ -4,7 +4,7 @@ import { BaseInputProps } from '../../types';
 export interface FileInputProps
   extends Omit<
       React.InputHTMLAttributes<HTMLInputElement>,
-      'size' | 'type' | 'value' | 'defaultValue' | 'onChange' | 'multiple'
+      'size' | 'type' | 'value' | 'defaultValue' | 'multiple'
     >,
     BaseInputProps {
   /** Button label text */
@@ -18,11 +18,8 @@ export interface FileInputProps
    * When provided, the component does not manage its own file array.
    */
   value?: File[];
-  /**
-   * Called when selected files change (controlled/uncontrolled).
-   * In `multiple` mode, new selections are appended to the current list.
-   */
-  onChange?: (files: File[]) => void;
+  /** Called when selected files change (controlled/uncontrolled). */
+  onFilesChange?: (files: File[]) => void;
   /** Whether multiple files can be selected */
   multiple?: boolean;
   /** Maximum number of files allowed (enforced on selection) */

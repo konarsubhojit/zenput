@@ -162,12 +162,12 @@ function Example() {
 
   return (
     <FileInput
-      label="Upload avatar"
+      label="Upload gallery images"
       accept="image/*"
       multiple
       maxFiles={5}
       value={files}
-      onChange={setFiles}
+      onFilesChange={setFiles}
     />
   );
 }

@@ -30,7 +30,7 @@ export function FileInputSection() {
           multiple
           maxFiles={5}
           value={files}
-          onChange={setFiles}
+          onFilesChange={setFiles}
           buttonLabel="Add images"
           accept="image/*"
           helperText="Up to 5 images; use ↑/↓ to reorder and ✕ to remove"

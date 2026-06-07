@@ -61,7 +61,8 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
       previewSrc,
       uploading,
       uploadProgress,
-      onChange,
+      onChange: nativeOnChange,
+      onFilesChange,
       multiple,
       accept,
       ...rest
@@ -80,6 +81,8 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
     const [isDragActive, setIsDragActive] = useState(false);
     const [objectUrl, setObjectUrl] = useState<string | undefined>(undefined);
     const [maxFilesError, setMaxFilesError] = useState<string | undefined>(undefined);
+    const fileKeyMapRef = useRef(new WeakMap<File, string>());
+    const fileKeyCounterRef = useRef(0);
 
     const selectedFiles = value ?? uncontrolledFiles;
 
@@ -88,10 +91,20 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
         if (value === undefined) {
           setUncontrolledFiles(next);
         }
-        onChange?.(next);
+        onFilesChange?.(next);
       },
-      [onChange, value]
+      [onFilesChange, value]
     );
+
+    const getFileKey = useCallback((file: File) => {
+      let key = fileKeyMapRef.current.get(file);
+      if (!key) {
+        fileKeyCounterRef.current += 1;
+        key = `${file.name}-${file.size}-${file.lastModified}-${fileKeyCounterRef.current}`;
+        fileKeyMapRef.current.set(file, key);
+      }
+      return key;
+    }, []);
 
     // Revoke the object-URL when it changes or the component unmounts.
     // Revocation happens only here (not inside setObjectUrl) to avoid double-revocation.
@@ -131,6 +144,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
 
     const handleChange = useCallback(
       (e: React.ChangeEvent<HTMLInputElement>) => {
+        nativeOnChange?.(e);
         const newlyPicked = normalizeFiles(e.target.files);
         if (newlyPicked.length === 0) return;
 
@@ -147,7 +161,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
           internalRef.current.value = '';
         }
       },
-      [maxFiles, multiple, selectedFiles, t, updateFiles]
+      [maxFiles, multiple, nativeOnChange, selectedFiles, t, updateFiles]
     );
 
     const handleDrop = useCallback(
@@ -296,7 +310,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
         {showFileNames && selectedFiles.length > 0 && (
           <ul className={styles.fileList}>
             {selectedFiles.map((file, index) => (
-              <li key={`${file.name}-${index}`} className={styles.fileListItem}>
+              <li key={getFileKey(file)} className={styles.fileListItem}>
                 <span className={styles.fileName}>📄 {file.name}</span>
                 <div className={styles.fileActions}>
                   <button

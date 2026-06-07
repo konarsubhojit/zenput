@@ -25,7 +25,7 @@ export type MessageCatalog = {
   // FileInput
   'fileInput.chooseFile': string;
   'fileInput.dragAndDropHint': string;
-  /** Template: "Maximum {max} files allowed" — var: max */
+  /** Template: "Maximum {max} file(s) allowed" — var: max */
   'fileInput.maxFilesExceeded': string;
   /** Template: "Move {name} up" — var: name */
   'fileInput.moveFileUp': string;
