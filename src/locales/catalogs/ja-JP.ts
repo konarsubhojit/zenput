@@ -11,6 +11,7 @@ export const jaJP: MessageCatalog = {
 
   'dataTable.noData': '\u30c7\u30fc\u30bf\u306a\u3057',
   'dataTable.paginationRange': '{total}\u4ef6\u4e2d {start}\u2013{end}\u4ef6',
+  'dataTable.loadMore': '\u3082\u3063\u3068\u8aad\u307f\u8fbc\u3080',
 
   'fileInput.chooseFile': '\u30d5\u30a1\u30a4\u30eb\u3092\u9078\u629e',
   'fileInput.dragAndDropHint':

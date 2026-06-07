@@ -11,6 +11,7 @@ export const deDE: MessageCatalog = {
 
   'dataTable.noData': 'Keine Daten',
   'dataTable.paginationRange': '{start}\u2013{end} von {total}',
+  'dataTable.loadMore': 'Mehr laden',
 
   'fileInput.chooseFile': 'Datei ausw\u00e4hlen',
   'fileInput.dragAndDropHint': 'oder Dateien hierher ziehen und ablegen',

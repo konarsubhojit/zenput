@@ -11,6 +11,7 @@ export const heIL: MessageCatalog = {
 
   'dataTable.noData': '\u05d0\u05d9\u05df \u05e0\u05ea\u05d5\u05e0\u05d9\u05dd',
   'dataTable.paginationRange': '{start}\u2013{end} \u05de\u05ea\u05d5\u05da {total}',
+  'dataTable.loadMore': '\u05d8\u05e2\u05df \u05e2\u05d5\u05d3',
 
   'fileInput.chooseFile': '\u05d1\u05d7\u05e8 \u05e7\u05d5\u05d1\u05e5',
   'fileInput.dragAndDropHint':
