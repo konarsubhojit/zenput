@@ -77,9 +77,10 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       disabled,
     });
 
-    // When allowEmpty is false, wrap onChange so that undefined is never forwarded
-    // to the consumer (we resolve it to a concrete number before calling setCurrentValue,
-    // but we cast here to satisfy useControllable's generic constraint).
+    // Cast onChange to satisfy useControllable's generic constraint. When
+    // allowEmpty is false, handleChange ensures setCurrentValue is never called
+    // with undefined, so the consumer's (value: number) => void callback is
+    // never invoked with undefined at runtime.
     const [currentValue, setCurrentValue] = useControllable<number | undefined>({
       value,
       defaultValue,
