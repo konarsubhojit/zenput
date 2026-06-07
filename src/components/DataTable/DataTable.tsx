@@ -526,7 +526,7 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
   // ── Pagination display values ──────────────────────────────────────────────
 
   const paginationDisplay = useMemo(() => {
-    if (!pagination) return null;
+    if (!pagination || pagination.mode === 'cursor') return null;
     // Clamp the displayed range to valid bounds so the "x–y of total" label
     // stays consistent even if the consumer's currentPage drifts out of
     // range (for example after totalCount shrinks).
@@ -843,7 +843,7 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
       </div>
 
       {/* Pagination controls */}
-      {pagination && paginationDisplay && (
+      {pagination && pagination.mode !== 'cursor' && paginationDisplay && (
         <div className={styles.pagination}>
           <span className={styles.paginationInfo}>
             {loading || pagination.totalCount === 0
@@ -862,6 +862,20 @@ export function DataTable<T extends DataTableRecord = DataTableRecord>({
             disabled={loading}
             size="sm"
           />
+        </div>
+      )}
+
+      {/* Cursor / Load More */}
+      {pagination?.mode === 'cursor' && pagination.hasNextPage && (
+        <div className={styles.loadMoreWrapper}>
+          <button
+            type="button"
+            className={styles.loadMoreButton}
+            onClick={pagination.onLoadMore}
+            disabled={loading || pagination.loading}
+          >
+            {t('dataTable.loadMore')}
+          </button>
         </div>
       )}
     </div>

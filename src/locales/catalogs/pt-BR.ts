@@ -11,6 +11,7 @@ export const ptBR: MessageCatalog = {
 
   'dataTable.noData': 'Sem dados',
   'dataTable.paginationRange': '{start}\u2013{end} de {total}',
+  'dataTable.loadMore': 'Carregar mais',
 
   'fileInput.chooseFile': 'Escolher arquivo',
   'fileInput.dragAndDropHint': 'ou arraste e solte arquivos aqui',

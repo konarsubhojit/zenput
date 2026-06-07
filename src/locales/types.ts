@@ -19,6 +19,8 @@ export type MessageCatalog = {
   'dataTable.noData': string;
   /** Template: "{start}–{end} of {total}" — vars: start, end, total */
   'dataTable.paginationRange': string;
+  /** Label for the Load More button used in cursor-based pagination */
+  'dataTable.loadMore': string;
 
   // FileInput
   'fileInput.chooseFile': string;

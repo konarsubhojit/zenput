@@ -14,7 +14,10 @@ export interface DataTableSortState {
   direction: SortDirection;
 }
 
-export interface DataTablePagination {
+/** Numbered-page pagination configuration. */
+export interface DataTablePaginationPage {
+  /** Discriminator — omit or pass `'page'` for numbered-page pagination. */
+  mode?: 'page';
   /** Current page number (1-based) */
   currentPage: number;
   /** Number of rows per page */
@@ -24,6 +27,29 @@ export interface DataTablePagination {
   /** Called when the user navigates to a different page */
   onPageChange: (page: number) => void;
 }
+
+/** Cursor-based / load-more pagination configuration. */
+export interface DataTablePaginationCursor {
+  /** Discriminator — use `'cursor'` to enable cursor-based / load-more pagination. */
+  mode: 'cursor';
+  /** Whether there are more rows available to load. */
+  hasNextPage: boolean;
+  /** Called when the user clicks the Load More button. */
+  onLoadMore: () => void;
+  /**
+   * When `true`, the Load More button is disabled and shows a loading state.
+   * Use this while the next batch of data is being fetched.
+   */
+  loading?: boolean;
+}
+
+/**
+ * Pagination configuration for DataTable.
+ *
+ * - Omit `mode` (or set it to `'page'`) for numbered-page pagination.
+ * - Set `mode: 'cursor'` to enable cursor-based / load-more pagination.
+ */
+export type DataTablePagination = DataTablePaginationPage | DataTablePaginationCursor;
 
 export interface DataTableColumn<T extends DataTableRecord = DataTableRecord> {
   /** Unique key that maps to a field in the row data */

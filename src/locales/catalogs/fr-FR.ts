@@ -11,6 +11,7 @@ export const frFR: MessageCatalog = {
 
   'dataTable.noData': 'Aucune donn\u00e9e disponible',
   'dataTable.paginationRange': '{start}\u2013{end} sur {total}',
+  'dataTable.loadMore': 'Charger plus',
 
   'fileInput.chooseFile': 'Choisir un fichier',
   'fileInput.dragAndDropHint': 'ou glisser-d\u00e9poser des fichiers ici',

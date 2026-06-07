@@ -604,3 +604,44 @@
   color: #6b7280;
   user-select: none;
 }
+
+/* ── Load More (cursor pagination) ───────────────────── */
+
+.loadMoreWrapper {
+  display: flex;
+  justify-content: center;
+  padding: 12px 4px 4px;
+}
+
+.loadMoreButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 20px;
+  border: 1px solid var(--dt-primary-color);
+  border-radius: 4px;
+  background-color: transparent;
+  color: var(--dt-primary-color);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.loadMoreButton:hover:not(:disabled) {
+  background-color: var(--dt-primary-color);
+  color: #ffffff;
+}
+
+.loadMoreButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.loadMoreButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--dt-primary-focus-ring);
+}

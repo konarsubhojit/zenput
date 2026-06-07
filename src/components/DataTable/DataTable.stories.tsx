@@ -161,6 +161,42 @@ export const WithPagination: Story = {
   },
 };
 
+export const WithCursorPagination: Story = {
+  render: () => {
+    const PAGE_SIZE = 2;
+
+    const CursorTable = () => {
+      const [rows, setRows] = useState(() => employees.slice(0, PAGE_SIZE));
+      const [loadingMore, setLoadingMore] = useState(false);
+      const hasNextPage = rows.length < employees.length;
+
+      const handleLoadMore = () => {
+        setLoadingMore(true);
+        // Simulate an async fetch
+        setTimeout(() => {
+          setRows((prev) => employees.slice(0, prev.length + PAGE_SIZE));
+          setLoadingMore(false);
+        }, 800);
+      };
+
+      return (
+        <DataTable
+          columns={basicColumns}
+          data={rows}
+          rowKey={(row) => row.id}
+          pagination={{
+            mode: 'cursor',
+            hasNextPage,
+            onLoadMore: handleLoadMore,
+            loading: loadingMore,
+          }}
+        />
+      );
+    };
+    return <CursorTable />;
+  },
+};
+
 export const WithRowClickAndExpand: Story = {
   render: () => (
     <DataTable

@@ -495,6 +495,80 @@ describe('DataTable', () => {
   });
 });
 
+// ── Cursor pagination ──────────────────────────────────────────────────────
+
+describe('DataTable – cursor pagination', () => {
+  it('renders a Load More button when mode is cursor and hasNextPage is true', () => {
+    render(
+      <DataTable
+        columns={columns}
+        data={data}
+        pagination={{ mode: 'cursor', hasNextPage: true, onLoadMore: vi.fn() }}
+      />
+    );
+    expect(screen.getByRole('button', { name: /load more/i })).toBeInTheDocument();
+  });
+
+  it('does not render a Load More button when hasNextPage is false', () => {
+    render(
+      <DataTable
+        columns={columns}
+        data={data}
+        pagination={{ mode: 'cursor', hasNextPage: false, onLoadMore: vi.fn() }}
+      />
+    );
+    expect(screen.queryByRole('button', { name: /load more/i })).not.toBeInTheDocument();
+  });
+
+  it('calls onLoadMore when the Load More button is clicked', async () => {
+    const handleLoadMore = vi.fn();
+    render(
+      <DataTable
+        columns={columns}
+        data={data}
+        pagination={{ mode: 'cursor', hasNextPage: true, onLoadMore: handleLoadMore }}
+      />
+    );
+    await userEvent.click(screen.getByRole('button', { name: /load more/i }));
+    expect(handleLoadMore).toHaveBeenCalledOnce();
+  });
+
+  it('disables the Load More button when pagination.loading is true', () => {
+    render(
+      <DataTable
+        columns={columns}
+        data={data}
+        pagination={{ mode: 'cursor', hasNextPage: true, onLoadMore: vi.fn(), loading: true }}
+      />
+    );
+    expect(screen.getByRole('button', { name: /load more/i })).toBeDisabled();
+  });
+
+  it('disables the Load More button when the outer loading prop is true', () => {
+    render(
+      <DataTable
+        columns={columns}
+        data={data}
+        loading
+        pagination={{ mode: 'cursor', hasNextPage: true, onLoadMore: vi.fn() }}
+      />
+    );
+    expect(screen.getByRole('button', { name: /load more/i })).toBeDisabled();
+  });
+
+  it('does not render page-based pagination controls in cursor mode', () => {
+    render(
+      <DataTable
+        columns={columns}
+        data={data}
+        pagination={{ mode: 'cursor', hasNextPage: true, onLoadMore: vi.fn() }}
+      />
+    );
+    expect(screen.queryByLabelText('Previous page')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Next page')).not.toBeInTheDocument();
+  });
+});
+
 // ── New flagship features ──────────────────────────────────────────────────
 
 describe('DataTable – global filter', () => {

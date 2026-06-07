@@ -20,6 +20,8 @@ const USER_ROWS: UserRow[] = [
   { id: 7, name: 'Barbara Liskov', email: 'barbara@zenput.dev', role: 'editor', active: true },
 ];
 
+const CURSOR_PAGE_SIZE = 3;
+
 export function DataTableSection() {
   const [page, setPage] = useState(1);
   const pageSize = 3;
@@ -27,6 +29,19 @@ export function DataTableSection() {
     () => USER_ROWS.slice((page - 1) * pageSize, page * pageSize),
     [page]
   );
+
+  // Cursor pagination state
+  const [cursorRows, setCursorRows] = useState(() => USER_ROWS.slice(0, CURSOR_PAGE_SIZE));
+  const [cursorLoading, setCursorLoading] = useState(false);
+  const hasNextPage = cursorRows.length < USER_ROWS.length;
+
+  const handleLoadMore = () => {
+    setCursorLoading(true);
+    setTimeout(() => {
+      setCursorRows((prev) => USER_ROWS.slice(0, prev.length + CURSOR_PAGE_SIZE));
+      setCursorLoading(false);
+    }, 600);
+  };
 
   const columns: DataTableColumn<UserRow>[] = useMemo(
     () => [
@@ -75,6 +90,19 @@ export function DataTableSection() {
             onPageChange: setPage,
           }}
           selectable
+        />
+      </Scenario>
+      <Scenario title="Cursor pagination (Load More)" full>
+        <DataTable<UserRow>
+          columns={columns}
+          data={cursorRows}
+          rowKey={(r) => r.id}
+          pagination={{
+            mode: 'cursor',
+            hasNextPage,
+            onLoadMore: handleLoadMore,
+            loading: cursorLoading,
+          }}
         />
       </Scenario>
       <Scenario title="Expandable rows" full>
