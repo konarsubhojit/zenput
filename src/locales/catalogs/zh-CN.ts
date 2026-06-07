@@ -11,6 +11,7 @@ export const zhCN: MessageCatalog = {
 
   'dataTable.noData': '\u6682\u65e0\u6570\u636e',
   'dataTable.paginationRange': '\u7b2c {start}\u2013{end} \u6761\uff0c\u5171 {total} \u6761',
+  'dataTable.loadMore': '\u52a0\u8f7d\u66f4\u591a',
 
   'fileInput.chooseFile': '\u9009\u62e9\u6587\u4ef6',
   'fileInput.dragAndDropHint': '\u6216\u5c06\u6587\u4ef6\u62d6\u653e\u5230\u6b64\u5904',

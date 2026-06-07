@@ -11,6 +11,7 @@ export const arSA: MessageCatalog = {
 
   'dataTable.noData': '\u0644\u0627 \u062a\u0648\u062c\u062f \u0628\u064a\u0627\u0646\u0627\u062a',
   'dataTable.paginationRange': '{start}\u2013{end} \u0645\u0646 {total}',
+  'dataTable.loadMore': '\u062a\u062d\u0645\u064a\u0644 \u0627\u0644\u0645\u0632\u064a\u062f',
 
   'fileInput.chooseFile': '\u0627\u062e\u062a\u0631 \u0645\u0644\u0641\u0627\u064b',
   'fileInput.dragAndDropHint':
