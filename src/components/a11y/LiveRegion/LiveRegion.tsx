@@ -24,7 +24,7 @@ type AnnounceFunction = (message: string, options?: AnnounceOptions) => void;
 // Context
 // ---------------------------------------------------------------------------
 
-const LiveRegionContext = createContext<AnnounceFunction | null>(null);
+export const LiveRegionContext = createContext<AnnounceFunction | null>(null);
 
 // ---------------------------------------------------------------------------
 // Internal region state

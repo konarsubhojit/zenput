@@ -7,9 +7,12 @@ import {
   CircularProgress,
   Alert,
 } from 'zenput';
+import { useState } from 'react';
 import { Section, Scenario } from './_shell';
 
 export function FeedbackSection() {
+  const [syncDismissed, setSyncDismissed] = useState(false);
+
   return (
     <Section
       id="feedback"
@@ -27,6 +30,31 @@ export function FeedbackSection() {
             action={<button type="button">Retry</button>}
           >
             We could not charge the card on file. Check the billing details and try again.
+          </Alert>
+        </div>
+      </Scenario>
+
+      <Scenario title="Alert — status alias + Alert.Action + dismissible">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '520px' }}>
+          {!syncDismissed && (
+            <Alert
+              status="error"
+              title="3 orders failed to sync"
+              dismissible
+              onDismiss={() => setSyncDismissed(true)}
+            >
+              <Alert.Action>
+                <button type="button" onClick={() => setSyncDismissed(true)}>Retry</button>
+              </Alert.Action>
+            </Alert>
+          )}
+          {syncDismissed && (
+            <button type="button" onClick={() => setSyncDismissed(false)}>
+              Reset example
+            </button>
+          )}
+          <Alert status="warning" title="Low disk space" dismissible>
+            You have less than 500 MB remaining.
           </Alert>
         </div>
       </Scenario>
