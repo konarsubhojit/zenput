@@ -65,6 +65,17 @@ export const Disabled: Story = {
   args: { label: 'Disabled', defaultValue: 5, disabled: true },
 };
 
+export const AllowEmptyFalse: Story = {
+  args: {
+    label: 'Quantity (no empty)',
+    allowEmpty: false,
+    min: 0,
+    max: 100,
+    fallbackValue: 1,
+    helperText: 'Clearing the field snaps to fallbackValue (1), or min/0 if unset',
+  },
+};
+
 export const Sizes: Story = {
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
