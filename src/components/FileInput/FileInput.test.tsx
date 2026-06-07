@@ -189,7 +189,7 @@ describe('FileInput', () => {
 
       await userEvent.upload(input, [file1, file2]);
       expect(screen.getAllByRole('listitem')).toHaveLength(1);
-      expect(screen.getByRole('alert')).toHaveTextContent('Maximum 1 file(s) allowed');
+      expect(screen.getByRole('alert')).toHaveTextContent('File limit: 1');
     });
   });
 
