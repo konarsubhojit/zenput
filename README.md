@@ -571,7 +571,154 @@ import { ThemeProvider, TokenBrowser } from 'zenput';
 
 ### Design Token Reference
 
-The following CSS custom properties are emitted by `ThemeProvider` and available for advanced customisation.
+> **Stability guarantee** — All `--zp-*` CSS custom property names listed here are stable within a major version of zenput. Token names will not be renamed or removed within the same major version. New tokens may be added in minor releases. The `src/tokens/tokens.snapshot.test.ts` snapshot file is the machine-readable contract that enforces this guarantee.
+
+Every CSS custom property is emitted by `ThemeProvider` on its root element and scoped to that element's subtree. The prefix is always `--zp-` (not `--zenput-`).
+
+#### Referencing tokens in code
+
+Use the exported `cssVar()` helper (or its re-export `tokenVar()`) to produce type-safe `var(…)` expressions without hard-coding variable names:
+
+```tsx
+import { cssVar } from 'zenput';
+// or: import { tokenVar } from 'zenput';
+
+cssVar('color-brand')                 // 'var(--zp-color-brand)'
+cssVar('space-4')                     // 'var(--zp-space-4)'
+cssVar('color-brand', '#0000ff')      // 'var(--zp-color-brand, #0000ff)'
+cssVar('space-0.5')                   // 'var(--zp-space-0-5)'  ← dots normalized
+```
+
+Decimal spacing keys (e.g. `0.5`) are automatically normalized to a dash form (`0-5`) to produce valid CSS custom-property names.
+
+---
+
+#### Brand colors (`--zp-color-brand-*`)
+
+| Custom property | Light | Dark | High-contrast | Purpose |
+|-----------------|-------|------|---------------|---------|
+| `--zp-color-brand` | `#2563eb` | `#60a5fa` | `#1aebff` | Primary action / filled button |
+| `--zp-color-brand-hover` | `#1d4ed8` | `#93c5fd` | `#ffffff` | Hover state |
+| `--zp-color-brand-active` | `#1e40af` | `#bfdbfe` | `#ffff00` | Active / pressed state |
+| `--zp-color-brand-subtle` | `#eff6ff` | `rgba(59, 130, 246, 0.16)` | `#000000` | Low-emphasis brand wash |
+| `--zp-color-brand-text` | `#1d4ed8` | `#93c5fd` | `#ffffff` | Brand-colored text on surfaces |
+
+---
+
+#### Semantic state colors
+
+Each state (`success`, `warning`, `danger`, `info`) exposes the following tokens. These are the canonical tokens for Toast, Alert, Banner, and Tag variants.
+
+| Token pattern | Purpose |
+|---------------|---------|
+| `--zp-color-{state}` | Primary accent color |
+| `--zp-color-{state}-subtle` | Low-emphasis background wash |
+| `--zp-color-{state}-text` | Text on the default surface |
+| `--zp-color-{state}-bg-subtle` | Subtle background (e.g. Alert, Tag) |
+| `--zp-color-{state}-bg-solid` | Vivid filled background |
+| `--zp-color-{state}-text-on-solid` | Text / icon on the filled background |
+
+##### Success (`--zp-color-success-*`)
+
+| Custom property | Light | Dark | High-contrast |
+|-----------------|-------|------|---------------|
+| `--zp-color-success` | `#16a34a` | `#4ade80` | `#3ff23f` |
+| `--zp-color-success-subtle` | `#f0fdf4` | `rgba(34, 197, 94, 0.16)` | `#000000` |
+| `--zp-color-success-text` | `#15803d` | `#86efac` | `#ffffff` |
+| `--zp-color-success-bg-subtle` | `#f0fdf4` | `rgba(34, 197, 94, 0.16)` | `#000000` |
+| `--zp-color-success-bg-solid` | `#16a34a` | `#4ade80` | `#3ff23f` |
+| `--zp-color-success-text-on-solid` | `#ffffff` | `#ffffff` | `#000000` |
+
+##### Warning (`--zp-color-warning-*`)
+
+| Custom property | Light | Dark | High-contrast |
+|-----------------|-------|------|---------------|
+| `--zp-color-warning` | `#f59e0b` | `#fbbf24` | `#ffff00` |
+| `--zp-color-warning-subtle` | `#fffbeb` | `rgba(245, 158, 11, 0.16)` | `#000000` |
+| `--zp-color-warning-text` | `#b45309` | `#fcd34d` | `#ffffff` |
+| `--zp-color-warning-bg-subtle` | `#fffbeb` | `rgba(245, 158, 11, 0.16)` | `#000000` |
+| `--zp-color-warning-bg-solid` | `#f59e0b` | `#fbbf24` | `#ffff00` |
+| `--zp-color-warning-text-on-solid` | `#111827` | `#111827` | `#000000` |
+
+##### Danger (`--zp-color-danger-*`)
+
+| Custom property | Light | Dark | High-contrast |
+|-----------------|-------|------|---------------|
+| `--zp-color-danger` | `#dc2626` | `#f87171` | `#ff5f5f` |
+| `--zp-color-danger-hover` | `#b91c1c` | `#fca5a5` | `#ffffff` |
+| `--zp-color-danger-active` | `#991b1b` | `#fecaca` | `#ffff00` |
+| `--zp-color-danger-subtle` | `#fef2f2` | `rgba(239, 68, 68, 0.16)` | `#000000` |
+| `--zp-color-danger-text` | `#b91c1c` | `#fca5a5` | `#ffffff` |
+| `--zp-color-danger-bg-subtle` | `#fef2f2` | `rgba(239, 68, 68, 0.16)` | `#000000` |
+| `--zp-color-danger-bg-solid` | `#dc2626` | `#f87171` | `#ff5f5f` |
+| `--zp-color-danger-text-on-solid` | `#ffffff` | `#ffffff` | `#000000` |
+
+##### Info (`--zp-color-info-*`)
+
+| Custom property | Light | Dark | High-contrast |
+|-----------------|-------|------|---------------|
+| `--zp-color-info` | `#0891b2` | `#22d3ee` | `#1aebff` |
+| `--zp-color-info-subtle` | `#ecfeff` | `rgba(6, 182, 212, 0.16)` | `#000000` |
+| `--zp-color-info-text` | `#0e7490` | `#67e8f9` | `#ffffff` |
+| `--zp-color-info-bg-subtle` | `#ecfeff` | `rgba(6, 182, 212, 0.16)` | `#000000` |
+| `--zp-color-info-bg-solid` | `#0891b2` | `#22d3ee` | `#1aebff` |
+| `--zp-color-info-text-on-solid` | `#ffffff` | `#ffffff` | `#000000` |
+
+---
+
+#### Neutral semantic state (`--zp-color-neutral-*`)
+
+| Custom property | Light | Dark | High-contrast |
+|-----------------|-------|------|---------------|
+| `--zp-color-neutral` | `#6b7280` | `#9ca3af` | `#ffffff` |
+| `--zp-color-neutral-subtle` | `#f3f4f6` | `rgba(156, 163, 175, 0.16)` | `#000000` |
+| `--zp-color-neutral-text` | `#374151` | `#d1d5db` | `#ffffff` |
+| `--zp-color-neutral-bg-subtle` | `#f3f4f6` | `rgba(156, 163, 175, 0.16)` | `#000000` |
+| `--zp-color-neutral-bg-solid` | `#6b7280` | `#9ca3af` | `#ffffff` |
+| `--zp-color-neutral-text-on-solid` | `#ffffff` | `#ffffff` | `#000000` |
+
+---
+
+#### Surface & background tokens
+
+| Custom property | Light | Dark | High-contrast | Purpose |
+|-----------------|-------|------|---------------|---------|
+| `--zp-color-background` | `#ffffff` | `#0b0f17` | `#000000` | Page / app canvas |
+| `--zp-color-surface` | `#ffffff` | `#121826` | `#000000` | Default card / panel |
+| `--zp-color-surface-raised` | `#ffffff` | `#1a2132` | `#000000` | Raised surface (e.g. Popover) |
+| `--zp-color-surface-overlay` | `rgba(17, 24, 39, 0.5)` | `rgba(0, 0, 0, 0.65)` | `rgba(0, 0, 0, 0.85)` | Scrim behind inline overlays |
+| `--zp-color-surface-0` | `#ffffff` | `#0b0f17` | `#000000` | Depth level 0 — canvas |
+| `--zp-color-surface-1` | `#ffffff` | `#121826` | `#000000` | Depth level 1 — default surface |
+| `--zp-color-surface-2` | `#f9fafb` | `#1a2132` | `#000000` | Depth level 2 |
+| `--zp-color-surface-3` | `#f3f4f6` | `#222b3d` | `#000000` | Depth level 3 |
+| `--zp-color-surface-4` | `#e5e7eb` | `#2b3548` | `#000000` | Depth level 4 — most raised |
+
+Use `--zp-color-surface-0` through `--zp-color-surface-4` in Card, Dialog, Popover, and Menu to express depth.
+
+---
+
+#### Text colors (`--zp-color-text-*`)
+
+| Custom property | Light | Dark | High-contrast | Purpose |
+|-----------------|-------|------|---------------|---------|
+| `--zp-color-text-primary` | `#111827` | `#f9fafb` | `#ffffff` | Default body text |
+| `--zp-color-text-secondary` | `#4b5563` | `#d1d5db` | `#ffffff` | Supporting / metadata text |
+| `--zp-color-text-disabled` | `#6b7280` | `#6b7280` | `#3ff23f` | Disabled interactive text |
+| `--zp-color-text-inverse` | `#ffffff` | `#111827` | `#000000` | Text on filled / dark backgrounds |
+
+---
+
+#### Border tokens (`--zp-color-border-*`)
+
+| Custom property | Light | Dark | Purpose |
+|-----------------|-------|------|---------|
+| `--zp-color-border` | `#d1d5db` | `#374151` | Default border |
+| `--zp-color-border-subtle` | `#e5e7eb` | `#1f2937` | Subtle / muted border |
+| `--zp-color-border-strong` | `#9ca3af` | `#4b5563` | Emphasized border |
+| `--zp-color-border-inverse` | `#ffffff` | `#f9fafb` | Border on filled / dark surfaces |
+| `--zp-color-border-focus` | `#3b82f6` | `#60a5fa` | Focus indicator border |
+
+---
 
 #### Focus ring (`--zp-focus-ring-*`)
 
@@ -582,52 +729,178 @@ The following CSS custom properties are emitted by `ThemeProvider` and available
 | `--zp-focus-ring-style` | `solid` | Outline style |
 | `--zp-focus-ring-color` | `var(--zp-color-focus-ring)` | Tracks the semantic focus-ring color |
 
-The global `.zp-focus-ring:focus-visible` utility class in `src/styles/globals.css` uses these tokens so all interactive elements stay in sync automatically.
+The global `.zp-focus-ring:focus-visible` utility class uses these tokens so all interactive elements stay in sync automatically.
 
-#### Surface levels (`--zp-color-surface-*`)
+---
 
-| Custom property | Light | Dark | High-contrast |
-|-----------------|-------|------|---------------|
-| `--zp-color-surface-0` | `#ffffff` | `#0b0f17` | `#000000` |
-| `--zp-color-surface-1` | `#ffffff` | `#121826` | `#000000` |
-| `--zp-color-surface-2` | `#f9fafb` | `#1a2132` | `#000000` |
-| `--zp-color-surface-3` | `#f3f4f6` | `#222b3d` | `#000000` |
-| `--zp-color-surface-4` | `#e5e7eb` | `#2b3548` | `#000000` |
+#### Color palette ramps (`--zp-color-{ramp}-{step}`)
 
-Use these in Card, Dialog, Popover, and Menu surfaces to express depth.
+Raw palette steps are available for custom usage. Prefer semantic tokens wherever possible.
 
-#### Semantic state triplets
+Available ramps: `neutral`, `blue`, `green`, `amber`, `red`, `cyan`.  
+Available steps: `50`, `100`, `200`, `300`, `400`, `500`, `600`, `700`, `800`, `900`.
 
-Each state (`success`, `warning`, `danger`, `info`, `neutral`) exposes a *bg-subtle*, *bg-solid*, and *text-on-solid* triplet. These are the canonical tokens for Toast, Alert, Banner, and Tag variants.
+Examples: `--zp-color-blue-500` → `#3b82f6`, `--zp-color-red-100` → `#fee2e2`.
 
-| Custom property pattern | Purpose |
-|-------------------------|---------|
-| `--zp-color-{state}-bg-subtle` | Light background wash |
-| `--zp-color-{state}-bg-solid` | Vivid filled background |
-| `--zp-color-{state}-text-on-solid` | Text / icon on the filled bg |
+---
 
-#### Neutral semantic state
+#### Spacing (`--zp-space-*`)
 
-| Custom property | Light | Dark |
-|-----------------|-------|------|
-| `--zp-color-neutral` | `#6b7280` | `#9ca3af` |
-| `--zp-color-neutral-subtle` | `#f3f4f6` | `rgba(156, 163, 175, 0.16)` |
-| `--zp-color-neutral-text` | `#374151` | `#d1d5db` |
-| `--zp-color-neutral-bg-subtle` | `#f3f4f6` | `rgba(156, 163, 175, 0.16)` |
-| `--zp-color-neutral-bg-solid` | `#6b7280` | `#9ca3af` |
-| `--zp-color-neutral-text-on-solid` | `#ffffff` | `#ffffff` |
+| Custom property | Value | px |
+|-----------------|-------|----|
+| `--zp-space-0` | `0` | 0 |
+| `--zp-space-0-5` | `0.125rem` | 2 |
+| `--zp-space-1` | `0.25rem` | 4 |
+| `--zp-space-1-5` | `0.375rem` | 6 |
+| `--zp-space-2` | `0.5rem` | 8 |
+| `--zp-space-2-5` | `0.625rem` | 10 |
+| `--zp-space-3` | `0.75rem` | 12 |
+| `--zp-space-4` | `1rem` | 16 |
+| `--zp-space-5` | `1.25rem` | 20 |
+| `--zp-space-6` | `1.5rem` | 24 |
+| `--zp-space-8` | `2rem` | 32 |
+| `--zp-space-10` | `2.5rem` | 40 |
+| `--zp-space-12` | `3rem` | 48 |
+| `--zp-space-16` | `4rem` | 64 |
+| `--zp-space-20` | `5rem` | 80 |
+| `--zp-space-24` | `6rem` | 96 |
 
-#### Border tokens
+> Source token keys with decimal steps (e.g. `0.5`) are normalized to dashes (e.g. `--zp-space-0-5`). Pass the raw key to `cssVar('space-0.5')` — the helper normalizes automatically.
+
+---
+
+#### Typography
+
+##### Font families (`--zp-font-family-*`)
+
+| Custom property | Usage |
+|-----------------|-------|
+| `--zp-font-family-sans` | Body text (system-UI stack) |
+| `--zp-font-family-serif` | Editorial / long-form text |
+| `--zp-font-family-mono` | Code blocks and monospace |
+
+##### Font sizes (`--zp-font-size-*`)
+
+| Custom property | Value | px |
+|-----------------|-------|----|
+| `--zp-font-size-xs` | `0.75rem` | 12 |
+| `--zp-font-size-sm` | `0.875rem` | 14 |
+| `--zp-font-size-md` | `1rem` | 16 |
+| `--zp-font-size-lg` | `1.125rem` | 18 |
+| `--zp-font-size-xl` | `1.25rem` | 20 |
+| `--zp-font-size-2xl` | `1.5rem` | 24 |
+| `--zp-font-size-3xl` | `1.875rem` | 30 |
+| `--zp-font-size-4xl` | `2.25rem` | 36 |
+| `--zp-font-size-5xl` | `3rem` | 48 |
+
+##### Font weights (`--zp-font-weight-*`)
+
+| Custom property | Value | Usage |
+|-----------------|-------|-------|
+| `--zp-font-weight-regular` | `400` | Body text |
+| `--zp-font-weight-medium` | `500` | Slightly emphasized |
+| `--zp-font-weight-semibold` | `600` | Labels, headings |
+| `--zp-font-weight-bold` | `700` | Strong emphasis |
+
+##### Line heights (`--zp-line-height-*`)
+
+| Custom property | Value | Usage |
+|-----------------|-------|-------|
+| `--zp-line-height-none` | `1` | Inline / icon elements |
+| `--zp-line-height-tight` | `1.25` | Headings |
+| `--zp-line-height-snug` | `1.375` | Dense body copy |
+| `--zp-line-height-normal` | `1.5` | Default body copy |
+| `--zp-line-height-relaxed` | `1.625` | Long-form / article text |
+
+##### Letter spacing (`--zp-letter-spacing-*`)
+
+| Custom property | Value | Usage |
+|-----------------|-------|-------|
+| `--zp-letter-spacing-tight` | `-0.01em` | Display / hero text |
+| `--zp-letter-spacing-normal` | `0` | Body text |
+| `--zp-letter-spacing-wide` | `0.02em` | Button labels |
+| `--zp-letter-spacing-wider` | `0.04em` | Overlines, ALL-CAPS labels |
+
+---
+
+#### Radius (`--zp-radius-*`)
+
+| Custom property | Value | Usage |
+|-----------------|-------|-------|
+| `--zp-radius-none` | `0` | Sharp corners |
+| `--zp-radius-sm` | `2px` | Small elements (badges) |
+| `--zp-radius-md` | `4px` | Default (inputs, badges) |
+| `--zp-radius-lg` | `8px` | Cards, dialogs |
+| `--zp-radius-xl` | `12px` | Large surfaces |
+| `--zp-radius-2xl` | `16px` | Extra-large surfaces |
+| `--zp-radius-full` | `9999px` | Fully round |
+| `--zp-radius-pill` | `9999px` | Alias — pill-shaped buttons and badges |
+| `--zp-radius-card` | `8px` | Alias — standard Card / panel surface |
+
+---
+
+#### Shadows (`--zp-shadow-*`)
 
 | Custom property | Purpose |
 |-----------------|---------|
-| `--zp-color-border` | Default border |
-| `--zp-color-border-subtle` | Subtle / muted border |
-| `--zp-color-border-strong` | Emphasized border |
-| `--zp-color-border-inverse` | White border on dark surfaces |
-| `--zp-color-border-focus` | Focus indicator border |
+| `--zp-shadow-none` | No shadow (flat) |
+| `--zp-shadow-xs` | Subtle depth (rows, list items) |
+| `--zp-shadow-sm` | Card surface |
+| `--zp-shadow-md` | Dropdown, Popover |
+| `--zp-shadow-lg` | Dialog, Drawer |
+| `--zp-shadow-xl` | Floating / full-screen panels |
+| `--zp-shadow-2xl` | Deep overlays |
 
-#### Overlay / z-index / elevation tokens
+#### Elevation scale (`--zp-elevation-*`)
+
+The elevation scale maps numeric levels to shadow tokens:
+
+| Custom property | Shadow token | Description |
+|-----------------|--------------|-------------|
+| `--zp-elevation-0` | `shadow.none` | No shadow |
+| `--zp-elevation-1` | `shadow.xs` | Extra-small shadow |
+| `--zp-elevation-2` | `shadow.sm` | Small shadow |
+| `--zp-elevation-3` | `shadow.md` | Medium shadow |
+| `--zp-elevation-4` | `shadow.lg` | Large shadow |
+| `--zp-elevation-5` | `shadow.xl` | Extra-large shadow |
+
+---
+
+#### Border widths (`--zp-border-width-*`)
+
+| Custom property | Value | Usage |
+|-----------------|-------|-------|
+| `--zp-border-width-0` | `0` | No border |
+| `--zp-border-width-1` | `1px` | Default border |
+| `--zp-border-width-2` | `2px` | Focused / active border |
+| `--zp-border-width-4` | `4px` | Accent / left-border style |
+
+---
+
+#### Duration (`--zp-duration-*`)
+
+| Custom property | Value | Usage |
+|-----------------|-------|-------|
+| `--zp-duration-instant` | `0ms` | No transition |
+| `--zp-duration-fast` | `100ms` | Micro-interactions (hover) |
+| `--zp-duration-normal` | `200ms` | Default transitions |
+| `--zp-duration-slow` | `300ms` | Expanded panels |
+| `--zp-duration-slower` | `500ms` | Large surface transitions |
+| `--zp-duration-shimmer` | `1500ms` | Skeleton shimmer loop |
+| `--zp-duration-spin` | `600ms` | Spinner loop |
+
+#### Easing (`--zp-easing-*`)
+
+| Custom property | Curve | Usage |
+|-----------------|-------|-------|
+| `--zp-easing-linear` | `linear` | Progress bars, opacity |
+| `--zp-easing-standard` | `cubic-bezier(0.4, 0, 0.2, 1)` | Default transitions |
+| `--zp-easing-emphasized` | `cubic-bezier(0.2, 0, 0, 1)` | Emphasized motion |
+| `--zp-easing-decelerate` | `cubic-bezier(0, 0, 0.2, 1)` | Entrance animations |
+| `--zp-easing-accelerate` | `cubic-bezier(0.4, 0, 1, 1)` | Exit animations |
+| `--zp-easing-bounce` | `cubic-bezier(0.34, 1.56, 0.64, 1)` | Playful overshoot (popover open) |
+
+---
 
 #### Z-index scale (`--zp-z-*`)
 
@@ -649,35 +922,36 @@ Each state (`success`, `warning`, `danger`, `info`, `neutral`) exposes a *bg-sub
 | `--zp-z-toast` | `1700` | Toast notifications |
 | `--zp-z-tooltip` | `1800` | Tooltips |
 
-#### Elevation scale (`--zp-elevation-*`)
+---
 
-Each elevation level maps to a named shadow token:
+#### Breakpoints (`--zp-breakpoint-*`)
 
-| Custom property | Shadow token | Description |
-|-----------------|--------------|-------------|
-| `--zp-elevation-0` | `shadow.none` | No shadow |
-| `--zp-elevation-1` | `shadow.xs` | Extra-small shadow |
-| `--zp-elevation-2` | `shadow.sm` | Small shadow |
-| `--zp-elevation-3` | `shadow.md` | Medium shadow |
-| `--zp-elevation-4` | `shadow.lg` | Large shadow |
-| `--zp-elevation-5` | `shadow.xl` | Extra-large shadow |
-
-#### Radius aliases
+These tokens expose the min-width thresholds. They are static (mode-independent).
 
 | Custom property | Value | Usage |
 |-----------------|-------|-------|
-| `--zp-radius-pill` | `9999px` | Pill-shaped buttons and badges |
-| `--zp-radius-card` | `8px` | Card / panel surfaces |
+| `--zp-breakpoint-sm` | `640px` | Small devices |
+| `--zp-breakpoint-md` | `768px` | Tablets |
+| `--zp-breakpoint-lg` | `1024px` | Desktops |
+| `--zp-breakpoint-xl` | `1280px` | Large desktops |
+| `--zp-breakpoint-2xl` | `1536px` | Extra-large screens |
 
-#### Motion (`--zp-easing-*`)
+---
 
-| Custom property | Curve | Usage |
-|-----------------|-------|-------|
-| `--zp-easing-standard` | `cubic-bezier(0.4, 0, 0.2, 1)` | Default transitions |
-| `--zp-easing-emphasized` | `cubic-bezier(0.2, 0, 0, 1)` | Emphasized motion |
-| `--zp-easing-decelerate` | `cubic-bezier(0, 0, 0.2, 1)` | Entrance animations |
-| `--zp-easing-accelerate` | `cubic-bezier(0.4, 0, 1, 1)` | Exit animations |
-| `--zp-easing-bounce` | `cubic-bezier(0.34, 1.56, 0.64, 1)` | Playful overshoot (popover open) |
+#### Density (`--zp-density-*`)
+
+Density tokens reflect the active `density` setting (`compact` / `normal` / `spacious`) and update when `ThemeProvider`'s `density` prop changes.
+
+| Custom property | compact | normal | spacious | Purpose |
+|-----------------|---------|--------|----------|---------|
+| `--zp-density-scale` | `0.75` | `1` | `1.25` | Multiplier |
+| `--zp-density-padding-sm` | `0.375rem` | `0.5rem` | `0.75rem` | Small component padding |
+| `--zp-density-padding-md` | `0.5rem` | `0.75rem` | `1rem` | Medium component padding |
+| `--zp-density-padding-lg` | `0.625rem` | `1rem` | `1.25rem` | Large component padding |
+| `--zp-density-gap` | `0.25rem` | `0.5rem` | `0.75rem` | Gap between elements |
+| `--zp-density-min-height` | `2rem` | `2.5rem` | `3rem` | Touch target minimum height |
+
+---
 
 #### Typography presets
 
@@ -697,11 +971,90 @@ Semantic typography presets are available as `.zp-text-*` CSS utility classes.
 
 All classes reference `--zp-*` CSS custom properties, so they automatically adapt to the active theme.
 
+---
+
 #### Overlay backdrop (`--zp-overlay`)
 
 | Custom property | Light | Dark | High-contrast |
 |-----------------|-------|------|---------------|
 | `--zp-overlay` | `rgba(17, 24, 39, 0.5)` | `rgba(0, 0, 0, 0.6)` | `rgba(0, 0, 0, 0.75)` |
+
+> `--zp-color-overlay` is also emitted with the same value as an artifact of the generic semantic-color emission; prefer `--zp-overlay` as the canonical token.
+
+---
+
+### Tailwind v4 integration
+
+Map zenput's design tokens into Tailwind v4's `@theme` block so both systems share the same values and respond to theme changes simultaneously.
+
+```css
+/* app/globals.css */
+@import "tailwindcss";
+
+@theme {
+  /* Semantic colors */
+  --color-brand: var(--zp-color-brand);
+  --color-brand-hover: var(--zp-color-brand-hover);
+  --color-success: var(--zp-color-success);
+  --color-warning: var(--zp-color-warning);
+  --color-danger: var(--zp-color-danger);
+  --color-info: var(--zp-color-info);
+
+  /* Surfaces / backgrounds */
+  --color-surface: var(--zp-color-surface);
+  --color-surface-raised: var(--zp-color-surface-raised);
+  --color-background: var(--zp-color-background);
+
+  /* Text */
+  --color-text: var(--zp-color-text-primary);
+  --color-text-muted: var(--zp-color-text-secondary);
+
+  /* Typography */
+  --font-sans: var(--zp-font-family-sans);
+  --font-mono: var(--zp-font-family-mono);
+
+  /* Radius */
+  --radius-sm: var(--zp-radius-sm);
+  --radius-md: var(--zp-radius-md);
+  --radius-lg: var(--zp-radius-lg);
+  --radius-pill: var(--zp-radius-pill);
+
+  /* Spacing */
+  --spacing-1: var(--zp-space-1);
+  --spacing-2: var(--zp-space-2);
+  --spacing-4: var(--zp-space-4);
+  --spacing-8: var(--zp-space-8);
+
+  /* Shadows */
+  --shadow-sm: var(--zp-shadow-sm);
+  --shadow-md: var(--zp-shadow-md);
+  --shadow-lg: var(--zp-shadow-lg);
+}
+```
+
+Because `ThemeProvider` updates the `--zp-*` variables on its root element, Tailwind utility classes that reference these aliases respond to light/dark/high-contrast mode changes without any additional configuration.
+
+#### Overriding tokens with raw CSS
+
+You can also override any token with plain CSS — no React required:
+
+```css
+/* Brand rebrand without re-rendering */
+:root {
+  --zp-color-brand: #8b5cf6;
+  --zp-color-brand-hover: #7c3aed;
+  --zp-color-brand-active: #6d28d9;
+  --zp-color-focus-ring: #8b5cf6;
+}
+
+/* Per-section overrides */
+.my-promo-banner {
+  --zp-color-brand: #f59e0b;
+  --zp-color-brand-hover: #d97706;
+}
+```
+
+Scoped overrides work because CSS custom properties cascade normally — a value set on a parent element propagates to all its descendants, and the nearest ancestor wins.
 
 ## Props
 

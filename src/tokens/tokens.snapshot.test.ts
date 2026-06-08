@@ -2,6 +2,13 @@
  * Snapshot test for the full set of CSS custom properties emitted by
  * `buildCssVariables`.
  *
+ * **Published contract**: this file is the machine-readable enforcement of
+ * zenput's token-stability guarantee. All `--zp-*` CSS custom property names
+ * in these snapshots are considered stable within a major version. Any
+ * intentional addition, rename, or removal of a token requires updating the
+ * snapshot (`npx vitest run --update-snapshot`) and constitutes a documented
+ * change in the changelog.
+ *
  * This test guards against accidental removals or renames of tokens.
  * If you intentionally add or rename a token, update the snapshot by
  * running `npx vitest run --update-snapshot`.
