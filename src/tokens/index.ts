@@ -41,7 +41,15 @@ import { focusRingTokens } from './focusRing';
 
 export type ThemeMode = 'light' | 'dark' | 'highContrast';
 
-/** CSS custom-property prefix used for all emitted tokens. */
+/**
+ * CSS custom-property prefix used for all emitted tokens.
+ *
+ * **Stability contract**: all `--zp-*` token names are stable within a major
+ * version of zenput. Names will not be renamed or removed within the same
+ * major version. New tokens may be added in minor releases. The snapshot file
+ * `src/tokens/tokens.snapshot.test.ts` is the machine-readable enforcement of
+ * this guarantee.
+ */
 export const CSS_VAR_PREFIX = '--zp';
 
 export const semanticByMode: Record<ThemeMode, SemanticColors> = {
