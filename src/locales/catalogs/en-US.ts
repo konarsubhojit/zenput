@@ -15,6 +15,10 @@ export const enUS: MessageCatalog = {
 
   'fileInput.chooseFile': 'Choose file',
   'fileInput.dragAndDropHint': 'or drag and drop files here',
+  'fileInput.maxFilesExceeded': 'File limit: {max}',
+  'fileInput.moveFileUp': 'Move {name} up',
+  'fileInput.moveFileDown': 'Move {name} down',
+  'fileInput.removeFile': 'Remove {name}',
 
   'pagination.navAriaLabel': 'Pagination',
   'pagination.rowsPerPage': 'Rows per page:',

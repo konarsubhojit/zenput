@@ -155,7 +155,22 @@ function App() {
 
 ### FileInput
 ```tsx
-<FileInput label="Upload avatar" accept="image/*" />
+import { useState } from 'react';
+
+function Example() {
+  const [files, setFiles] = useState<File[]>([]);
+
+  return (
+    <FileInput
+      label="Upload gallery images"
+      accept="image/*"
+      multiple
+      maxFiles={5}
+      value={files}
+      onFilesChange={setFiles}
+    />
+  );
+}
 ```
 
 ### RangeInput

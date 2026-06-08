@@ -25,6 +25,14 @@ export type MessageCatalog = {
   // FileInput
   'fileInput.chooseFile': string;
   'fileInput.dragAndDropHint': string;
+  /** Template: "File limit: {max}" — var: max */
+  'fileInput.maxFilesExceeded': string;
+  /** Template: "Move {name} up" — var: name */
+  'fileInput.moveFileUp': string;
+  /** Template: "Move {name} down" — var: name */
+  'fileInput.moveFileDown': string;
+  /** Template: "Remove {name}" — var: name */
+  'fileInput.removeFile': string;
 
   // Pagination
   'pagination.navAriaLabel': string;

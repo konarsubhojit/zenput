@@ -16,6 +16,10 @@ export const heIL: MessageCatalog = {
   'fileInput.chooseFile': '\u05d1\u05d7\u05e8 \u05e7\u05d5\u05d1\u05e5',
   'fileInput.dragAndDropHint':
     '\u05d0\u05d5 \u05d2\u05e8\u05d5\u05e8 \u05d5\u05e9\u05d7\u05e8\u05e8 \u05e7\u05d1\u05e6\u05d9\u05dd \u05db\u05d0\u05df',
+  'fileInput.maxFilesExceeded': '\u05de\u05d5\u05ea\u05e8 \u05e2\u05d3 {max} \u05e7\u05d1\u05e6\u05d9\u05dd',
+  'fileInput.moveFileUp': '\u05d4\u05e2\u05d1\u05e8 \u05d0\u05ea {name} \u05dc\u05de\u05e2\u05dc\u05d4',
+  'fileInput.moveFileDown': '\u05d4\u05e2\u05d1\u05e8 \u05d0\u05ea {name} \u05dc\u05de\u05d8\u05d4',
+  'fileInput.removeFile': '\u05d4\u05e1\u05e8 \u05d0\u05ea {name}',
 
   'pagination.navAriaLabel': '\u05e0\u05d9\u05d5\u05d5\u05d8 \u05e2\u05de\u05d5\u05d3\u05d9\u05dd',
   'pagination.rowsPerPage': '\u05e9\u05d5\u05e8\u05d5\u05ea \u05dc\u05d3\u05e3:',

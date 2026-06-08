@@ -15,6 +15,10 @@ export const ptBR: MessageCatalog = {
 
   'fileInput.chooseFile': 'Escolher arquivo',
   'fileInput.dragAndDropHint': 'ou arraste e solte arquivos aqui',
+  'fileInput.maxFilesExceeded': 'M\u00e1ximo de {max} arquivos permitidos',
+  'fileInput.moveFileUp': 'Mover {name} para cima',
+  'fileInput.moveFileDown': 'Mover {name} para baixo',
+  'fileInput.removeFile': 'Remover {name}',
 
   'pagination.navAriaLabel': 'Pagina\u00e7\u00e3o',
   'pagination.rowsPerPage': 'Linhas por p\u00e1gina:',

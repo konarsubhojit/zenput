@@ -16,6 +16,10 @@ export const jaJP: MessageCatalog = {
   'fileInput.chooseFile': '\u30d5\u30a1\u30a4\u30eb\u3092\u9078\u629e',
   'fileInput.dragAndDropHint':
     '\u307e\u305f\u306f\u3053\u3053\u306b\u30d5\u30a1\u30a4\u30eb\u3092\u30c9\u30e9\u30c3\u30b0\uff06\u30c9\u30ed\u30c3\u30d7',
+  'fileInput.maxFilesExceeded': '{max}\u500b\u307e\u3067\u9078\u629e\u3067\u304d\u307e\u3059',
+  'fileInput.moveFileUp': '{name} \u3092\u4e0a\u3078\u79fb\u52d5',
+  'fileInput.moveFileDown': '{name} \u3092\u4e0b\u3078\u79fb\u52d5',
+  'fileInput.removeFile': '{name} \u3092\u524a\u9664',
 
   'pagination.navAriaLabel': '\u30da\u30fc\u30b8\u30cd\u30fc\u30b7\u30e7\u30f3',
   'pagination.rowsPerPage': '\u30da\u30fc\u30b8\u3042\u305f\u308a\u306e\u884c\u6570\uff1a',
