@@ -31,6 +31,12 @@ env:
   CI: 'true'
   FORCE_COLOR: '1'
 
+# Default to least-privilege token permissions for all jobs. Jobs that need
+# additional scopes (e.g. `publish` requires `id-token: write` for npm
+# provenance) override this block at the job level.
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: Lint & Format

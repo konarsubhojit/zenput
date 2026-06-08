@@ -618,21 +618,23 @@
   align-items: center;
   justify-content: center;
   padding: 6px 20px;
-  border: 1px solid var(--dt-primary-color);
+  border: 1px solid var(--dt-active-filter-color);
   border-radius: 4px;
-  background-color: transparent;
-  color: var(--dt-primary-color);
+  background-color: var(--dt-active-filter-color);
+  color: #ffffff;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
   transition:
     background-color 0.15s ease,
     color 0.15s ease,
+    border-color 0.15s ease,
     opacity 0.15s ease;
 }
 
 .loadMoreButton:hover:not(:disabled) {
   background-color: var(--dt-primary-color);
+  border-color: var(--dt-primary-color);
   color: #ffffff;
 }
 
