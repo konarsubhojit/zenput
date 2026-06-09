@@ -4,6 +4,14 @@ import typescript from '@rollup/plugin-typescript';
 import postcss from 'rollup-plugin-postcss';
 import dts from 'rollup-plugin-dts';
 import peerDepsExternal from 'rollup-plugin-peer-deps-external';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, resolve as resolvePath } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const rootDir = dirname(fileURLToPath(import.meta.url));
+const coreA11yBaselines = JSON.parse(
+  readFileSync(resolvePath(rootDir, 'a11y/core-components.json'), 'utf8')
+);
 
 /**
  * Rollup plugin that preserves `'use client'` and `'use server'` directives
@@ -37,6 +45,36 @@ function preserveDirectives() {
       const directive = directiveMatch ? `'use server'` : `'use client'`;
 
       return { code: `${directive};\n${stripped}`, map: null };
+    },
+  };
+}
+
+function emitA11yBaselines(baselines) {
+  return {
+    name: 'emit-a11y-baselines',
+    writeBundle() {
+      const outDir = resolvePath(rootDir, 'dist/a11y');
+      mkdirSync(outDir, { recursive: true });
+
+      writeFileSync(
+        resolvePath(outDir, 'index.json'),
+        JSON.stringify(
+          {
+            version: 1,
+            source: 'vitest-axe default-render fixtures',
+            components: baselines.map(({ component, slug }) => ({
+              component,
+              path: `./${slug}.json`,
+            })),
+          },
+          null,
+          2
+        )
+      );
+
+      for (const baseline of baselines) {
+        writeFileSync(resolvePath(outDir, `${baseline.slug}.json`), JSON.stringify(baseline, null, 2));
+      }
     },
   };
 }
@@ -79,7 +117,11 @@ export default [
   {
     input: 'src/index.ts',
     output: { file: 'dist/cjs/index.js', format: 'cjs', sourcemap: true, banner: clientBanner },
-    plugins: [...basePlugins({ declaration: true, declarationDir: 'dist/cjs/types' }), preserveDirectives()],
+    plugins: [
+      ...basePlugins({ declaration: true, declarationDir: 'dist/cjs/types' }),
+      preserveDirectives(),
+      emitA11yBaselines(coreA11yBaselines),
+    ],
     external,
   },
   // Core entry – ESM
