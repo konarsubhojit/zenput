@@ -1,0 +1,236 @@
+[
+  {
+    "component": "TextInput",
+    "slug": "text-input",
+    "fixture": {
+      "tool": "vitest-axe",
+      "source": "src/components/TextInput/TextInput.test.tsx",
+      "testName": "has no detectable axe violations in default render"
+    },
+    "guarantee": {
+      "expectedViolations": [],
+      "ruleset": "axe-core default"
+    }
+  },
+  {
+    "component": "TextArea",
+    "slug": "text-area",
+    "fixture": {
+      "tool": "vitest-axe",
+      "source": "src/components/TextArea/TextArea.test.tsx",
+      "testName": "has no detectable axe violations in default render"
+    },
+    "guarantee": {
+      "expectedViolations": [],
+      "ruleset": "axe-core default"
+    }
+  },
+  {
+    "component": "NumberInput",
+    "slug": "number-input",
+    "fixture": {
+      "tool": "vitest-axe",
+      "source": "src/components/NumberInput/NumberInput.test.tsx",
+      "testName": "has no detectable axe violations in default render"
+    },
+    "guarantee": {
+      "expectedViolations": [],
+      "ruleset": "axe-core default"
+    }
+  },
+  {
+    "component": "PasswordInput",
+    "slug": "password-input",
+    "fixture": {
+      "tool": "vitest-axe",
+      "source": "src/components/PasswordInput/PasswordInput.test.tsx",
+      "testName": "has no detectable axe violations in default render"
+    },
+    "guarantee": {
+      "expectedViolations": [],
+      "ruleset": "axe-core default"
+    }
+  },
+  {
+    "component": "SelectInput",
+    "slug": "select-input",
+    "fixture": {
+      "tool": "vitest-axe",
+      "source": "src/components/SelectInput/SelectInput.test.tsx",
+      "testName": "has no detectable axe violations in default render"
+    },
+    "guarantee": {
+      "expectedViolations": [],
+      "ruleset": "axe-core default"
+    }
+  },
+  {
+    "component": "Checkbox",
+    "slug": "checkbox",
+    "fixture": {
+      "tool": "vitest-axe",
+      "source": "src/components/Checkbox/Checkbox.test.tsx",
+      "testName": "has no detectable axe violations in default render"
+    },
+    "guarantee": {
+      "expectedViolations": [],
+      "ruleset": "axe-core default"
+    }
+  },
+  {
+    "component": "CheckboxGroup",
+    "slug": "checkbox-group",
+    "fixture": {
+      "tool": "vitest-axe",
+      "source": "src/components/CheckboxGroup/CheckboxGroup.test.tsx",
+      "testName": "has no detectable axe violations in default render"
+    },
+    "guarantee": {
+      "expectedViolations": [],
+      "ruleset": "axe-core default"
+    }
+  },
+  {
+    "component": "RadioGroup",
+    "slug": "radio-group",
+    "fixture": {
+      "tool": "vitest-axe",
+      "source": "src/components/RadioGroup/RadioGroup.test.tsx",
+      "testName": "has no detectable axe violations in default render"
+    },
+    "guarantee": {
+      "expectedViolations": [],
+      "ruleset": "axe-core default"
+    }
+  },
+  {
+    "component": "Toggle",
+    "slug": "toggle",
+    "fixture": {
+      "tool": "vitest-axe",
+      "source": "src/components/Toggle/Toggle.test.tsx",
+      "testName": "has no detectable axe violations in default render"
+    },
+    "guarantee": {
+      "expectedViolations": [],
+      "ruleset": "axe-core default"
+    }
+  },
+  {
+    "component": "DateInput",
+    "slug": "date-input",
+    "fixture": {
+      "tool": "vitest-axe",
+      "source": "src/components/DateInput/DateInput.test.tsx",
+      "testName": "has no detectable axe violations in default render"
+    },
+    "guarantee": {
+      "expectedViolations": [],
+      "ruleset": "axe-core default"
+    }
+  },
+  {
+    "component": "TimeInput",
+    "slug": "time-input",
+    "fixture": {
+      "tool": "vitest-axe",
+      "source": "src/components/TimeInput/TimeInput.test.tsx",
+      "testName": "has no detectable axe violations in default render"
+    },
+    "guarantee": {
+      "expectedViolations": [],
+      "ruleset": "axe-core default"
+    }
+  },
+  {
+    "component": "FileInput",
+    "slug": "file-input",
+    "fixture": {
+      "tool": "vitest-axe",
+      "source": "src/components/FileInput/FileInput.test.tsx",
+      "testName": "has no detectable axe violations in default render"
+    },
+    "guarantee": {
+      "expectedViolations": [],
+      "ruleset": "axe-core default"
+    }
+  },
+  {
+    "component": "RangeInput",
+    "slug": "range-input",
+    "fixture": {
+      "tool": "vitest-axe",
+      "source": "src/components/RangeInput/RangeInput.test.tsx",
+      "testName": "has no detectable axe violations in default render"
+    },
+    "guarantee": {
+      "expectedViolations": [],
+      "ruleset": "axe-core default"
+    }
+  },
+  {
+    "component": "ColorInput",
+    "slug": "color-input",
+    "fixture": {
+      "tool": "vitest-axe",
+      "source": "src/components/ColorInput/ColorInput.test.tsx",
+      "testName": "has no detectable axe violations in default render"
+    },
+    "guarantee": {
+      "expectedViolations": [],
+      "ruleset": "axe-core default"
+    }
+  },
+  {
+    "component": "SearchInput",
+    "slug": "search-input",
+    "fixture": {
+      "tool": "vitest-axe",
+      "source": "src/components/SearchInput/SearchInput.test.tsx",
+      "testName": "has no detectable axe violations in default render"
+    },
+    "guarantee": {
+      "expectedViolations": [],
+      "ruleset": "axe-core default"
+    }
+  },
+  {
+    "component": "PhoneInput",
+    "slug": "phone-input",
+    "fixture": {
+      "tool": "vitest-axe",
+      "source": "src/components/PhoneInput/PhoneInput.test.tsx",
+      "testName": "has no detectable axe violations in default render"
+    },
+    "guarantee": {
+      "expectedViolations": [],
+      "ruleset": "axe-core default"
+    }
+  },
+  {
+    "component": "OTPInput",
+    "slug": "otp-input",
+    "fixture": {
+      "tool": "vitest-axe",
+      "source": "src/components/OTPInput/OTPInput.test.tsx",
+      "testName": "has no detectable axe violations in default render"
+    },
+    "guarantee": {
+      "expectedViolations": [],
+      "ruleset": "axe-core default"
+    }
+  },
+  {
+    "component": "AutoComplete",
+    "slug": "auto-complete",
+    "fixture": {
+      "tool": "vitest-axe",
+      "source": "src/components/AutoComplete/AutoComplete.test.tsx",
+      "testName": "has no detectable axe violations in default render"
+    },
+    "guarantee": {
+      "expectedViolations": [],
+      "ruleset": "axe-core default"
+    }
+  }
+]

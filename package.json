@@ -32,7 +32,9 @@
       "import": "./dist/esm/locales/index.js",
       "require": "./dist/cjs/locales/index.js",
       "types": "./dist/locales/index.d.ts"
-    }
+    },
+    "./a11y": "./dist/a11y/index.json",
+    "./a11y/*": "./dist/a11y/*.json"
   },
   "files": [
     "dist"

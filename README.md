@@ -1084,6 +1084,39 @@ Scoped overrides work because CSS custom properties cascade normally — a value
 Zenput ships a set of first-class accessibility primitives in `src/components/a11y/`. All are
 exported from the top-level `zenput` package entry point.
 
+### Published a11y baselines (for consumer CI)
+
+Zenput also publishes per-component accessibility snapshots under `zenput/a11y/*` (JSON files).
+These are generated during `npm run build` from the default `vitest-axe` fixtures for the 18 core
+input components (TextInput, TextArea, NumberInput, PasswordInput, SelectInput, Checkbox,
+CheckboxGroup, RadioGroup, Toggle, DateInput, TimeInput, FileInput, RangeInput, ColorInput,
+SearchInput, PhoneInput, OTPInput, AutoComplete).
+
+Each baseline artifact records:
+- the fixture source test (`src/components/**/**.test.tsx`)
+- the rule set (`axe-core default`)
+- the expected violation IDs for that fixture (currently an empty array)
+
+What Zenput guarantees:
+- those exact default fixtures continue to pass with no axe violations
+- artifact paths and names remain stable (`zenput/a11y/<component>.json`)
+
+What consumers still own:
+- checking your composed screens/pages and custom theming
+- validating interactive flows not covered by the default fixture
+- deciding which axe rules/tags to enforce for your product requirements
+
+Example CI assertion in a consuming app:
+
+```ts
+import baseline from 'zenput/a11y/text-input';
+import { axe } from 'vitest-axe';
+
+const results = await axe(container);
+const actualViolationIds = results.violations.map((v) => v.id).sort();
+expect(actualViolationIds).toEqual(baseline.guarantee.expectedViolations.slice().sort());
+```
+
 ### `<VisuallyHidden>`
 
 Visually hides content while keeping it accessible to screen readers (clip-path technique).
