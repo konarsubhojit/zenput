@@ -9,6 +9,7 @@ import { dirname, resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const rootDir = dirname(fileURLToPath(import.meta.url));
+const JSON_INDENT = 2;
 const coreA11yBaselines = JSON.parse(
   readFileSync(resolvePath(rootDir, 'a11y/core-components.json'), 'utf8')
 );
@@ -68,12 +69,15 @@ function emitA11yBaselines(baselines) {
             })),
           },
           null,
-          2
+          JSON_INDENT
         )
       );
 
       for (const baseline of baselines) {
-        writeFileSync(resolvePath(outDir, `${baseline.slug}.json`), JSON.stringify(baseline, null, 2));
+        writeFileSync(
+          resolvePath(outDir, `${baseline.slug}.json`),
+          JSON.stringify(baseline, null, JSON_INDENT)
+        );
       }
     },
   };

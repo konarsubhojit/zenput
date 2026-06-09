@@ -1114,7 +1114,7 @@ import { axe } from 'vitest-axe';
 
 const results = await axe(container);
 const actualViolationIds = results.violations.map((v) => v.id).sort();
-expect(actualViolationIds).toEqual([...baseline.guarantee.expectedViolations].sort());
+expect(actualViolationIds).toEqual(baseline.guarantee.expectedViolations.slice().sort());
 ```
 
 ### `<VisuallyHidden>`

@@ -5,13 +5,16 @@ import { fileURLToPath } from 'node:url';
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const baselinesPath = resolve(repoRoot, 'a11y/core-components.json');
 const packageJsonPath = resolve(repoRoot, 'package.json');
+const EXPECTED_CORE_COMPONENT_COUNT = 18;
 
 describe('published a11y baselines', () => {
   it('defines baseline fixtures for all core input components', () => {
     const baselines = JSON.parse(readFileSync(baselinesPath, 'utf8'));
 
-    expect(baselines).toHaveLength(18);
-    expect(new Set(baselines.map((baseline: { slug: string }) => baseline.slug)).size).toBe(18);
+    expect(baselines).toHaveLength(EXPECTED_CORE_COMPONENT_COUNT);
+    expect(new Set(baselines.map((baseline: { slug: string }) => baseline.slug)).size).toBe(
+      EXPECTED_CORE_COMPONENT_COUNT
+    );
 
     for (const baseline of baselines) {
       expect(baseline.guarantee.expectedViolations).toEqual([]);
