@@ -8,6 +8,13 @@ updates:
     groups:
       dev-deps:
         dependency-type: "development"
+    ignore:
+      - dependency-name: "@babel/preset-env"
+        versions: ["8.x"]
+      - dependency-name: "@babel/preset-react"
+        versions: ["8.x"]
+      - dependency-name: "@babel/preset-typescript"
+        versions: ["8.x"]
 
   - package-ecosystem: "npm"
     directory: "/demo"
