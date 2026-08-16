@@ -163,10 +163,18 @@ html[data-zp-theme='highContrast'] body {
   text-decoration: none;
 }
 
+/* `surface-2` is the first depth step that is guaranteed to differ from the
+ * canvas background in the light palette, so the hover state stays visible. */
 .app-nav a:hover,
 .app-nav a:focus-visible {
-  background: var(--zp-color-surface, #f1f5f9);
-  outline: none;
+  background: var(--zp-color-surface-2, #f1f5f9);
+}
+
+/* High-contrast palettes collapse every surface to black, so keyboard focus
+ * relies on an explicit ring rather than the hover background. */
+.app-nav a:focus-visible {
+  outline: 2px solid var(--zp-color-focus-ring, #2563eb);
+  outline-offset: 2px;
 }
 
 .app-main {
