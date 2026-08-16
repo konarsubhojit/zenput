@@ -1,6 +1,8 @@
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
+import { getColorModeScript } from '../src/context/getColorModeScript';
+import { COLOR_MODE_STORAGE_KEY } from './src/colorMode';
 
 // The demo imports Zenput directly from the repo source via an alias.
 // This means the demo always renders the current in-repo version of the
@@ -13,8 +15,35 @@ import path from 'node:path';
 // the demo app itself, preventing the "failed to resolve import" hard error.
 const DEDUPED_PEER_DEPS = ['react', 'react-dom', 'react/jsx-runtime'];
 
+/**
+ * Injects Zenput's anti-flash color-mode script into `<head>` so the correct
+ * color scheme is applied before first paint. Doubles as a live demonstration
+ * of the library's `getColorModeScript` export.
+ */
+function colorModeScriptPlugin(): Plugin {
+  return {
+    name: 'zenput-demo-color-mode-script',
+    transformIndexHtml() {
+      return [
+        {
+          tag: 'script',
+          injectTo: 'head-prepend',
+          children: getColorModeScript({
+            storageKey: COLOR_MODE_STORAGE_KEY,
+            defaultMode: 'system',
+            detectHighContrast: true,
+          }),
+        },
+      ];
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react()],
+  // The gallery is served from the root of its own origin (Cloudflare Pages),
+  // so assets are referenced from '/'.
+  base: '/',
+  plugins: [react(), colorModeScriptPlugin()],
   resolve: {
     alias: {
       zenput: path.resolve(__dirname, '../src'),

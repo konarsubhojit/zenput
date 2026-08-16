@@ -4,6 +4,10 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "types": ["node"],
+    // vite.config.ts imports `getColorModeScript` from ../src, whose module
+    // graph includes .tsx files.
+    "jsx": "react-jsx",
+    "skipLibCheck": true,
     "noEmit": true
   },
   "files": ["vite.config.ts"]

@@ -6,6 +6,11 @@
 [![npm](https://img.shields.io/npm/v/zenput.svg)](https://www.npmjs.com/package/zenput)
 [![bundle size](https://img.shields.io/bundlephobia/minzip/zenput)](https://bundlephobia.com/package/zenput)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![Live demo](https://img.shields.io/badge/live%20demo-component%20gallery-6366f1)](https://zenput-demo.pages.dev)
+
+**[▶ Live component gallery](https://zenput-demo.pages.dev)** — every component, every
+scenario, with switchable theme presets (share a preset with `?theme=dark`, or deep-link a
+component with `#text-input`).
 
 A production-ready, accessible React TypeScript input components library with 18 fully-featured components.
 
