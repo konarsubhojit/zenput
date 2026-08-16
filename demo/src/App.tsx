@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ThemeProvider, extendTheme, type Theme, type ColorMode } from 'zenput';
+import { COLOR_MODE_STORAGE_KEY } from './colorMode';
 import {
   TypographySection,
   LayoutSection,
@@ -251,9 +252,87 @@ const NAV_GROUPS: Array<{ title: string; items: Array<{ id: string; name: string
   },
 ];
 
+type ThemeName = keyof typeof BASE_THEMES;
+
+const THEME_QUERY_PARAM = 'theme';
+const DEFAULT_THEME: ThemeName = 'Default';
+
+/** `High Contrast` → `high-contrast` */
+const toThemeSlug = (name: string): string => name.toLowerCase().replace(/\s+/g, '-');
+
+const THEME_BY_SLUG: Record<string, ThemeName> = Object.fromEntries(
+  Object.keys(BASE_THEMES).map((name) => [toThemeSlug(name), name as ThemeName])
+);
+
+/** Reads `?theme=dark` so a specific preset can be shared by link. */
+function readThemeFromLocation(): ThemeName {
+  const slug = new URLSearchParams(window.location.search).get(THEME_QUERY_PARAM);
+  return (slug && THEME_BY_SLUG[slug.toLowerCase()]) || DEFAULT_THEME;
+}
+
+/** Keeps `?theme=` in sync without adding a history entry per change. */
+function writeThemeToLocation(name: ThemeName): void {
+  const url = new URL(window.location.href);
+  if (name === DEFAULT_THEME) {
+    url.searchParams.delete(THEME_QUERY_PARAM);
+  } else {
+    url.searchParams.set(THEME_QUERY_PARAM, toThemeSlug(name));
+  }
+  window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+}
+
+/**
+ * Persists the preset's color mode under the same `storageKey` the anti-flash
+ * `getColorModeScript` (injected in index.html by vite.config.ts) reads, so a
+ * reload paints the correct color scheme immediately.
+ */
+function persistColorMode(name: ThemeName): void {
+  const mode = BASE_THEMES[name].mode ?? 'light';
+  try {
+    window.localStorage.setItem(COLOR_MODE_STORAGE_KEY, mode);
+  } catch {
+    /* storage may be unavailable (private mode) — the gallery still works */
+  }
+  // For `system` the inline script already resolved the concrete mode against
+  // the OS preference, so leave its attribute untouched.
+  if (mode !== 'system') {
+    document.documentElement.setAttribute('data-zp-theme', mode);
+  }
+}
+
+/**
+ * Deep links such as `/#text-input` are requested before the sections exist in
+ * the DOM, so re-apply the hash once after the gallery has mounted.
+ */
+function useScrollToHashOnMount(): void {
+  useEffect(() => {
+    const id = window.location.hash.slice(1);
+    if (!id) return;
+    // Wait a frame so the freshly rendered sections have been laid out.
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById(id)?.scrollIntoView();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+}
+
 export function App() {
-  const [themeName, setThemeName] = useState<keyof typeof BASE_THEMES>('Default');
+  const [themeName, setThemeName] = useState<ThemeName>(readThemeFromLocation);
   const [density, setDensity] = useState<DensityScale>('normal');
+
+  useScrollToHashOnMount();
+
+  useEffect(() => {
+    writeThemeToLocation(themeName);
+    persistColorMode(themeName);
+  }, [themeName]);
+
+  // Keep the gallery in sync when the visitor uses back/forward navigation.
+  useEffect(() => {
+    const onPopState = () => setThemeName(readThemeFromLocation());
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
 
   const baseTheme = BASE_THEMES[themeName];
   const theme: Theme = density === 'normal' ? baseTheme : extendTheme(baseTheme, { density });
@@ -264,10 +343,14 @@ export function App() {
         className="app-shell"
         style={{
           // Ensure the demo shell itself reacts to the active theme's surface/text
-          background: baseTheme.bgColor ?? 'var(--zp-color-surface-canvas)',
-          color: baseTheme.textColor ?? 'var(--zp-color-text-default)',
+          background: baseTheme.bgColor ?? 'var(--zp-color-background)',
+          color: baseTheme.textColor ?? 'var(--zp-color-text-primary)',
         }}
       >
+        <a className="skip-link" href="#gallery">
+          Skip to gallery
+        </a>
+
         <header className="app-header">
           <div className="app-brand">
             <span className="app-brand-name">Zenput</span>
@@ -278,7 +361,7 @@ export function App() {
               Theme
               <select
                 value={themeName}
-                onChange={(e) => setThemeName(e.target.value as keyof typeof BASE_THEMES)}
+                onChange={(e) => setThemeName(e.target.value as ThemeName)}
               >
                 {Object.keys(BASE_THEMES).map((name) => (
                   <option key={name} value={name}>
@@ -317,7 +400,7 @@ export function App() {
             ))}
           </nav>
 
-          <main className="app-main">
+          <main className="app-main" id="gallery" tabIndex={-1}>
             <div className="intro">
               <h1>Zenput component gallery</h1>
               <p>

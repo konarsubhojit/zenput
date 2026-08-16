@@ -1,0 +1,3 @@
+# Cloudflare Pages SPA fallback — serve index.html (with a 200) for any path so
+# deep links such as /#text-input keep working after a client-side navigation.
+/*    /index.html   200
