@@ -1,54 +1,5 @@
 # ═════════════════════════════════════════════════════════════════════════════
-# Zenput — Azure Pipeline (single self-hosted agent, ARM64-optimized)
-#
-# This pipeline targets a single self-hosted Linux agent (Oracle Cloud Ampere
-# A1, 4 vCPU ARM64 / 24 GB RAM). All stages run on the same machine, which
-# means:
-#
-#   - Node, npm cache and Playwright browsers only need to be set up once.
-#   - Workspace state (node_modules, dist/, storybook-static/) is reused
-#     between steps — no artifact hand-off needed inside a single job.
-#
-# CPU-budget rule: at most 2 CPU-heavy Node processes run in parallel at any
-# time (1 vCPU reserved for the OS, 1 for background I/O).
-#
-# Parallelised steps (2-way):
-#   lint + type-check  run concurrently  (disjoint outputs, low I/O overlap)
-#
-# The pipeline still mirrors the GitHub Actions workflow
-# (.github/workflows/ci.yml) — both systems invoke the same npm scripts as a
-# single source of truth:
-#
-#     npm run lint  ╮ (parallel)
-#     npm run type-check  ╯  →  npm run test:ci  →  npm run build
-#
-# ── Agent requirements ──────────────────────────────────────────────────────
-#   Pool:          "Default" (self-hosted). Adjust `pool.name` below if yours
-#                  is named differently.
-#   OS:            Linux ARM64 / aarch64 (Oracle Cloud Ampere A1).
-#   Pre-installed: git, nvm, npm 10+. Playwright Chromium browsers
-#                  are in `/home/ubuntu/.cache/ms-playwright`. Vercel CLI and
-#                  http-server are installed globally on the agent.
-#                  Node is selected via `nvm install 24 && nvm use 24` in the
-#                  pipeline (do not rely on the agent's default Node — vitest 4
-#                  / rolldown require Node ^20.19.0 || >=22.12.0).
-#
-# ── Pipeline variables / service connections ────────────────────────────────
-#   SonarCloud service connection : "SonarCloud"
-#   SONAR_TOKEN   : optional — Sonar steps are gated behind
-#                   ne(variables['SONAR_TOKEN'], '')
-#   CODECOV_TOKEN : optional
-#   NPM_TOKEN     : required only by the "Publish" stage
-#   VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID : required by the
-#                   "DeployDemoToVercel" stage (demo site)
-#
-# ── Running the same steps locally ──────────────────────────────────────────
-#   npm ci
-#   npm run lint
-#   npm run type-check
-#   npm run test:ci
-#   npm run build
-#   npm run build-storybook
+# Zenput — Azure Pipeline (single self-hosted agent)
 # ═════════════════════════════════════════════════════════════════════════════
 
 trigger:
@@ -57,12 +8,8 @@ trigger:
       - master
       - release/*
 
-# Do not trigger the pipeline for pull requests — CI coverage for PRs is
-# handled by the GitHub Actions workflow (.github/workflows/ci.yml).
 pr: none
 
-# Weekly "clean" run — guards against stale state on a long-lived self-hosted
-# agent. Regular CI runs skip the nuke (see `workspace.clean` below).
 schedules:
   - cron: '0 6 * * 1'        # Mondays 06:00 UTC
     displayName: Weekly clean rebuild
@@ -72,9 +19,9 @@ schedules:
 
 variables:
   - name: npm_config_cache
-    value: /home/ubuntu/.npm
+    value: /home/actions-runner/.npm
   - name: PLAYWRIGHT_BROWSERS_PATH
-    value: /home/ubuntu/.cache/ms-playwright
+    value: /home/actions-runner/.cache/ms-playwright
   - name: CI
     value: 'true'
   - name: FORCE_COLOR
@@ -83,51 +30,47 @@ variables:
     value: 'production'
 
 pool:
-  name: Default              # self-hosted pool — rename if your pool differs
+  name: Default              # self-hosted pool
   demands:
-    - Agent.OS -equals Linux # adjust for Windows/macOS self-hosted agents
+    - Agent.OS -equals Linux
 
 stages:
   - stage: CI
     displayName: 'CI (lint+typecheck ∥ → test → build → a11y)'
     jobs:
-      # All CI runs in a single job on the single self-hosted agent.
-      # Lint and type-check run concurrently (2-way); remaining steps
-      # execute in order, reusing node_modules and build outputs.
       - job: CI
         displayName: 'Lint+type-check (parallel), test, build, a11y'
         timeoutInMinutes: 60
         workspace:
-          clean: outputs       # only wipe build outputs between runs
+          clean: outputs
         steps:
           - checkout: self
-            clean: false       # keep node_modules/checkout between runs for speed
+            clean: false
             fetchDepth: 1
 
-          # ── Node toolchain (pin to a vitest 4 / rolldown-compatible version) ─
-          # Self-hosted agent uses nvm; install/select Node 24 and prepend it to
-          # PATH so all subsequent script steps in this job use it.
+          # ── Node toolchain selection ──────────────────────────────────
           - script: |
               set -e
               export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
-              # shellcheck disable=SC1091
-              . "$NVM_DIR/nvm.sh"
-              nvm install 24
-              nvm use 24
-              NODE_BIN_DIR="$(dirname "$(nvm which 24)")"
-              echo "##vso[task.prependpath]$NODE_BIN_DIR"
-              echo "Selected Node: $(node -v) at $NODE_BIN_DIR"
-            displayName: 'Use Node 24.x (via nvm)'
+              if [ -s "$NVM_DIR/nvm.sh" ]; then
+                . "$NVM_DIR/nvm.sh"
+                nvm install 24 || true
+                nvm use 24 || true
+                NODE_BIN_DIR="$(dirname "$(nvm which 24)")"
+                echo "##vso[task.prependpath]$NODE_BIN_DIR"
+              fi
+              echo "Selected Node: $(node -v)"
+            displayName: 'Use Node 24.x'
 
           # ── Toolchain verification ──────────────────────────────────────
           - script: |
               set -e
               echo "Node: $(node -v)"
               echo "npm:  $(npm -v)"
-              echo "npm cache: $(npm_config_cache)"
             displayName: 'Verify toolchain'
 
-          - script: npm ci --prefer-offline --no-audit --fund=false
+          # ── Install dependencies with legacy-peer-deps ─────────────────
+          - script: npm ci --legacy-peer-deps --prefer-offline --no-audit --fund=false
             displayName: 'Install dependencies (npm ci)'
 
           # ── Lint & type-check (parallel, 2-way) ────────────────────────
@@ -189,7 +132,7 @@ stages:
           - script: npm run build-storybook
             displayName: 'Build Storybook'
 
-          # ── Demo parity check (all exported components must have a section) ─
+          # ── Demo parity check ──────────────────────────────────────────
           - script: node demo/scripts/check-coverage.mjs
             displayName: 'Demo coverage parity check'
 
@@ -208,16 +151,15 @@ stages:
           # ── Storybook a11y (axe via @storybook/test-runner) ─────────────
           - script: |
               set -e
-              echo "Using PLAYWRIGHT_BROWSERS_PATH=$PLAYWRIGHT_BROWSERS_PATH"
+              mkdir -p "$PLAYWRIGHT_BROWSERS_PATH"
               CHROMIUM_DIR="$(find "$PLAYWRIGHT_BROWSERS_PATH" -maxdepth 1 \( -name 'chromium-*' -o -name 'chromium_headless_shell-*' \) -type d 2>/dev/null | head -1)"
               if [ -z "$CHROMIUM_DIR" ]; then
                 echo "Playwright Chromium not found. Installing..."
-                # Omit --with-deps: system dependencies are pre-installed on this agent.
-                npx playwright install chromium
+                npx playwright install --with-deps chromium
               else
                 echo "Playwright Chromium already installed at $CHROMIUM_DIR"
               fi
-            displayName: 'Ensure Playwright Chromium exists (fallback install)'
+            displayName: 'Ensure Playwright Chromium exists'
 
           - script: |
               set -e
@@ -229,9 +171,7 @@ stages:
             displayName: 'Storybook a11y (axe)'
 
   # ───────────────────────────────────────────────────────────────────────────
-  # Deploy the demo site (demo/) to Vercel.
-  # Runs only on master pushes (never on PRs) and only after CI passes.
-  # Requires VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID pipeline secrets.
+  # Deploy demo to Vercel
   # ───────────────────────────────────────────────────────────────────────────
   - stage: DeployDemoToVercel
     displayName: 'Deploy demo to Vercel'
@@ -244,40 +184,37 @@ stages:
           - checkout: self
             clean: false
 
-          # ── Node toolchain (Vite 8 requires Node ^20.19.0 || >=22.12.0) ──
           - script: |
               set -e
               export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
-              # shellcheck disable=SC1091
-              . "$NVM_DIR/nvm.sh"
-              nvm install 24
-              nvm use 24
-              NODE_BIN_DIR="$(dirname "$(nvm which 24)")"
-              echo "##vso[task.prependpath]$NODE_BIN_DIR"
-              echo "Selected Node: $(node -v) at $NODE_BIN_DIR"
-            displayName: 'Use Node 24.x (via nvm)'
+              if [ -s "$NVM_DIR/nvm.sh" ]; then
+                . "$NVM_DIR/nvm.sh"
+                nvm use 24 || true
+                NODE_BIN_DIR="$(dirname "$(nvm which 24)")"
+                echo "##vso[task.prependpath]$NODE_BIN_DIR"
+              fi
+            displayName: 'Use Node 24.x'
 
-          - script: vercel pull --yes --environment=$(VERCEL_ENV) --token=$(VERCEL_TOKEN)
+          - script: npx vercel pull --yes --environment=$(VERCEL_ENV) --token=$(VERCEL_TOKEN)
             displayName: 'Pull Vercel project settings'
             env:
               VERCEL_ORG_ID: $(VERCEL_ORG_ID)
               VERCEL_PROJECT_ID: $(VERCEL_PROJECT_ID)
 
-          - script: vercel build --prod --token=$(VERCEL_TOKEN)
+          - script: npx vercel build --prod --token=$(VERCEL_TOKEN)
             displayName: 'Build Vercel deployment'
             env:
               VERCEL_ORG_ID: $(VERCEL_ORG_ID)
               VERCEL_PROJECT_ID: $(VERCEL_PROJECT_ID)
 
-          - script: vercel deploy --prebuilt --prod --token=$(VERCEL_TOKEN)
+          - script: npx vercel deploy --prebuilt --prod --token=$(VERCEL_TOKEN)
             displayName: 'Deploy to Vercel'
             env:
               VERCEL_ORG_ID: $(VERCEL_ORG_ID)
               VERCEL_PROJECT_ID: $(VERCEL_PROJECT_ID)
 
   # ───────────────────────────────────────────────────────────────────────────
-  # Optional publish stage — retained from previous pipeline configuration.
-  # Runs only on pushes to release/** branches, and only after CI passes.
+  # Publish stage
   # ───────────────────────────────────────────────────────────────────────────
   - stage: Publish
     displayName: 'Publish to npm'
@@ -296,15 +233,14 @@ stages:
                 - script: |
                     set -e
                     export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
-                    # shellcheck disable=SC1091
-                    . "$NVM_DIR/nvm.sh"
-                    nvm install 24
-                    nvm use 24
-                    NODE_BIN_DIR="$(dirname "$(nvm which 24)")"
-                    echo "##vso[task.prependpath]$NODE_BIN_DIR"
-                    echo "Selected Node: $(node -v) at $NODE_BIN_DIR"
-                  displayName: 'Use Node 24.x (via nvm)'
-                - script: npm ci --prefer-offline --no-audit --fund=false
+                    if [ -s "$NVM_DIR/nvm.sh" ]; then
+                      . "$NVM_DIR/nvm.sh"
+                      nvm use 24 || true
+                      NODE_BIN_DIR="$(dirname "$(nvm which 24)")"
+                      echo "##vso[task.prependpath]$NODE_BIN_DIR"
+                    fi
+                  displayName: 'Use Node 24.x'
+                - script: npm ci --legacy-peer-deps --prefer-offline --no-audit --fund=false
                   displayName: 'npm ci'
                 - script: npm run build
                   displayName: 'Build'
