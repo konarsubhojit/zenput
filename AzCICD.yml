@@ -149,17 +149,18 @@ stages:
               artifact: 'storybook-static'
 
           # ── Storybook a11y (axe via @storybook/test-runner) ─────────────
+                    # ── Storybook a11y (axe via @storybook/test-runner) ─────────────
           - script: |
               set -e
-              mkdir -p "$PLAYWRIGHT_BROWSERS_PATH"
+              echo "Using PLAYWRIGHT_BROWSERS_PATH=$PLAYWRIGHT_BROWSERS_PATH"
               CHROMIUM_DIR="$(find "$PLAYWRIGHT_BROWSERS_PATH" -maxdepth 1 \( -name 'chromium-*' -o -name 'chromium_headless_shell-*' \) -type d 2>/dev/null | head -1)"
               if [ -z "$CHROMIUM_DIR" ]; then
-                echo "Playwright Chromium not found. Installing..."
-                npx playwright install --with-deps chromium
+                echo "Playwright Chromium not found in cache. Installing browser only..."
+                npx playwright install chromium
               else
-                echo "Playwright Chromium already installed at $CHROMIUM_DIR"
+                echo "Found pre-installed Playwright Chromium at $CHROMIUM_DIR"
               fi
-            displayName: 'Ensure Playwright Chromium exists'
+            displayName: 'Verify Playwright Chromium'
 
           - script: |
               set -e
