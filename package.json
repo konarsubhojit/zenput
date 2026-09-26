@@ -50,7 +50,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
-    "test:ci": "vitest run --coverage --reporter=default --reporter=junit",
+    "test:ci": "vitest run --coverage --reporter=default --reporter=junit --maxWorkers=2",
     "test:storybook": "test-storybook",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
