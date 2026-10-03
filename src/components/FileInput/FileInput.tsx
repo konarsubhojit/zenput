@@ -106,16 +106,6 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
       return key;
     }, []);
 
-    // Revoke the object-URL when it changes or the component unmounts.
-    // Revocation happens only here (not inside setObjectUrl) to avoid double-revocation.
-    useEffect(() => {
-      return () => {
-        if (objectUrl) {
-          URL.revokeObjectURL(objectUrl);
-        }
-      };
-    }, [objectUrl]);
-
     const effectiveValidationState = maxFilesError ? 'error' : validationState;
     const effectiveErrorMessage = maxFilesError ?? errorMessage;
 
@@ -136,7 +126,9 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
       }
       const file = selectedFiles[0];
       if (file && file.type.startsWith('image/')) {
-        setObjectUrl(URL.createObjectURL(file));
+        const url = URL.createObjectURL(file);
+        setObjectUrl(url);
+        return () => URL.revokeObjectURL(url);
       } else {
         setObjectUrl(undefined);
       }

@@ -78,6 +78,71 @@ function TestForm({
 // ---------------------------------------------------------------------------
 
 describe('Form', () => {
+  it('respects disabled submit and reset buttons', async () => {
+    const onSubmit = vi.fn();
+    function DisabledForm() {
+      const form = useZenputForm({ defaultValues: { name: 'original' } });
+      return (
+        <Form form={form} onSubmit={onSubmit}>
+          <Form.Field name="name">
+            {({ props }) => <input {...props} aria-label="Name" value={props.value as string} />}
+          </Form.Field>
+          <Form.Submit disabled>Submit</Form.Submit>
+          <Form.Reset disabled>Reset</Form.Reset>
+        </Form>
+      );
+    }
+    render(<DisabledForm />);
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'changed' } });
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Reset' })).toBeDisabled();
+    await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByRole('textbox')).toHaveValue('changed');
+  });
+
+  it('lists leaf validation errors inside arrays with their full field paths', async () => {
+    function ArrayForm() {
+      const form = useZenputForm({
+        schema: z.object({ names: z.array(z.string().min(1, 'Name is required')) }),
+        defaultValues: { names: [''] },
+        mode: 'onSubmit',
+      });
+      return (
+        <Form form={form} onSubmit={vi.fn()}>
+          <Form.Field name="names.0">
+            {({ props }) => <input {...props} aria-label="Name" value={props.value as string} />}
+          </Form.Field>
+          <Form.ErrorSummary />
+        </Form>
+      );
+    }
+    render(<ArrayForm />);
+    fireEvent.submit(document.querySelector('form')!);
+    const errorLink = await screen.findByRole('button', { name: 'Name is required' });
+    await userEvent.click(errorLink);
+    expect(screen.getByRole('textbox')).toHaveFocus();
+  });
+
+  it('does not mistake nested fields named type for leaf errors', async () => {
+    function NestedForm() {
+      const form = useZenputForm({
+        schema: z.object({ address: z.object({ type: z.string().min(1, 'Type is required') }) }),
+        defaultValues: { address: { type: '' } },
+        mode: 'onSubmit',
+      });
+      return (
+        <Form form={form} onSubmit={vi.fn()}>
+          <Form.ErrorSummary />
+        </Form>
+      );
+    }
+    render(<NestedForm />);
+    fireEvent.submit(document.querySelector('form')!);
+    expect(await screen.findByRole('button', { name: 'Type is required' })).toBeInTheDocument();
+  });
+
   it('renders a <form> element', () => {
     render(<TestForm />);
     // The form element needs an accessible name to be found by role="form".

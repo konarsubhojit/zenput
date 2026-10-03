@@ -124,7 +124,7 @@ FormField.displayName = 'Form.Field';
 // Form.Submit
 // ---------------------------------------------------------------------------
 
-function FormSubmit({ children = 'Submit', className, ...rest }: Readonly<FormSubmitProps>): React.ReactElement {
+function FormSubmit({ children = 'Submit', className, disabled, ...rest }: Readonly<FormSubmitProps>): React.ReactElement {
   const { disabled: formDisabled } = useFormInternal();
   const { isSubmitting } = useFormState();
 
@@ -132,7 +132,7 @@ function FormSubmit({ children = 'Submit', className, ...rest }: Readonly<FormSu
     <button
       {...rest}
       type="submit"
-      disabled={isSubmitting || formDisabled}
+      disabled={disabled || isSubmitting || formDisabled}
       aria-busy={isSubmitting || undefined}
       className={className ?? styles.submitButton}
     >
@@ -151,6 +151,7 @@ function FormReset({
   children = 'Reset',
   className,
   onClick,
+  disabled,
   ...rest
 }: Readonly<FormResetProps>): React.ReactElement {
   const { disabled: formDisabled } = useFormInternal();
@@ -173,7 +174,7 @@ function FormReset({
     <button
       {...rest}
       type="button"
-      disabled={isSubmitting || formDisabled}
+      disabled={disabled || isSubmitting || formDisabled}
       className={className ?? styles.resetButton}
       onClick={handleClick}
     >
@@ -212,12 +213,10 @@ function flattenErrors(
     // Leaf error: has a `message` and/or `type` property and no further nested
     // field-shaped children.
     const v = value as { message?: string; type?: string | number } & Record<string, unknown>;
-    if (typeof v.message === 'string' || v.type !== undefined) {
+    if (typeof v.message === 'string' || typeof v.type === 'string' || typeof v.type === 'number') {
       result.push({ path, message: v.message ?? `${path} is invalid` });
     } else if (Array.isArray(value)) {
-      value.forEach((entry, index) => {
-        result.push(...flattenErrors(entry as FieldErrors, `${path}.${index}`));
-      });
+      result.push(...flattenErrors(value as FieldErrors, path));
     } else if (typeof value === 'object') {
       result.push(...flattenErrors(value as FieldErrors, path));
     }

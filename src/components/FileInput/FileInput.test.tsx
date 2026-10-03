@@ -146,6 +146,32 @@ describe('FileInput', () => {
       expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:mock-url');
     });
 
+    it('revokes every preview URL during StrictMode replay, replacement and unmount', () => {
+      let nextUrl = 0;
+      URL.createObjectURL = vi.fn(() => `blob:preview-${++nextUrl}`);
+      const first = new File(['first'], 'first.png', { type: 'image/png' });
+      const second = new File(['second'], 'second.png', { type: 'image/png' });
+      const { rerender, unmount } = render(
+        <React.StrictMode>
+          <FileInput value={[first]} />
+        </React.StrictMode>
+      );
+      expect(screen.getByRole('img')).toHaveAttribute('src', 'blob:preview-2');
+      expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:preview-1');
+
+      rerender(
+        <React.StrictMode>
+          <FileInput value={[second]} />
+        </React.StrictMode>
+      );
+      expect(screen.getByRole('img')).toHaveAttribute('src', 'blob:preview-3');
+      expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:preview-2');
+
+      unmount();
+      expect(URL.revokeObjectURL).toHaveBeenCalledTimes(3);
+      expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:preview-3');
+    });
+
     it('allows removing a selected file', async () => {
       const onFilesChange = vi.fn();
       render(<FileInput multiple onFilesChange={onFilesChange} />);

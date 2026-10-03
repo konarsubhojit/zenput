@@ -73,6 +73,27 @@ afterEach(() => {
 });
 
 describe('useFocusTrap', () => {
+  it('skips negative tab indices, disabled controls, and hidden ancestors', () => {
+    render(
+      <Harness active>
+        <button tabIndex={-1}>Programmatic only</button>
+        <button disabled tabIndex={0}>Disabled</button>
+        <div style={{ display: 'none' }}><button>Hidden</button></div>
+        <button data-testid="visible">Visible</button>
+      </Harness>
+    );
+    expect(screen.getByTestId('visible')).toHaveFocus();
+    fireEvent.keyDown(document, { key: 'Tab' });
+    expect(screen.getByTestId('visible')).toHaveFocus();
+  });
+
+  it('keeps the container focusable when its last tabbable child becomes disabled', () => {
+    const { rerender } = render(<Harness active><button>Only</button></Harness>);
+    rerender(<Harness active><button disabled>Only</button></Harness>);
+    fireEvent.keyDown(document, { key: 'Tab' });
+    expect(screen.getByTestId('trap-container')).toHaveFocus();
+  });
+
   it('traps Tab: wraps from last to first', () => {
     render(<Harness active />);
 

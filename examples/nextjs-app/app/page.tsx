@@ -6,6 +6,7 @@
  * components (wrapped with 'use client') render without errors.
  */
 import { CSS_VAR_PREFIX, cssVar } from 'zenput/tokens';
+import { LocaleProvider } from 'zenput/locales';
 import ZenputClientDemo from '../components/ZenputClientDemo';
 
 export default function Home() {
@@ -27,7 +28,9 @@ export default function Home() {
        * their bundle. If the directive is missing, Next.js will throw at
        * build time with "You're importing a component that needs ... hooks".
        */}
-      <ZenputClientDemo />
+      <LocaleProvider>
+        <ZenputClientDemo />
+      </LocaleProvider>
     </main>
   );
 }

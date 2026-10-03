@@ -51,8 +51,14 @@ const TABBABLE_SELECTOR = [
 function getTabbable(container: HTMLElement): HTMLElement[] {
   return Array.from(container.querySelectorAll<HTMLElement>(TABBABLE_SELECTOR)).filter((el) => {
     if (!el.isConnected) return false;
+    if (el.matches(':disabled') || el.closest('[inert]')) return false;
+    if (el.hasAttribute('tabindex') && el.tabIndex < 0) return false;
     const style = getComputedStyle(el);
-    return style.display !== 'none' && style.visibility !== 'hidden';
+    if (style.visibility === 'hidden' || style.visibility === 'collapse') return false;
+    for (let ancestor: HTMLElement | null = el; ancestor; ancestor = ancestor.parentElement) {
+      if (getComputedStyle(ancestor).display === 'none') return false;
+    }
+    return true;
   });
 }
 
@@ -101,13 +107,8 @@ export function useFocusTrap({
     // consumer-set attribute.
     const hadTabindex = container.hasAttribute('tabindex');
 
-    // The container must be programmatically focusable whenever there are no
-    // tabbable children — this is needed both for the autoFocus path (which
-    // focuses the container directly) and for the Tab-key handler (which calls
-    // container.focus() when getTabbable returns an empty list). We always set
-    // the attribute here so the Tab handler always has a valid focus target,
-    // regardless of the autoFocus setting.
-    if (!initialTarget) {
+    // Keep the fallback focusable even if tabbable children disappear while active.
+    if (!hadTabindex) {
       container.setAttribute('tabindex', '-1');
     }
 

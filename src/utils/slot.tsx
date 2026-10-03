@@ -53,9 +53,9 @@ function mergeProps(slotProps: AnyProps, childProps: AnyProps): AnyProps {
   return merged;
 }
 
-function assignRef<T>(ref: React.Ref<T> | undefined, node: T | null): void {
+function assignRef<T>(ref: React.Ref<T> | undefined, node: T | null): void | (() => void) {
   if (typeof ref === 'function') {
-    ref(node);
+    return ref(node);
   } else if (ref != null && 'current' in ref) {
     (ref as React.RefObject<T | null>).current = node;
   }
@@ -117,8 +117,16 @@ export const Slot = React.forwardRef<Element, SlotProps>(function Slot(
   // Merge the forwarded ref with any existing ref on the child.
   if (forwardedRef || childRef) {
     merged.ref = (node: Element | null) => {
-      assignRef(forwardedRef, node);
-      assignRef(childRef, node);
+      const forwardedCleanup = assignRef(forwardedRef, node);
+      const childCleanup = assignRef(childRef, node);
+      if (typeof forwardedCleanup === 'function' || typeof childCleanup === 'function') {
+        return () => {
+          if (typeof forwardedCleanup === 'function') forwardedCleanup();
+          else assignRef(forwardedRef, null);
+          if (typeof childCleanup === 'function') childCleanup();
+          else assignRef(childRef, null);
+        };
+      }
     };
   }
 

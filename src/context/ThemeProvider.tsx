@@ -368,6 +368,9 @@ export function ThemeProvider({
         contrastMql = window.matchMedia('(prefers-contrast: more)');
         onContrastChange = (e: MediaQueryListEvent) => setSystemHighContrast(e.matches);
         mqlAddListener(contrastMql, onContrastChange);
+        // Refresh the external snapshot after changes missed while unsubscribed.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setSystemHighContrast(contrastMql.matches);
       }
 
       return () => {

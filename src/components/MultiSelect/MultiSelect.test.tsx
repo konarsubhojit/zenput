@@ -214,6 +214,38 @@ describe('MultiSelect', () => {
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
   });
 
+  it('does not remove read-only selections with Backspace', async () => {
+    const onChange = vi.fn();
+    render(
+      <MultiSelect options={OPTIONS} defaultValue={[OPTIONS[0]]} readOnly onChange={onChange} />
+    );
+    await userEvent.click(screen.getByRole('combobox'));
+    await userEvent.keyboard('{Backspace}');
+    expect(screen.getByText('React')).toBeInTheDocument();
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it.each([{ readOnly: true }, { disabled: true }])(
+    'does not remove protected selections through a custom tag: %j',
+    async (props) => {
+      const onChange = vi.fn();
+      render(
+        <MultiSelect
+          {...props}
+          options={OPTIONS}
+          defaultValue={[OPTIONS[0]]}
+          onChange={onChange}
+          renderTag={(option, onRemove) => (
+            <button onClick={onRemove}>{option.label}</button>
+          )}
+        />
+      );
+      await userEvent.click(screen.getByRole('button', { name: 'React' }));
+      expect(onChange).not.toHaveBeenCalled();
+      expect(screen.getByRole('button', { name: 'React' })).toBeInTheDocument();
+    }
+  );
+
   it('closes dropdown when clicking outside', async () => {
     render(
       <div>
@@ -292,6 +324,55 @@ describe('MultiSelect', () => {
     }
   });
 
+  it('ignores stale async results while the next search is still debouncing', async () => {
+    vi.useFakeTimers();
+    try {
+      let resolveInitial!: (options: MultiSelectOption[]) => void;
+      const loadOptions = vi.fn((query: string) =>
+        query === ''
+          ? new Promise<MultiSelectOption[]>((resolve) => { resolveInitial = resolve; })
+          : Promise.resolve([OPTIONS[1]])
+      );
+      render(<MultiSelect loadOptions={loadOptions} debounceMs={300} />);
+      const input = screen.getByRole('combobox');
+      fireEvent.focus(input);
+      await act(async () => { vi.advanceTimersByTime(300); });
+      fireEvent.change(input, { target: { value: 'vue' } });
+
+      await act(async () => { resolveInitial([OPTIONS[0]]); });
+      expect(screen.queryByRole('option', { name: 'React' })).not.toBeInTheDocument();
+      expect(screen.getByRole('status')).toHaveTextContent('Loading');
+
+      await act(async () => { vi.advanceTimersByTime(300); });
+      expect(screen.getByRole('option', { name: 'Vue' })).toBeInTheDocument();
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('recovers from a rejected async load without an unhandled rejection', async () => {
+    vi.useFakeTimers();
+    try {
+      const loadOptions = vi.fn()
+        .mockResolvedValueOnce([OPTIONS[0]])
+        .mockRejectedValueOnce(new Error('Network error'));
+      render(<MultiSelect loadOptions={loadOptions} debounceMs={300} />);
+      const input = screen.getByRole('combobox');
+      fireEvent.focus(input);
+      await act(async () => { vi.advanceTimersByTime(300); });
+      expect(screen.getByRole('option', { name: 'React' })).toBeInTheDocument();
+
+      fireEvent.change(input, { target: { value: 'vue' } });
+      await act(async () => { vi.advanceTimersByTime(300); });
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+      expect(screen.queryByRole('option', { name: 'React' })).not.toBeInTheDocument();
+      expect(screen.getByText('No options found')).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('uses custom renderTag function', async () => {
     render(
       <MultiSelect
@@ -342,5 +423,19 @@ describe('MultiSelect', () => {
     const ref = React.createRef<HTMLInputElement>();
     render(<MultiSelect options={OPTIONS} ref={ref} />);
     expect(ref.current).toBeInstanceOf(HTMLInputElement);
+  });
+
+  it('honors React callback-ref cleanup without detaching on selection updates', async () => {
+    const cleanup = vi.fn();
+    const ref = vi.fn(() => cleanup);
+    const { unmount } = render(<MultiSelect options={OPTIONS} ref={ref} />);
+    await userEvent.click(screen.getByRole('combobox'));
+    await userEvent.click(screen.getByRole('option', { name: 'React' }));
+    expect(ref).toHaveBeenCalledTimes(1);
+    expect(cleanup).not.toHaveBeenCalled();
+
+    unmount();
+    expect(cleanup).toHaveBeenCalledTimes(1);
+    expect(ref).toHaveBeenCalledTimes(1);
   });
 });
