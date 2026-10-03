@@ -292,6 +292,26 @@ describe('ThemeProvider detectHighContrast', () => {
     act(() => contrastMql._fire(true));
     expect(result.current.resolvedMode).toBe('highContrast');
   });
+
+  it('refreshes contrast preference after detection is disabled and re-enabled', () => {
+    contrastMql.matches = true;
+    function Mode() {
+      return <span data-testid="mode">{useColorMode().resolvedMode}</span>;
+    }
+    const tree = (detectHighContrast: boolean) => (
+      <ThemeProvider theme={{ mode: 'system' }} detectHighContrast={detectHighContrast}>
+        <Mode />
+      </ThemeProvider>
+    );
+    const { rerender, getByTestId } = render(tree(true));
+    expect(getByTestId('mode')).toHaveTextContent('highContrast');
+    rerender(tree(false));
+    act(() => contrastMql._fire(false));
+    rerender(tree(true));
+    expect(getByTestId('mode')).toHaveTextContent('light');
+    act(() => contrastMql._fire(true));
+    expect(getByTestId('mode')).toHaveTextContent('highContrast');
+  });
 });
 
 // ── storageKey / persistence ──────────────────────────────────────────────────

@@ -4,6 +4,7 @@ import React, {
   useState,
   useCallback,
   useRef,
+  useImperativeHandle,
   useEffect,
   useId,
   useMemo,
@@ -106,10 +107,11 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
 
     const updateSelected = useCallback(
       (next: MultiSelectOption[]) => {
+        if (disabled || readOnly) return;
         if (!isControlled) setInternalSelected(next);
         onChange?.(next);
       },
-      [isControlled, onChange]
+      [disabled, readOnly, isControlled, onChange]
     );
 
     // ── Search / async state ─────────────────────────────────────────────────
@@ -124,35 +126,29 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
     const inputRef = useRef<HTMLInputElement>(null);
     const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const raceRef = useRef(0);
 
-    // Merge external ref
-    const handleRef = useCallback(
-      (node: HTMLInputElement | null) => {
-        (inputRef as React.RefObject<HTMLInputElement | null>).current = node;
-        if (typeof ref === 'function') ref(node);
-        else if (ref) (ref as React.RefObject<HTMLInputElement | null>).current = node;
-      },
-      [ref]
-    );
+    useImperativeHandle(ref, () => inputRef.current as HTMLInputElement, []);
 
     // ── Async loading ────────────────────────────────────────────────────────
     useEffect(() => {
       if (!loadOptions) return;
+      let cancelled = false;
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(async () => {
-        const seq = ++raceRef.current;
         setAsyncLoading(true);
         try {
           const results = await loadOptions(query);
-          if (seq === raceRef.current) {
+          if (!cancelled) {
             setAsyncOptions(results);
           }
+        } catch {
+          if (!cancelled) setAsyncOptions([]);
         } finally {
-          if (seq === raceRef.current) setAsyncLoading(false);
+          if (!cancelled) setAsyncLoading(false);
         }
       }, debounceMs);
       return () => {
+        cancelled = true;
         if (debounceRef.current) clearTimeout(debounceRef.current);
       };
     }, [query, loadOptions, debounceMs]);
@@ -282,6 +278,7 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
 
     const handleKeyDown = useCallback(
       (e: KeyboardEvent<HTMLInputElement>) => {
+        if (disabled || readOnly) return;
         if (e.key === 'Backspace' && query === '' && selectedValues.length > 0) {
           e.preventDefault();
           removeTag(selectedValues[selectedValues.length - 1].value);
@@ -309,6 +306,8 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
         }
       },
       [
+        disabled,
+        readOnly,
         query,
         selectedValues,
         removeTag,
@@ -497,7 +496,7 @@ export const MultiSelect = forwardRef<HTMLInputElement, MultiSelectProps>(
           <input
             {...rest}
             {...inputAriaProps}
-            ref={handleRef}
+            ref={inputRef}
             id={inputId}
             type="text"
             role="combobox"

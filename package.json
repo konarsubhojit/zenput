@@ -138,7 +138,8 @@
   ],
   "overrides": {
     "uuid": "^11.1.1",
-    "js-yaml": "^4.3.2"
+    "js-yaml": "^4.3.2",
+    "webpack-dev-middleware": "^7.4.5"
   },
   "license": "MIT",
   "repository": {

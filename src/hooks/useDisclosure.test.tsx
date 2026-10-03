@@ -28,6 +28,22 @@ function Harness({
 }
 
 describe('useDisclosure', () => {
+  it('emits each uncontrolled change only once in StrictMode', () => {
+    const onOpenChange = vi.fn();
+    render(
+      <React.StrictMode>
+        <Harness onOpenChange={onOpenChange} />
+      </React.StrictMode>
+    );
+    act(() => {
+      screen.getByText('toggle').click();
+    });
+    act(() => {
+      screen.getByText('toggle').click();
+    });
+    expect(onOpenChange.mock.calls).toEqual([[true], [false]]);
+  });
+
   it('starts closed by default and opens/closes/toggles', () => {
     render(<Harness />);
     expect(screen.getByTestId('open')).toHaveTextContent('false');

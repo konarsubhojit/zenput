@@ -216,15 +216,15 @@ export default [
   // ---------------------------------------------------------------------------
   {
     input: 'src/locales/index.ts',
-    output: { file: 'dist/cjs/locales/index.js', format: 'cjs', sourcemap: true },
-    plugins: basePlugins({ declaration: true, declarationDir: 'dist/cjs/locales/types' }),
+    output: { file: 'dist/cjs/locales/index.js', format: 'cjs', sourcemap: true, banner: clientBanner },
+    plugins: [...basePlugins({ declaration: true, declarationDir: 'dist/cjs/locales/types' }), preserveDirectives()],
     external,
   },
   // locales subpath – ESM
   {
     input: 'src/locales/index.ts',
-    output: { file: 'dist/esm/locales/index.js', format: 'esm', sourcemap: true },
-    plugins: basePlugins({ declaration: false }),
+    output: { file: 'dist/esm/locales/index.js', format: 'esm', sourcemap: true, banner: clientBanner },
+    plugins: [...basePlugins({ declaration: false }), preserveDirectives()],
     external,
   },
   // locales subpath – DTS

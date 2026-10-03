@@ -4,6 +4,20 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { Slot } from './slot';
 
 describe('Slot', () => {
+  it('runs callback ref cleanup and clears object refs on unmount', () => {
+    const forwardedRef = createRef<Element>();
+    const cleanup = vi.fn();
+    const childRef = vi.fn(() => cleanup);
+    const { unmount } = render(
+      <Slot ref={forwardedRef}><span ref={childRef}>text</span></Slot>
+    );
+    expect(childRef).toHaveBeenCalledWith(screen.getByText('text'));
+    unmount();
+    expect(cleanup).toHaveBeenCalledTimes(1);
+    expect(childRef).toHaveBeenCalledTimes(1);
+    expect(forwardedRef.current).toBeNull();
+  });
+
   it('clones its single child and passes through children content', () => {
     render(
       <Slot>

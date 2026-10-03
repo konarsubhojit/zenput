@@ -49,24 +49,14 @@ export function useDisclosure(options: UseDisclosureOptions = {}): UseDisclosure
 
   const setOpen = useCallback<SetOpen>(
     (next) => {
-      if (isControlled) {
-        const base = pendingRef.current;
-        const resolved = typeof next === 'function' ? next(base) : next;
-        if (resolved === base) {
-          // No-op: don't emit duplicate change events.
-          return;
-        }
-        pendingRef.current = resolved;
-        onOpenChange?.(resolved);
+      const base = pendingRef.current;
+      const resolved = typeof next === 'function' ? next(base) : next;
+      if (resolved === base) {
         return;
       }
-      setUncontrolledOpen((prev) => {
-        const resolved = typeof next === 'function' ? next(prev) : next;
-        if (resolved !== prev) {
-          onOpenChange?.(resolved);
-        }
-        return resolved;
-      });
+      pendingRef.current = resolved;
+      if (!isControlled) setUncontrolledOpen(resolved);
+      onOpenChange?.(resolved);
     },
     [isControlled, onOpenChange]
   );
