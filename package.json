@@ -50,7 +50,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
-    "test:ci": "vitest run --coverage --reporter=default --reporter=junit",
+    "test:ci": "vitest run --coverage --reporter=default --reporter=junit --maxWorkers=2",
     "test:storybook": "test-storybook",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -122,7 +122,7 @@
     "size-limit": "^14.0.0",
     "storybook": "^10.3.5",
     "tslib": "^2.8.1",
-    "typescript": "^7.0.2",
+    "typescript": "^6.0.3",
     "typescript-eslint": "^8.8.0",
     "vitest": "^5.0.0",
     "vitest-axe": "^0.1.0"
