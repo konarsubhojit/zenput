@@ -325,6 +325,53 @@ describe('Combobox', () => {
     }
   });
 
+  it('recovers from a rejected async load and can load again', async () => {
+    const loadOptions = vi.fn()
+      .mockRejectedValueOnce(new Error('Network error'))
+      .mockResolvedValueOnce([{ value: 'react', label: 'React' }]);
+    vi.useFakeTimers();
+    try {
+      render(<Combobox loadOptions={loadOptions} debounceMs={100} />);
+      const input = screen.getByRole('combobox');
+      fireEvent.focus(input);
+      await act(async () => { await vi.advanceTimersByTimeAsync(100); });
+
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+      expect(screen.getByText('No options found')).toBeInTheDocument();
+
+      fireEvent.change(input, { target: { value: 'react' } });
+      await act(async () => { await vi.advanceTimersByTimeAsync(100); });
+      expect(screen.getByRole('option', { name: 'React' })).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('ignores stale results while the next query is still debouncing', async () => {
+    let resolveFirst!: (options: ComboboxOption[]) => void;
+    const loadOptions = vi.fn()
+      .mockImplementationOnce(() => new Promise<ComboboxOption[]>((resolve) => {
+        resolveFirst = resolve;
+      }))
+      .mockResolvedValueOnce([{ value: 'react', label: 'React' }]);
+    vi.useFakeTimers();
+    try {
+      render(<Combobox loadOptions={loadOptions} debounceMs={100} />);
+      const input = screen.getByRole('combobox');
+      fireEvent.focus(input);
+      await act(async () => { await vi.advanceTimersByTimeAsync(100); });
+
+      fireEvent.change(input, { target: { value: 'react' } });
+      await act(async () => { resolveFirst([{ value: 'ruby', label: 'Ruby' }]); });
+      expect(screen.queryByRole('option', { name: 'Ruby' })).not.toBeInTheDocument();
+
+      await act(async () => { await vi.advanceTimersByTimeAsync(100); });
+      expect(screen.getByRole('option', { name: 'React' })).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('navigates up with ArrowUp key', async () => {
     render(<Combobox options={OPTIONS} />);
     const input = screen.getByRole('combobox');

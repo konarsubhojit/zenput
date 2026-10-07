@@ -103,7 +103,6 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
     const wrapperRef = useRef<HTMLDivElement>(null);
     const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const raceRef = useRef(0);
 
     // ── Sync input value when controlled value changes ────────────────────────
     useEffect(() => {
@@ -115,18 +114,21 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
     // ── Async loading ─────────────────────────────────────────────────────────
     useEffect(() => {
       if (!loadOptions) return;
+      let cancelled = false;
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(async () => {
-        const seq = ++raceRef.current;
         setAsyncLoading(true);
         try {
           const results = await loadOptions(inputValue);
-          if (seq === raceRef.current) setAsyncOptions(results);
+          if (!cancelled) setAsyncOptions(results);
+        } catch {
+          if (!cancelled) setAsyncOptions([]);
         } finally {
-          if (seq === raceRef.current) setAsyncLoading(false);
+          if (!cancelled) setAsyncLoading(false);
         }
       }, debounceMs);
       return () => {
+        cancelled = true;
         if (debounceRef.current) clearTimeout(debounceRef.current);
       };
     }, [inputValue, loadOptions, debounceMs]);
