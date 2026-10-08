@@ -1869,6 +1869,59 @@ All Zenput components are designed to render safely in server-side environments:
 
 ---
 
+## Architecture Review and Optimization Plan
+
+### Current design and decision
+
+Keep the existing package boundaries and public APIs; optimize incrementally rather
+than rewrite the component library:
+
+- `src/components/` contains components with colocated types, tests, styles, and
+  stories. Shared hooks provide field accessibility and controlled state behavior.
+- `src/forms/` isolates the optional React Hook Form/Zod integration from the core
+  entry point. `src/locales/` provides localization independently.
+- `zenput/tokens` and `zenput/server` are server-safe entry points; the core, forms,
+  and locales bundles are client entries. Preserve these boundaries when changing
+  `rollup.config.mjs`, including CJS, ESM, and declaration outputs.
+- Accessibility is checked through component tests, published baselines in `a11y/`,
+  and the Storybook accessibility job. The Next.js fixture checks client/server
+  integration against built artifacts.
+
+### Repairs from this review
+
+- CI failed at `npm ci` because TypeScript 7 exceeded the locked
+  `typescript-eslint` peer range (`>=4.8.4 <6.1.0`). Use `~6.0.3` and the matching
+  lockfile; future compiler upgrades must check lint/build plugin compatibility
+  and pass a clean install without bypassing peer checks.
+- Combobox async loads now handle failures with empty results and cancel obsolete
+  requests when the query changes or the component unmounts, matching MultiSelect's
+  effect-local cancellation pattern. Regression tests cover rejected requests,
+  subsequent recovery, and stale results arriving during the next debounce delay.
+
+### Prioritized follow-up work
+
+| Priority | Planned change | Acceptance criteria |
+| --- | --- | --- |
+| P1 | Investigate bundle size and measurement changes before changing packaging (`.size-limit.cjs`, `rollup.config.mjs`, `src/index.ts`). Compare the current size-limit tool's dependency inclusion with the previous baseline, then evaluate per-component exports and CSS delivery. | Preserve public imports, styles, optional-peer isolation, and client/server directives; bring `npm run size` within the existing budgets without simply raising them. Verify both module formats and the Next.js fixture. |
+| P2 | Consolidate duplicated async-search loading behavior in Combobox and MultiSelect only after defining a shared contract for debounce, cancellation, failure, and loading states. | Tests cover overlapping requests, stale successes/rejections, loader replacement, and unmount; no public API or search behavior changes. |
+| P3 | Reduce repeated TypeScript/declaration work across Rollup entries after profiling clean builds. | Record before/after build times; all subpath declarations, CJS/ESM exports, accessibility artifacts, and Next.js smoke tests remain intact. |
+| P4 | Make bundle budgets an explicit GitHub CI gate after resolving P1. The GitHub build job currently builds artifacts but does not run `npm run size`. | A deliberate oversized bundle fails CI; existing budgets remain enforced, and GitHub/Azure checks stay aligned. |
+
+Measured baseline for this review (Node 24, clean install, library build,
+`npm run size`; minified and gzipped, including measured dependencies):
+ESM **96.67 kB / 54 kB budget**, CJS **96.56 kB / 55 kB**, TextInput-only
+**66.97 kB / 50 kB**, and forms **3.07 kB / 10 kB**. The size check currently
+fails; these are measurements, not new budgets or evidence that tree shaking is
+fully effective.
+
+Validate follow-ups with `npm ci --ignore-scripts`, `npm run lint`,
+`npm run type-check`, targeted tests, then `npm run test:ci`, `npm run build`,
+`npm run build-storybook`, `npm run size`, and the existing Next.js/Storybook
+integration jobs. Keep the two-worker CI coverage limit and existing coverage
+thresholds.
+
+---
+
 ## License
 
 MIT © konarsubhojit
